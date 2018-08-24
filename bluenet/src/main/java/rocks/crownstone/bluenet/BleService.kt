@@ -1,0 +1,68 @@
+package rocks.crownstone.bluenet
+
+import android.app.Service
+import android.bluetooth.le.BluetoothLeAdvertiser
+import android.content.Intent
+import android.os.Binder
+import android.os.IBinder
+import android.util.Log
+
+
+class BleService: Service() {
+	private val TAG = this::class.java.canonicalName
+//	lateinit var instance: BleService
+	private val binder = ServiceBinder()
+
+	private lateinit var eventBus: EventBus
+	private lateinit var scanner: BleScanner
+//	private lateinit var advertiser:
+
+	inner class ServiceBinder : Binder() {
+		fun getService(): BleService {
+//			return instance
+			return this@BleService
+		}
+	}
+
+
+	override fun onCreate() {
+		super.onCreate()
+		Log.i(TAG, "onCreate")
+//		instance = this
+	}
+
+
+	// The system calls your Service’s onBind() only once when the first client binds to retrieve the IBinder.
+	// The system won’t call onBind() again when any additional clients bind. Instead it’ll deliver the same IBinder.
+	override fun onBind(intent: Intent?): IBinder {
+		Log.i(TAG, "onBind")
+		parseIntent(intent)
+		return binder
+	}
+
+	// Never used?
+	override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+		Log.i(TAG, "onStartCommand")
+		parseIntent(intent)
+//		return Service.START_STICKY
+		return Service.START_REDELIVER_INTENT
+	}
+
+	private fun parseIntent(intent: Intent?) {
+		if (intent == null) {
+			return
+		}
+		val bla = intent.getIntExtra("bla", 0)
+	}
+
+
+	fun setEventBus(eventBus: EventBus) {
+		Log.i(TAG, "setEventBus")
+		this.eventBus = eventBus
+	}
+
+	fun setBleScanner(scanner: BleScanner) {
+		Log.i(TAG, "setBleScanner")
+		this.scanner = scanner
+	}
+}
