@@ -22,6 +22,10 @@ class EventBus {
 	init {
 	}
 
+	fun emit(eventType: BluenetEvent, data: Any = Unit) {
+		emit(eventType.name, data)
+	}
+
 	fun emit(eventType: EventType, data: Any = Unit) {
 		if (!eventSubscriptions.containsKey(eventType)) {
 			return
@@ -35,6 +39,10 @@ class EventBus {
 //		for (it in topics.get(event)!) {
 			it.callback(data)
 		}
+	}
+
+	fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
+		return subscribe(eventType.name, callback)
 	}
 
 	fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {

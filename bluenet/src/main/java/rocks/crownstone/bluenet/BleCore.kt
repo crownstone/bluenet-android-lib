@@ -44,22 +44,22 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		advertiser = bleAdapter.bluetoothLeAdvertiser
 	}
 
-	fun startScan() : Boolean {
-		if (scanner == null) {
-			return false
-		}
+	fun startScan() {
+//		if (scanner == null) {
+//			return false
+//		}
 		scanner.startScan(scanFilters, scanSettings, scanCallback)
 		scanning = true
-		return true
+//		return true
 	}
 
-	fun stopScan() : Boolean {
-		if (scanner == null) {
-			return false
-		}
+	fun stopScan() {
+//		if (scanner == null) {
+//			return false
+//		}
 		scanner.stopScan(scanCallback)
 		scanning = false
-		return true
+//		return true
 	}
 
 
@@ -72,7 +72,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 				return
 			}
 
-			eventBus.emit(BluenetEvent.SCAN_RESULT_RAW.name, result)
+			eventBus.emit(BluenetEvent.SCAN_RESULT_RAW, result)
 		}
 
 		override fun onBatchScanResults(results: MutableList<ScanResult>?) {
@@ -90,7 +90,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 				return
 			}
 			scanning = false
-			eventBus.emit(BluenetEvent.SCAN_FAILURE.name)
+			eventBus.emit(BluenetEvent.SCAN_FAILURE)
 		}
 	}
 }

@@ -5,6 +5,17 @@ import android.bluetooth.le.ScanResult
 import android.os.Handler
 import android.util.Log
 
+/*
+Class that provides the following:
+- When scanning, stopping now and then, to avoid bluetoothLeScanner stop giving results after 30 minutes (see https://stackoverflow.com/questions/43833904/android-bluetooth-le-scanner-stops-after-a-time).
+- (to do) Parsing advertisements and decrypting the service data.
+- (to do) Keeping up a list of recently seen devices.
+- (to do) Set scan filters based on iBeacon, Crownstone type or mode.
+- (to do) Making sure startScan is not called too often within a short time (see https://stackoverflow.com/questions/45681711/app-is-scanning-too-frequently-with-scansettings-scan-mode-opportunistic).
+- (to do) Emit events: unverified advertisement, verified advertisement,
+ */
+
+
 class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	private val TAG = this::class.java.canonicalName
 	private val eventBus = evtBus
@@ -22,7 +33,8 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	init {
 //		val onScan = { result: Any -> onScan(result as ScanResult) }
 //		val subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW.name, onScan)
-		val subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW.name, { result: Any -> onScan(result as ScanResult) })
+		val subIdScan     = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { result: Any -> onScan(result as ScanResult) })
+		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any -> onScanFail() })
 
 		// Had to init those here, or silly kotlin had some recursion problem
 		startScanRunnable = Runnable {
@@ -33,51 +45,62 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 		}
 	}
 
-	fun startScan() : Boolean {
+
+	fun setFilter() {
+
+	}
+
+	fun startScan() {
 		Log.i(TAG, "startScan")
 		if (!running) {
 			running = true
 			handler.removeCallbacks(null)
 			handler.post(startScanRunnable)
 		}
-		return true
+//		return true
 	}
 
-	fun stopScan() : Boolean {
+	fun stopScan() {
 		Log.i(TAG, "stopScan")
 		if (running) {
 			running = false
 			core.stopScan()
 			handler.removeCallbacks(null)
 		}
-		return true
+//		return true
 	}
 
 	private fun startInterval() {
 		Log.i(TAG, "startScanRunnable")
-		if (core.startScan()) {
+//		if (core.startScan()) {
+			core.startScan()
 //			scanning = true
-
 			if (scanPause > 0) {
 				handler.postDelayed(stopScanRunnable, scanDuration)
 			}
-		}
+//		}
 	}
 
 	private fun stopInterval() {
 		Log.i(TAG, "stopScanRunnable")
-		if (core.stopScan()) {
+//		if (core.stopScan()) {
+			core.stopScan()
 //			scanning = true
 
 			if (scanPause > 0) {
 				handler.postDelayed(startScanRunnable, scanPause)
 			}
-		}
+//		}
 	}
 
-	fun onScan(result: ScanResult) {
+	private fun onScan(result: ScanResult) {
 		Log.i(TAG, "onScan")
 
+		val device = BleDevice(result)
+		eventBus.emit(BluenetEvent.SCAN_RESULT, device)
+
+
+		return
 
 		if (result.device == null || result.device.name == null) {
 			return
@@ -106,8 +129,11 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		val o = m.invoke(null, arrayOf(data))
 //		Log.d(TAG, o)
 
-
-		val serviceData = result.scanRecord.serviceData
+		val scanRecord = result.scanRecord
+		if (scanRecord == null) {
+			return
+		}
+		val serviceData = scanRecord.serviceData
 		for (uuid in serviceData.keys) {
 			val data = serviceData.get(uuid)
 			val dataStr = Conversion.bytesToString(data)
@@ -138,6 +164,10 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 		}
 
 
+	}
+
+	private fun onScanFail() {
+		// TODO
 	}
 
 }
