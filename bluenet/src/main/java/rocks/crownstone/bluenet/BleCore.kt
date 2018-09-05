@@ -43,14 +43,17 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	private var scanSettings: ScanSettings
 	private var scanning = false
 
-	// The permission request code for requesting location (required for ble scanning).
-	private val REQ_CODE_PERMISSIONS_LOCATION = 101
+	companion object {
+		// The permission request code for requesting location (required for ble scanning).
+		val REQ_CODE_PERMISSIONS_LOCATION = 101
 
-	// The request code to enable bluetooth.
-	private val REQ_CODE_ENABLE_BLUETOOOTH = 102
+		// The request code to enable bluetooth.
+		val REQ_CODE_ENABLE_BLUETOOOTH = 102
 
-	// The request code to enable location services.
-	private val REQ_CODE_ENABLE_LOCATION_SERVICES = 103
+		// The request code to enable location services.
+		val REQ_CODE_ENABLE_LOCATION_SERVICE = 103
+	}
+
 
 	init {
 		// Init scan settings
@@ -74,20 +77,18 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 *
 	 * Checks if hardware is available and registers broadcast receiver.
 	 * Does not check if BLE is enabled.
-	 * @return Promise that will be resolved or rejected.
+	 *
+	 * @return True on success.
 	 */
-	fun initBle(): Promise<Unit, Exception> {
-		val deferred = deferred<Unit, Exception>()
-		val promise = deferred.promise
+	fun initBle(): Boolean {
 		if (bleInitialized) {
-			deferred.resolve()
-			return promise
+			return true
 		}
 
 		// Check if phone has bluetooth LE
 		if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-			deferred.reject(Exception("No BLE hardware"))
-			return promise
+			Log.e(TAG,"No BLE hardware")
+			return true
 		}
 
 		bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -101,8 +102,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		}
 
 		bleInitialized = true
-		deferred.resolve()
-		return promise
+		return true
 	}
 
 	/**
@@ -112,34 +112,32 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 * Checks if required permissions are given.
 	 * Does not check if location service is enabled.
 	 *
-	 * @param activity If not null, will be used to ask for permissions (if needed).
-	 *
-	 * @return Promise that will be resolved or rejected.
+	 * @return True on success.
 	 */
-	fun initScanner(activity: Activity?): Promise<Unit, Exception> {
-		val deferred = deferred<Unit, Exception>()
-		val promise = deferred.promise
+	fun initScanner(): Boolean {
+		if (scannerInitialezed) {
+			return true
+		}
 		if (!bleInitialized) {
-			deferred.reject(Exception("ble not initialzed"))
-			return promise
+			Log.e(TAG, "ble not initialzed")
+			return false
 		}
 
 		if (!isLocationPermissionGranted()) {
-			deferred.reject(Exception("location permission not granted"))
-			return promise
+			Log.w(TAG, "location permission not granted")
+			return false
 		}
 
 		// Register the broadcast receiver for location manager changes.
-		// Must be done before checkLocationServicesEnabled, but after having permissions.
+		// Must be done before checking if location service is enabled, but after having location permissions.
 		if (!receiverRegisteredLocation) {
 			context.registerReceiver(receiverLocation, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION))
 			receiverRegisteredLocation = true
 		}
 
 		scanner = bleAdapter.bluetoothLeScanner
-
-		deferred.resolve()
-		return promise
+		scannerInitialezed = true
+		return true
 	}
 
 //	fun initAdvertiser(activity: Activity): Promise<Unit, Exception> {
@@ -151,15 +149,44 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 //	}
 
 	/**
+	 * Checks and requests location permission, required for scanning.
+	 *
+	 * @param activity Activity to be used to ask for permissions.
+	 *                 The activity can implement Activity.onRequestPermissionsResult() to see if the user canceled.
+	 *                 The request code will be BleCore.REQ_CODE_PERMISSIONS_LOCATION
+	 * @return False when unable to make the request
+	 */
+	fun requestLocationPermission(activity: Activity): Boolean {
+		Log.i(TAG, "requestLocationPermission activity=$activity")
+
+		if (isLocationPermissionGranted()) {
+			Log.i(TAG, "no need to request")
+			return true
+		}
+
+		if (!isActivityValid(activity)) {
+			Log.w(TAG,"Invalid activity")
+			return false
+		}
+
+		ActivityCompat.requestPermissions(
+				activity,
+				arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+				REQ_CODE_PERMISSIONS_LOCATION)
+
+		return true
+	}
+
+	/**
 	 * Checks and gets location permission, required for scanning.
 	 *
 	 * Does not check if location service is enabled.
 	 *
 	 * @param activity If not null, will be used to ask for permissions (if needed).
-	 *                 Make sure that the activity has Activity.onRequestPermissionsResult() implemented,
+	 *                 The activity must has Activity.onRequestPermissionsResult() implemented,
 	 *                 and from there calls BleCore.handlePermissionResult().
 	 *
-	 * @return Promise that will be resolved or rejected.
+	 * @return Promise that will be resolved when permissions are granted.
 	 */
 	fun getLocationPermission(activity: Activity?): Promise<Unit, Exception> {
 		Log.i(TAG, "getLocationPermission activity=$activity")
@@ -216,91 +243,85 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		return false
 	}
 
-
-	fun enableBle(activity: Activity?): Promise<Unit, Exception> {
-		val deferred = deferred<Unit, Exception>()
-		val promise = deferred.promise
-
+	/**
+	 * Requests BLE to be enabled.
+	 *
+	 * @param activity Optional activity to be used to ask for bluetooth to be enabled.
+	 *                 The activity can implement Activity.onActivityResult() to see if the user canceled the request.
+	 *                 The request code will be BleCore.REQ_CODE_ENABLE_BLUETOOOTH
+	 * @return False when unable to make the request
+	 */
+	fun requestEnableBle(activity: Activity?): Boolean {
+		Log.i(TAG, "requestEnableBle activity=$activity")
 		if (isBleEnabled()) {
-			deferred.resolve()
-			return promise
+			Log.i(TAG, "no need to request")
+			return true
 		}
-
-		if (!isActivityValid(activity)) {
-			deferred.reject(Exception("bluetooth not enabled"))
-			return promise
-		}
-
-		if (enableBlePromise != null) {
-			deferred.reject(Exception("busy"))
-			return promise
-		}
-		enableBlePromise = deferred
-
 
 		val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
 		intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-		activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_BLUETOOOTH)
-		// Can also do it without activity, but that might be confusing?
-		// context.startActivity(intent)
-
-		// Wait for result
-		return promise
-	}
-
-	fun enableLocationServices(activity: Activity?): Promise<Unit, Exception> {
-		val deferred = deferred<Unit, Exception>()
-		val promise = deferred.promise
-
-		if (isLocationServicesEnabled()) {
-			deferred.resolve()
-			return promise
+		if (isActivityValid(activity)) {
+			activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_BLUETOOOTH)
 		}
-
-		if (!isActivityValid(activity)) {
-			deferred.reject(Exception("location service not enabled"))
-			return promise
+		else {
+			context.startActivity(intent)
 		}
-
-
-		val intent = Intent(context, LocationServiceRequestActivity::class.java)
-		intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-		activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_BLUETOOOTH)
-		// Can also do it without activity, but that might be confusing?
-		// context.startActivity(intent)
-
-		// Wait for result
-		return promise
+		return true
 	}
 
 	/**
-	 * Handles an enable request result.
+	 * Requests location service to be enabled.
 	 *
-	 * @return return true if permission result was handled, false otherwise.
+	 * @param activity Optional activity to be used to ask for location service to be enabled.
+	 *                 The activity can implement Activity.onActivityResult() to see if the user canceled the request.
+	 *                 The request code will be BleCore.REQ_CODE_ENABLE_LOCATION_SERVICE
+	 * @return False when unable to make the request
 	 */
-	fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent): Boolean {
-		when (requestCode) {
-			REQ_CODE_ENABLE_BLUETOOOTH -> {
-				Log.d(TAG, "bluetooth enable result: $resultCode")
-				if (resultCode == Activity.RESULT_CANCELED) {
-					Log.i(TAG, "bluetooth not enabled")
-					enableBlePromise?.reject(Exception("bluetooth not enabled"))
-					enableBlePromise = null
-				}
-				return true
-			}
-			REQ_CODE_ENABLE_LOCATION_SERVICES -> {
-				Log.d(TAG, "location services enable result: $resultCode")
-				if (resultCode == Activity.RESULT_CANCELED) {
-					Log.i(TAG, "location services not enabled")
-					enableLocationServicePromise?.reject(Exception("location services not enabled"))
-					enableLocationServicePromise = null
-				}
-				return true
-			}
+	fun requestEnableLocationServices(activity: Activity?): Boolean {
+		if (isLocationServicesEnabled()) {
+			Log.i(TAG, "no need to request")
+			return true
 		}
-		return false
+
+		val intent = Intent(context, LocationServiceRequestActivity::class.java)
+		intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+		if (isActivityValid(activity)) {
+			activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_LOCATION_SERVICE)
+		}
+		else {
+			context.startActivity(intent)
+		}
+		return true
 	}
+
+//	/**
+//	 * Handles an enable request result.
+//	 *
+//	 * @return return true if permission result was handled, false otherwise.
+//	 */
+//	fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent): Boolean {
+//		when (requestCode) {
+//			REQ_CODE_ENABLE_BLUETOOOTH -> {
+//				Log.d(TAG, "bluetooth enable result: $resultCode")
+//				if (resultCode == Activity.RESULT_CANCELED) {
+//					Log.i(TAG, "bluetooth not enabled")
+//					enableBlePromise?.reject(Exception("bluetooth not enabled"))
+//					enableBlePromise = null
+//				}
+//				return true
+//			}
+//			REQ_CODE_ENABLE_LOCATION_SERVICE -> {
+//				Log.d(TAG, "location services enable result: $resultCode")
+//				if (resultCode == Activity.RESULT_CANCELED) {
+//					Log.i(TAG, "location services not enabled")
+//					enableLocationServicePromise?.reject(Exception("location services not enabled"))
+//					enableLocationServicePromise = null
+//				}
+//				return true
+//			}
+//		}
+//		return false
+//	}
 
 
 
@@ -315,11 +336,11 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	}
 
 	/**
-	 * Check if bluetooth is enabled.
+	 * Check if bluetooth is enabled. Can only be called after BLE is initialized
 	 *
 	 * @return True if bluetooth is enabled.
 	 */
-	private fun isBleEnabled(): Boolean {
+	fun isBleEnabled(): Boolean {
 		if (bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON) {
 			return true
 		}
@@ -331,9 +352,9 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	/**
 	 * Check if location service is enabled.
 	 *
-	 * @return True if location service is enabled.
+	 * @return True when location service is enabled.
 	 */
-	private fun isLocationServicesEnabled(): Boolean {
+	fun isLocationServicesEnabled(): Boolean {
 		Log.i(TAG, "isLocationServicesEnabled")
 		if (Build.VERSION.SDK_INT < 23) {
 			return true
@@ -364,27 +385,12 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 */
 	private val receiverBle = object : BroadcastReceiver() {
 		override fun onReceive(context: Context, intent: Intent) {
-
 			if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
 				when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
 					BluetoothAdapter.STATE_ON -> {
 						Log.i(TAG, "bluetooth on")
 
 						/*
-						// Cancel the bluetooth enable request timeout, if any.
-						_timeoutHandler.removeCallbacks(_requestEnableBluetoothTimeout)
-						if (_requestEnableBluetoothCallback.isCallbackSet()) {
-							_requestEnableBluetoothCallback.resolve()
-						}
-
-//						_leScanner = _bluetoothAdapter.getBluetoothLeScanner();
-//						_scanSettings = new ScanSettings.Builder()
-//								.setScanMode(_scanMode)
-//								.build();
-//						_scanFilters = new ArrayList<>();
-
-						sendEvent(BleCoreTypes.EVT_BLUETOOTH_ON)
-
 						// if bluetooth state turns on because of a reset, then reset was completed
 						if (_resettingBle) {
 							_resettingBle = false
@@ -395,8 +401,6 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 					BluetoothAdapter.STATE_OFF -> {
 						Log.i(TAG, "bluetooth off")
 						/*
-						sendEvent(BleCoreTypes.EVT_BLUETOOTH_OFF)
-
 						// TODO: this has to happen after event has been sent?
 						_connections = HashMap<String, Connection>()
 						_scanning = false
@@ -418,21 +422,10 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 */
 	private val receiverLocation = object : BroadcastReceiver() {
 		override fun onReceive(context: Context, intent: Intent) {
-
 			if (intent.action == LocationManager.PROVIDERS_CHANGED_ACTION) {
-
 				// PROVIDERS_CHANGED_ACTION  are also triggered if mode is changed, so only
 				// create events if the _locationsServicesReady flag changes
-
 				if (isLocationServicesEnabled()) {
-					/*
-					// Cancel the location services enable request timeout, if any.
-					_timeoutHandler.removeCallbacks(_requestEnableLocationServicesTimeout)
-					if (_requestEnableLocationServicesCallback.isCallbackSet()) {
-						_requestEnableLocationServicesCallback.resolve()
-					}
-					sendEvent(BleCoreTypes.EVT_LOCATION_SERVICES_ON)
-					*/
 					eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_ON)
 				}
 				else {
