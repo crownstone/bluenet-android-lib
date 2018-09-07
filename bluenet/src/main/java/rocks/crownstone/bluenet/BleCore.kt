@@ -283,7 +283,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
+	@Synchronized fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
 		when (requestCode) {
 			REQ_CODE_PERMISSIONS_LOCATION -> {
 				if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
@@ -458,7 +458,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent): Boolean {
+	@Synchronized fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		when (requestCode) {
 			REQ_CODE_ENABLE_BLUETOOOTH -> {
 				Log.i(TAG, "bluetooth enable result: $resultCode")

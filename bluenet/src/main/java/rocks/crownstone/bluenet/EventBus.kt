@@ -27,6 +27,7 @@ class EventBus {
 	}
 
 	fun emit(eventType: EventType, data: Any = Unit) {
+		Log.d(TAG, "emit $eventType data: $data")
 		if (!eventSubscriptions.containsKey(eventType)) {
 			return
 		}
