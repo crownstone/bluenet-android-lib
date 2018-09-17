@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet
 import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
 import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
 
 /*
@@ -20,7 +21,9 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	private val TAG = this::class.java.canonicalName
 	private val eventBus = evtBus
 	private val core = bleCore
-	private val handler = Handler() // TODO: with different thread?
+
+//	private val handler = Handler() // Can only be done when constructed on UI thread, do with different thread?
+	private val handler: Handler
 
 //	private var scanning = false
 	private var running = false
@@ -31,6 +34,10 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	private var stopScanRunnable: Runnable
 
 	init {
+		val handlerThread = HandlerThread("BleScanner")
+		handlerThread.start()
+		handler = Handler(handlerThread.looper)
+
 //		val onScan = { result: Any -> onScan(result as ScanResult) }
 //		val subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW.name, onScan)
 		val subIdScan     = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { result: Any -> onScan(result as ScanResult) })
@@ -46,11 +53,11 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	}
 
 
-	fun setFilter() {
+	@Synchronized fun setFilter() {
 
 	}
 
-	fun startScan() {
+	@Synchronized fun startScan() {
 		Log.i(TAG, "startScan")
 		if (!running) {
 			running = true
@@ -60,7 +67,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		return true
 	}
 
-	fun stopScan() {
+	@Synchronized fun stopScan() {
 		Log.i(TAG, "stopScan")
 		if (running) {
 			running = false
@@ -70,7 +77,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		return true
 	}
 
-	private fun startInterval() {
+	@Synchronized private fun startInterval() {
 		Log.i(TAG, "startScanRunnable")
 //		if (core.startScan()) {
 			core.startScan()
@@ -81,7 +88,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		}
 	}
 
-	private fun stopInterval() {
+	@Synchronized private fun stopInterval() {
 		Log.i(TAG, "stopScanRunnable")
 //		if (core.stopScan()) {
 			core.stopScan()
@@ -93,7 +100,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		}
 	}
 
-	private fun onScan(result: ScanResult) {
+	@Synchronized private fun onScan(result: ScanResult) {
 		Log.i(TAG, "onScan")
 
 		val device = BleDevice(result)
@@ -166,7 +173,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 
 	}
 
-	private fun onScanFail() {
+	@Synchronized private fun onScanFail() {
 		// TODO
 	}
 
