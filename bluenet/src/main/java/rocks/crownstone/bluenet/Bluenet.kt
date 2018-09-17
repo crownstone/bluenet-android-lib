@@ -8,6 +8,8 @@ import android.util.Log
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
+import nl.komponents.kovenant.ui.successUi
+import nl.komponents.kovenant.unwrap
 
 class Bluenet {
 	private val TAG = this::class.java.canonicalName
@@ -24,6 +26,7 @@ class Bluenet {
 	 * @return Promise that resolves when initialized.
 	 */
 	fun init(appContext: Context): Promise<Unit, Exception> {
+		Log.i(TAG, "init")
 		context = appContext
 		bleCore = BleCore(context, eventBus)
 		bleCore.initBle()
@@ -45,6 +48,7 @@ class Bluenet {
 				.then {
 					bleCore.initScanner()
 					bleCore.requestEnableLocationService(activity)
+//					activity.runOnUiThread { bleScanner = BleScanner(eventBus, bleCore) }
 					bleScanner = BleScanner(eventBus, bleCore)
 				}
 	}
@@ -74,7 +78,10 @@ class Bluenet {
 	 * @return Promise that resolves when ready to scan.
 	 */
 	fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
-		return bleCore.makeScannerReady(activity)
+		return initScanner(activity)
+				.then {
+					bleCore.makeScannerReady(activity)
+				}.unwrap()
 	}
 
 	/**

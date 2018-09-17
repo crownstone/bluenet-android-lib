@@ -97,6 +97,7 @@ class BleServiceManager(appContext: Context, evtBus: EventBus) {
 
 
 	private fun startForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
+		Log.i(TAG, "startForeground")
 		val deferred = deferred<Unit, Exception>()
 		val service = service // Else kotlin complains about mutable object
 		if (service == null) {
@@ -118,6 +119,7 @@ class BleServiceManager(appContext: Context, evtBus: EventBus) {
 
 
 	private fun startBackground(): Promise<Unit, Exception> {
+		Log.i(TAG, "startBackground")
 		val deferred = deferred<Unit, Exception>()
 		val service = service // Else kotlin complains about mutable object
 		if (service == null) {
