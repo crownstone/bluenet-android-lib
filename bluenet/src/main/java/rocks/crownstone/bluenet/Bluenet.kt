@@ -26,27 +26,13 @@ class Bluenet {
 	 */
 	@Synchronized fun init(appContext: Context): Promise<Unit, Exception> {
 		Log.i(TAG, "init")
-//		val deferred = deferred<Unit, java.lang.Exception>()
 		if (initialized) {
-//			deferred.resolve()
-//			return deferred.promise
 			return Promise.ofSuccess(Unit)
 		}
 		context = appContext
 		bleCore = BleCore(context, eventBus)
 		bleCore.initBle()
 		service = BleServiceManager(appContext, eventBus)
-		initialized = true // No need to wait for service to be started
-//		service.runInBackground()
-//				.success {
-//					initialized = true
-//					eventBus.emit(BluenetEvent.INITIALIZED)
-//					deferred.resolve()
-//				}
-//				.fail {
-//					deferred.reject(it)
-//				}
-//		return deferred.promise
 		return service.runInBackground()
 				.then {
 					initialized = true
