@@ -59,21 +59,21 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	}
 
 	@Synchronized fun startScan() {
-		Log.i(TAG, "startScan this=$this")
+		Log.i(TAG, "startScan")
 		if (!running) {
 			running = true
-			handler.removeCallbacks(null)
+			handler.removeCallbacksAndMessages(null)
 			handler.post(startScanRunnable)
 		}
 //		return true
 	}
 
 	@Synchronized fun stopScan() {
-		Log.i(TAG, "stopScan this=$this")
+		Log.i(TAG, "stopScan")
 		if (running) {
 			running = false
 			core.stopScan()
-			handler.removeCallbacks(null)
+			handler.removeCallbacksAndMessages(null)
 		}
 //		return true
 	}
