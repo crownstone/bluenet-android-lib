@@ -16,6 +16,7 @@ class BleDevice(result: ScanResult) {
 
 	var serviceData = CrownstoneServiceData()
 	var ibeaconData: IbeaconData? = null
+	val scanResult = result
 
 	init {
 		parse(result)
@@ -31,7 +32,7 @@ class BleDevice(result: ScanResult) {
 				val dataStr = Conversion.bytesToString(data)
 				Log.d(TAG, "serviceData uuid=$uuid data=$dataStr")
 				if (data != null) {
-					serviceData.parseHeaderBytes(data)
+					serviceData.parseHeaderBytes(uuid.uuid, data)
 				}
 			}
 		}
@@ -52,12 +53,14 @@ class BleDevice(result: ScanResult) {
 				val data = manufacturerData[manufacturerId]
 				val dataStr = Conversion.bytesToString(data)
 				Log.d(TAG, "manufacturerData id=$manufacturerId data=$dataStr")
-				if (data != null) {
+				if (manufacturerId == BluenetProtocol.APPLE_COMPANY_ID && data != null) {
 					ibeaconData = Ibeacon.parse(data)
 				}
 			}
 		}
 	}
 
-
+	override fun toString(): String {
+		return "${scanResult.device.address} ${scanResult.device.name}   ServiceData: $serviceData   Ibeacon: $ibeaconData"
+	}
 }

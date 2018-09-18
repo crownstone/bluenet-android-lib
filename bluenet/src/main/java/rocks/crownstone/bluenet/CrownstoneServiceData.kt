@@ -1,7 +1,9 @@
 package rocks.crownstone.bluenet
 
+import android.os.ParcelUuid
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.*
 
 
 //data class CrownstoneServiceData(
@@ -35,14 +37,15 @@ class CrownstoneServiceData {
 	// Parsed data
 	internal var version = 0
 	internal var type = ServiceDataType.UNKNOWN
-	internal var serviceUuid = 0
+	internal var serviceUuid: UUID? = null
 	internal var deviceType = DeviceType.UNKNOWN
 
 
 	// Parses first bytes to determine the advertisement type and device type, without decrypting the data.
 	// bytes should start with service UUID
 	// Returns null when parsing was unsuccessful
-	fun parseHeaderBytes(bytes: ByteArray) : Boolean {
+	fun parseHeaderBytes(uuid: UUID, bytes: ByteArray) : Boolean {
+		serviceUuid = uuid
 		if (_parseHeaderBytes(bytes)) {
 			headerParsed = true
 			return true
@@ -58,7 +61,7 @@ class CrownstoneServiceData {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 
-		serviceUuid = Conversion.toUint16(bb.getShort().toInt())
+//		serviceUuid = Conversion.toUint16(bb.getShort().toInt())
 		version = Conversion.toUint8(bb.get())
 		when (version) {
 			1 -> return parseHeaderDataV1(bb)
@@ -117,11 +120,19 @@ class CrownstoneServiceData {
 	}
 
 	private fun setDeviceTypeFromServiceUuid() {
-		when (serviceUuid) {
+		val uuid = serviceUuid // Make immutable
+		when (uuid) {
+			null -> deviceType = DeviceType.UNKNOWN
 			BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG -> deviceType = DeviceType.CROWNSTONE_PLUG
 			BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN -> deviceType = DeviceType.CROWNSTONE_BUILTIN
 			BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE -> deviceType = DeviceType.GUIDESTONE
 			else -> deviceType = DeviceType.UNKNOWN
 		}
 	}
+
+	override fun toString(): String {
+		return "version=$version, type=${type.name}, serviceUuid=$serviceUuid, deviceType=${deviceType.name}"
+	}
+
+
 }

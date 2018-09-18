@@ -4,7 +4,11 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 
-data class IbeaconData(val uuid: UUID, val major: Int, val minor: Int, val rssiAtOneMeter: Int)
+data class IbeaconData(val uuid: UUID, val major: Int, val minor: Int, val rssiAtOneMeter: Int) {
+	override fun toString(): String {
+		return "uuid=$uuid, major=$major, minor=$minor, rssiAtOneMeter=$rssiAtOneMeter"
+	}
+}
 
 class Ibeacon {
 //	var data: IbeaconData? = null
@@ -20,17 +24,17 @@ class Ibeacon {
 		fun parse(byteArray: ByteArray): IbeaconData? {
 			val bb = ByteBuffer.wrap(byteArray)
 
-			bb.order(ByteOrder.LITTLE_ENDIAN)
-
-			if (bb.remaining() < 2) {
-				return null
-//				return false
-			}
-			val companyId = Conversion.toUint16(bb.getShort().toInt())
-			if (companyId != BluenetProtocol.APPLE_COMPANY_ID) {
-				return null
-//				return false
-			}
+//			bb.order(ByteOrder.LITTLE_ENDIAN)
+//
+//			if (bb.remaining() < 2) {
+//				return null
+////				return false
+//			}
+//			val companyId = Conversion.toUint16(bb.getShort().toInt())
+//			if (companyId != BluenetProtocol.APPLE_COMPANY_ID) {
+//				return null
+////				return false
+//			}
 
 			// iBeacon data is in big endian format
 			bb.order(ByteOrder.BIG_ENDIAN)
