@@ -34,6 +34,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	private var stopScanRunnable: Runnable
 
 	init {
+		Log.i(TAG, "init")
 		val handlerThread = HandlerThread("BleScanner")
 		handlerThread.start()
 		handler = Handler(handlerThread.looper)
@@ -58,7 +59,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	}
 
 	@Synchronized fun startScan() {
-		Log.i(TAG, "startScan")
+		Log.i(TAG, "startScan this=$this")
 		if (!running) {
 			running = true
 			handler.removeCallbacks(null)
@@ -68,7 +69,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	}
 
 	@Synchronized fun stopScan() {
-		Log.i(TAG, "stopScan")
+		Log.i(TAG, "stopScan this=$this")
 		if (running) {
 			running = false
 			core.stopScan()
@@ -78,7 +79,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	}
 
 	@Synchronized private fun startInterval() {
-		Log.i(TAG, "startScanRunnable")
+		Log.i(TAG, "startInterval")
 //		if (core.startScan()) {
 			core.startScan()
 //			scanning = true
@@ -89,7 +90,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	}
 
 	@Synchronized private fun stopInterval() {
-		Log.i(TAG, "stopScanRunnable")
+		Log.i(TAG, "stopInterval")
 //		if (core.stopScan()) {
 			core.stopScan()
 //			scanning = true

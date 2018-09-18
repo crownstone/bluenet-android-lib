@@ -2,7 +2,8 @@ package rocks.crownstone.bluenet
 
 
 enum class BluenetEvent {
-	NO_LOCATION_SERVICE_PERMISSION, // Send when permission is required, but not granted.
+	INITIALIZED, // Sent when bluenet has been initialized.
+	NO_LOCATION_SERVICE_PERMISSION, // Sent when permission is required, but not granted.
 	BLE_TURNED_ON,
 	BLE_TURNED_OFF,
 	LOCATION_SERVICE_TURNED_ON,

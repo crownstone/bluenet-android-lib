@@ -5,19 +5,18 @@ import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
-import nl.komponents.kovenant.then
+import nl.komponents.kovenant.*
 import nl.komponents.kovenant.ui.successUi
-import nl.komponents.kovenant.unwrap
 
 class Bluenet {
 	private val TAG = this::class.java.canonicalName
 	private val eventBus = EventBus()
 	private lateinit var context: Context
 	private lateinit var bleCore: BleCore
-	private lateinit var bleScanner: BleScanner
+	private var bleScanner: BleScanner? = null
 	private lateinit var service: BleServiceManager
+
+	private var initialized = false
 
 	/**
 	 * Init the library.
@@ -25,13 +24,34 @@ class Bluenet {
 	 * @param appContext Context of the app
 	 * @return Promise that resolves when initialized.
 	 */
-	fun init(appContext: Context): Promise<Unit, Exception> {
+	@Synchronized fun init(appContext: Context): Promise<Unit, Exception> {
 		Log.i(TAG, "init")
+//		val deferred = deferred<Unit, java.lang.Exception>()
+		if (initialized) {
+//			deferred.resolve()
+//			return deferred.promise
+			return Promise.ofSuccess(Unit)
+		}
 		context = appContext
 		bleCore = BleCore(context, eventBus)
 		bleCore.initBle()
 		service = BleServiceManager(appContext, eventBus)
+		initialized = true // No need to wait for service to be started
+//		service.runInBackground()
+//				.success {
+//					initialized = true
+//					eventBus.emit(BluenetEvent.INITIALIZED)
+//					deferred.resolve()
+//				}
+//				.fail {
+//					deferred.reject(it)
+//				}
+//		return deferred.promise
 		return service.runInBackground()
+				.then {
+					initialized = true
+					eventBus.emit(BluenetEvent.INITIALIZED)
+				}
 	}
 
 	/**
@@ -43,7 +63,8 @@ class Bluenet {
 	 * @return Promise that resolves when initialized (rejected when BLE hardware or location permission is missing).
 	 *         When resolved, you can already call startScanning(), but it will give no result until scanner is ready.
 	 */
-	fun initScanner(activity: Activity): Promise<Unit, Exception> {
+	@Synchronized fun initScanner(activity: Activity): Promise<Unit, Exception> {
+		Log.i(TAG, "initScanner")
 		return bleCore.getLocationPermission(activity)
 				.then {
 					bleCore.initScanner()
@@ -56,15 +77,15 @@ class Bluenet {
 	/**
 	 * @return True when scanner is ready.
 	 */
-	fun isScannerReady(): Boolean {
-		return bleCore.isScannerReady()
+	@Synchronized fun isScannerReady(): Boolean {
+		return (bleScanner != null) && (bleCore.isScannerReady())
 	}
 
 	/**
 	 * Try to make the scanner ready to scan.
 	 * @param activity Activity to be used to ask for requests.
 	 */
-	fun tryMakeScannerReady(activity: Activity) {
+	@Synchronized fun tryMakeScannerReady(activity: Activity) {
 		bleCore.tryMakeScannerReady(activity)
 	}
 
@@ -77,7 +98,8 @@ class Bluenet {
 	 *                 and from there call Bluenet.handleActivityResult().
 	 * @return Promise that resolves when ready to scan.
 	 */
-	fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
+	@Synchronized fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
+		Log.i(TAG, "makeScannerReady")
 		return initScanner(activity)
 				.then {
 					bleCore.makeScannerReady(activity)
@@ -89,7 +111,7 @@ class Bluenet {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+	@Synchronized fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		return bleCore.handleActivityResult(requestCode, resultCode, data)
 	}
 
@@ -113,15 +135,15 @@ class Bluenet {
 	}
 
 
-	fun startScanning() {
-		bleScanner.startScan()
+	@Synchronized fun startScanning() {
+		bleScanner?.startScan()
 	}
 
-	fun stopScanning() {
-		bleScanner.stopScan()
+	@Synchronized fun stopScanning() {
+		bleScanner?.stopScan()
 	}
 
-	fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
+	@Synchronized fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
 		Log.i(TAG, "setBackground $background")
 		if (!background) {
 			return service.runInBackground()
