@@ -91,6 +91,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 * @return True on success.
 	 */
 	@Synchronized fun initBle(): Boolean {
+		Log.i(TAG, "initBle")
 		if (bleInitialized) {
 			return true
 		}
@@ -146,6 +147,9 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 			context.registerReceiver(receiverLocation, IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION))
 			receiverRegisteredLocation = true
 		}
+
+		val test = bleAdapter.bluetoothLeScanner
+		Log.i(TAG, "scanner = $test")
 
 		scanner = bleAdapter.bluetoothLeScanner
 		scannerInitialized = true
@@ -666,8 +670,12 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		if (!initScanner()) {
 			return
 		}
-		scanner.stopScan(scanCallback)
 		scanning = false
+		if (!isScannerReady()) {
+			return
+		}
+		scanner.stopScan(scanCallback)
+
 	}
 
 
