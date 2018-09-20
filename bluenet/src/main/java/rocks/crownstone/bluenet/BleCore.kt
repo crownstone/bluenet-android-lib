@@ -198,6 +198,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 					initScanner()
 					requestEnableBle(activity)
 					requestEnableLocationService(activity)
+					setScanner()
 				}
 	}
 
