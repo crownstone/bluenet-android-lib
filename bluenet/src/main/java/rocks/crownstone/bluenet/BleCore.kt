@@ -29,6 +29,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 
 	private var bleInitialized = false
 	private var scannerInitialized = false
+	private var scannerSet = false // Keeps up whether the var "scanner" is set
 	private var advertiserInitialized = false
 	private var scannerReady = false
 
@@ -148,13 +149,23 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 			receiverRegisteredLocation = true
 		}
 
-		val test = bleAdapter.bluetoothLeScanner
-		Log.i(TAG, "scanner = $test")
-
-		scanner = bleAdapter.bluetoothLeScanner
+		setScanner()
 		scannerInitialized = true
 		handler.post { checkScannerReady() } // Execute this a bit later to avoid timing issues?
 		return true
+	}
+
+	// Try to set the scanner object
+	private fun setScanner() {
+		Log.i(TAG, "setScanner")
+		if (!scannerSet) {
+			val testScanner = bleAdapter.bluetoothLeScanner // This can return null when ble is not enabled (not documented, jeey)
+			if (testScanner != null) {
+				Log.i(TAG, "scanner set")
+				scanner = testScanner
+				scannerSet = true
+			}
+		}
 	}
 
 	/**
@@ -211,6 +222,10 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 				.then {
 					enableLocationServices(activity)
 				}.unwrap()
+				.then {
+					Log.i(TAG, "makeScannerReady - setScanner")
+					setScanner()
+				}
 	}
 
 	/**
@@ -374,6 +389,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		Log.i(TAG, "enableBleResult $enabled ($reason)")
 		handler.removeCallbacks(enableBleTimeout)
 		if (enabled) {
+			setScanner()
 			enableBlePromise?.resolve()
 		}
 		else {
@@ -449,6 +465,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		Log.i(TAG, "enableLocationServiceResult $enabled ($reason)")
 		handler.removeCallbacks(enableLocationServiceTimeout)
 		if (enabled) {
+			setScanner()
 			enableLocationServicePromise?.resolve()
 		}
 		else {
@@ -489,7 +506,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 
 	@Synchronized fun isScannerReady(): Boolean {
 //		return (scannerInitialized && isBleReady() && isLocationPermissionGranted() && isLocationServiceEnabled())
-		if (scannerInitialized && isBleReady() && isLocationServiceEnabled()) {
+		if (scannerInitialized && scannerSet && isBleReady() && isLocationServiceEnabled()) {
 //			scannerReady = true
 			return true
 		}
@@ -660,6 +677,9 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 
 	@Synchronized fun startScan() {
 		if (!initScanner()) {
+			return
+		}
+		if (!isScannerReady()) {
 			return
 		}
 		scanner.startScan(scanFilters, scanSettings, scanCallback)
