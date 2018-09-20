@@ -49,19 +49,19 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 
 	companion object {
 		// The permission request code for requesting location (required for ble scanning).
-		val REQ_CODE_PERMISSIONS_LOCATION = 101
+		const val REQ_CODE_PERMISSIONS_LOCATION = 101
 
 		// The request code to enable bluetooth.
-		val REQ_CODE_ENABLE_BLUETOOOTH = 102
+		const val REQ_CODE_ENABLE_BLUETOOOTH = 102
 
 		// The request code to enable location services.
-		val REQ_CODE_ENABLE_LOCATION_SERVICE = 103
+		const val REQ_CODE_ENABLE_LOCATION_SERVICE = 103
 
 		// Timeout for a bluetooth enable request. If timeout expires, promise is rejected.
-		private val BLUETOOTH_ENABLE_TIMEOUT: Long = 5000
+		private const val BLUETOOTH_ENABLE_TIMEOUT: Long = 5000
 
 		// Timeout for a location service enable request. If timeout expires, promise is rejected.
-		private val LOCATION_SERVICE_ENABLE_TIMEOUT: Long = 10000
+		private const val LOCATION_SERVICE_ENABLE_TIMEOUT: Long = 10000
 	}
 
 
