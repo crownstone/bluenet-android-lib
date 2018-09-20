@@ -1,6 +1,5 @@
 package rocks.crownstone.bluenet
 
-import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
 import android.os.Handler
 import android.os.HandlerThread
@@ -44,8 +43,8 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		val subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW.name, onScan)
 		val subIdScan     = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { result: Any -> onScan(result as ScanResult) })
 		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any -> onScanFail() })
-		eventBus.subscribe(BluenetEvent.SCANNER_READY, ::onScannerReady)
-		eventBus.subscribe(BluenetEvent.SCANNER_NOT_READY, ::onScannerNotReady)
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onScannerReady)
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onScannerNotReady)
 
 		// Had to init those here, or silly kotlin had some recursion problem
 		startScanRunnable = Runnable {

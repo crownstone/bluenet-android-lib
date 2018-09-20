@@ -18,6 +18,8 @@ class Bluenet {
 
 	private var initialized = false
 
+	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
+
 	/**
 	 * Init the library.
 	 *
@@ -30,6 +32,11 @@ class Bluenet {
 			return Promise.ofSuccess(Unit)
 		}
 		context = appContext
+
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
+		eventBus.subscribe(BluenetEvent.LOCATION_PERMISSION_GRANTED, ::onPermissionGranted)
+
 		bleCore = BleCore(context, eventBus)
 		bleCore.initBle()
 		service = BleServiceManager(appContext, eventBus)
@@ -53,11 +60,17 @@ class Bluenet {
 		Log.i(TAG, "initScanner")
 		return bleCore.getLocationPermission(activity)
 				.then {
-					bleCore.initScanner()
-					bleCore.requestEnableLocationService(activity)
-//					activity.runOnUiThread { bleScanner = BleScanner(eventBus, bleCore) }
-					bleScanner = BleScanner(eventBus, bleCore)
+					initScanner()
 				}
+	}
+
+	@Synchronized private fun initScanner() {
+		bleCore.initScanner()
+//		bleCore.requestEnableLocationService(activity)
+//		activity.runOnUiThread { bleScanner = BleScanner(eventBus, bleCore) }
+		if (bleScanner == null) {
+			bleScanner = BleScanner(eventBus, bleCore)
+		}
 	}
 
 	/**
@@ -69,9 +82,11 @@ class Bluenet {
 
 	/**
 	 * Try to make the scanner ready to scan.
+	 * You can wait for the event SCANNER_READY.
 	 * @param activity Activity to be used to ask for requests.
 	 */
 	@Synchronized fun tryMakeScannerReady(activity: Activity) {
+		initScanner(activity)
 		bleCore.tryMakeScannerReady(activity)
 	}
 
@@ -82,14 +97,30 @@ class Bluenet {
 	 *                 and from there calls Bluenet.handlePermissionResult().
 	 *                 The activity should implement Activity.onActivityResult(),
 	 *                 and from there call Bluenet.handleActivityResult().
-	 * @return Promise that resolves when ready to scan.
+	 * @return Promise that resolves when ready to scan, rejected only when already waiting to be resolved.
 	 */
 	@Synchronized fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "makeScannerReady")
-		return initScanner(activity)
-				.then {
-					bleCore.makeScannerReady(activity)
-				}.unwrap()
+//		return initScanner(activity)
+//				.then {
+//					bleCore.makeScannerReady(activity)
+//				}.unwrap()
+		val deferred = deferred<Unit, Exception>()
+		val promise = deferred.promise
+
+		if (isScannerReady()) {
+			deferred.resolve()
+			return promise
+		}
+
+		if (scannerReadyPromise != null) {
+			deferred.reject(Exception("busy"))
+			return promise
+		}
+		scannerReadyPromise = deferred
+
+		bleCore.tryMakeScannerReady(activity)
+		return promise
 	}
 
 	/**
@@ -122,10 +153,12 @@ class Bluenet {
 
 
 	@Synchronized fun startScanning() {
+		Log.i(TAG, "startScanning")
 		bleScanner?.startScan()
 	}
 
 	@Synchronized fun stopScanning() {
+		Log.i(TAG, "stopScanning")
 		bleScanner?.stopScan()
 	}
 
@@ -151,8 +184,20 @@ class Bluenet {
 //
 //	}
 
+	@Synchronized private fun onCoreScannerReady(data: Any) {
+		initScanner()
+		eventBus.emit(BluenetEvent.SCANNER_READY)
+		if (scannerReadyPromise != null) {
+			scannerReadyPromise?.resolve()
+			scannerReadyPromise = null
+		}
+	}
 
-	private fun onLocationPermissionMissing() {
+	private fun onCoreScannerNotReady(data: Any) {
+		eventBus.emit(BluenetEvent.SCANNER_NOT_READY)
+	}
 
+	private fun onPermissionGranted(data: Any) {
+		initScanner()
 	}
 }

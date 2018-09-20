@@ -212,16 +212,21 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 * @return Promise that resolves when ready to scan.
 	 */
 	@Synchronized fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
+		Log.i(TAG, "makeScannerReady")
+		Log.i(TAG, "makeScannerReady - initBle")
 		initBle()
 		return getLocationPermission(activity)
 				.then {
+					Log.i(TAG, "makeScannerReady - initScanner")
 					initScanner()
 				}
 				.then {
+					Log.i(TAG, "makeScannerReady - enableBle")
 					enableBle(activity)
 				}.unwrap()
 				.then {
-					enableLocationServices(activity)
+					Log.i(TAG, "makeScannerReady - enableLocationService")
+					enableLocationService(activity)
 				}.unwrap()
 				.then {
 					Log.i(TAG, "makeScannerReady - setScanner")
@@ -309,6 +314,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 				if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
 						grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					// Permission granted.
+					eventBus.emit(BluenetEvent.LOCATION_PERMISSION_GRANTED)
 					locationPermissionPromise?.resolve()
 				}
 				else {
@@ -384,11 +390,11 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	}
 
 	private val enableBleTimeout = Runnable {
-		enableBleResult(isBleEnabled(), "timeout")
+		onEnableBleResult(isBleEnabled(), "timeout")
 	}
 
-	@Synchronized private fun enableBleResult(enabled: Boolean, reason: String? = null) {
-		Log.i(TAG, "enableBleResult $enabled ($reason)")
+	@Synchronized private fun onEnableBleResult(enabled: Boolean, reason: String? = null) {
+		Log.i(TAG, "onEnableBleResult $enabled ($reason)")
 		handler.removeCallbacks(enableBleTimeout)
 		if (enabled) {
 			setScanner()
@@ -435,8 +441,8 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 *                 and from there call BleCore.handleActivityResult().
 	 * @return Promise that will resolve when location service was enabled, or rejected when user cancels or on timeout.
 	 */
-	@Synchronized fun enableLocationServices(activity: Activity?): Promise<Unit, Exception> {
-		Log.i(TAG, "enableLocationServices")
+	@Synchronized fun enableLocationService(activity: Activity?): Promise<Unit, Exception> {
+		Log.i(TAG, "enableLocationService")
 		val deferred = deferred<Unit, Exception>()
 		val promise = deferred.promise
 
@@ -462,11 +468,11 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	}
 
 	private val enableLocationServiceTimeout = Runnable {
-		enableLocationServiceResult(isLocationServiceEnabled(), "timeout")
+		onEnableLocationServiceResult(isLocationServiceEnabled(), "timeout")
 	}
 
-	@Synchronized private fun enableLocationServiceResult(enabled: Boolean, reason: String? = null) {
-		Log.i(TAG, "enableLocationServiceResult $enabled ($reason)")
+	@Synchronized private fun onEnableLocationServiceResult(enabled: Boolean, reason: String? = null) {
+		Log.i(TAG, "onEnableLocationServiceResult $enabled ($reason)")
 		handler.removeCallbacks(enableLocationServiceTimeout)
 		if (enabled) {
 			setScanner()
@@ -488,14 +494,14 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 			REQ_CODE_ENABLE_BLUETOOOTH -> {
 				Log.i(TAG, "bluetooth enable result: $resultCode")
 				if (resultCode == Activity.RESULT_CANCELED) {
-					enableBleResult(false, "canceled")
+					onEnableBleResult(false, "canceled")
 				}
 				return true
 			}
 			REQ_CODE_ENABLE_LOCATION_SERVICE -> {
 				Log.i(TAG, "location services enable result: $resultCode")
 				if (resultCode == Activity.RESULT_CANCELED) {
-					enableLocationServiceResult(false, "canceled")
+					onEnableLocationServiceResult(false, "canceled")
 				}
 				return true
 			}
@@ -551,7 +557,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 //			eventBus.emit(BluenetEvent.BLE_READY)
 //		}
 //		if (!wasScannerReady && isScannerReady()) {
-//			eventBus.emit(BluenetEvent.SCANNER_READY)
+//			eventBus.emit(BluenetEvent.CORE_SCANNER_READY)
 //		}
 //		return true
 //	}
@@ -611,10 +617,10 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		val wasReady = scannerReady
 		scannerReady = isScannerReady()
 		if (scannerReady && !wasReady) {
-				eventBus.emit(BluenetEvent.SCANNER_READY)
+				eventBus.emit(BluenetEvent.CORE_SCANNER_READY)
 		}
 		else if (!scannerReady && wasReady) {
-				eventBus.emit(BluenetEvent.SCANNER_NOT_READY)
+				eventBus.emit(BluenetEvent.CORE_SCANNER_NOT_READY)
 		}
 	}
 
@@ -628,7 +634,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 					BluetoothAdapter.STATE_ON -> {
 						Log.i(TAG, "bluetooth on")
 
-						enableBleResult(true)
+						onEnableBleResult(true)
 						/*
 						// if bluetooth state turns on because of a reset, then reset was completed
 						if (_resettingBle) {
@@ -667,7 +673,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 				// PROVIDERS_CHANGED_ACTION  are also triggered if mode is changed, so only
 				// create events if the _locationsServicesReady flag changes
 				if (isLocationServiceEnabled()) {
-					enableLocationServiceResult(true)
+					onEnableLocationServiceResult(true)
 					eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_ON)
 					checkScannerReady()
 				}

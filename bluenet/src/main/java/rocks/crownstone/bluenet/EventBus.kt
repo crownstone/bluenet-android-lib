@@ -19,14 +19,16 @@ class EventBus {
 //	val topics = HashMap<EventType, HashMap<UUID, EventCallback>>()
 	private val eventSubscriptions = HashMap<EventType, ArrayList<EventCallbackWithId>>()
 
+	private val emitting = false
+
 	init {
 	}
 
-	fun emit(eventType: BluenetEvent, data: Any = Unit) {
+	@Synchronized fun emit(eventType: BluenetEvent, data: Any = Unit) {
 		emit(eventType.name, data)
 	}
 
-	fun emit(eventType: EventType, data: Any = Unit) {
+	@Synchronized fun emit(eventType: EventType, data: Any = Unit) {
 		Log.d(TAG, "emit $eventType data: $data")
 		if (!eventSubscriptions.containsKey(eventType)) {
 			return
@@ -42,11 +44,11 @@ class EventBus {
 		}
 	}
 
-	fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
+	@Synchronized fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
 		return subscribe(eventType.name, callback)
 	}
 
-	fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
+	@Synchronized fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
 		Log.i(TAG, "subscribe $eventType")
 		if (!eventSubscriptions.containsKey(eventType)) {
 			eventSubscriptions[eventType] = ArrayList()
@@ -58,7 +60,7 @@ class EventBus {
 		return id
 	}
 
-	fun unsubscribe(id: SubscriptionId) {
+	@Synchronized fun unsubscribe(id: SubscriptionId) {
 		Log.i(TAG, "unsubscribe $id")
 		val eventType = subscribers[id] ?: return
 //		if (eventType == null) {
