@@ -338,11 +338,12 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		}
 
 		val intent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-		intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 		if (isActivityValid(activity)) {
+//			intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 			activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_BLUETOOOTH)
 		}
 		else {
+			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 			context.startActivity(intent)
 		}
 		return true
@@ -408,17 +409,19 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 * @return False when unable to make the request
 	 */
 	@Synchronized fun requestEnableLocationService(activity: Activity?): Boolean {
+		Log.i(TAG, "requestEnableLocationService activity=$activity")
 		if (isLocationServiceEnabled()) {
 			Log.i(TAG, "no need to request")
 			return true
 		}
 
 		val intent = Intent(context, LocationServiceRequestActivity::class.java)
-		intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 		if (isActivityValid(activity)) {
+//			intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 			activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_LOCATION_SERVICE)
 		}
 		else {
+			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 			context.startActivity(intent)
 		}
 		return true
