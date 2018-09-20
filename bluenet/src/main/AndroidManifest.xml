@@ -8,4 +8,8 @@
 			android:name="android.hardware.bluetooth_le"
 			android:required="true"/>
 
+	<application>
+		<activity android:name=".LocationServiceRequestActivity"></activity>
+	</application>
+
 </manifest>
