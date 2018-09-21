@@ -34,7 +34,8 @@ class Bluenet {
 		if (appContext is Activity) {
 			Log.e(TAG, "Context cannot be activity, use getApplicationContext() instead.")
 			return Promise.ofFail(java.lang.Exception("Context cannot be activity, use getApplicationContext() instead."))
-//			context = appContext.applicationContext // Didn't seem to work fully
+//			context = appContext.application // Still got "leaked ServiceConnection"
+//			context = appContext.applicationContext // Still got "leaked ServiceConnection"
 		}
 		else {
 			context = appContext
