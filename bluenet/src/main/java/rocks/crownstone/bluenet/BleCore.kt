@@ -390,6 +390,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	}
 
 	private val enableBleTimeout = Runnable {
+		Log.i(TAG, "enableBleTimeout")
 		onEnableBleResult(isBleEnabled(), "timeout")
 	}
 
@@ -468,6 +469,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	}
 
 	private val enableLocationServiceTimeout = Runnable {
+		Log.i(TAG, "enableLocationServiceTimeout")
 		onEnableLocationServiceResult(isLocationServiceEnabled(), "timeout")
 	}
 
@@ -578,10 +580,10 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 * @return True if bluetooth is enabled.
 	 */
 	@Synchronized private fun isBleEnabled(): Boolean {
+		Log.i(TAG, "isBleEnabled: enabled=${bleAdapter.isEnabled} state=${bleAdapter.state} STATE_ON=${BluetoothAdapter.STATE_ON}")
 		if (bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON) {
 			return true
 		}
-		Log.d(TAG, "bluetooth enabled=${bleAdapter.isEnabled} state=${bleAdapter.state} + STATE_ON=${BluetoothAdapter.STATE_ON}")
 		return false
 	}
 
@@ -591,26 +593,30 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 * @return True when location service is enabled.
 	 */
 	@Synchronized private fun isLocationServiceEnabled(): Boolean {
-		Log.i(TAG, "isLocationServiceEnabled")
 		if (Build.VERSION.SDK_INT < 23) {
+			Log.i(TAG, "isLocationServiceEnabled true")
 			return true
 		}
 		val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 		val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 		val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-		return isGpsEnabled || isNetworkEnabled
+		val result = isGpsEnabled || isNetworkEnabled
+		Log.i(TAG, "isLocationServiceEnabled $result")
+		return result
 	}
 
 	/**
 	 * Check if location permissions are granted.
 	 */
 	@Synchronized private fun isLocationPermissionGranted(): Boolean {
-		Log.i(TAG, "isLocationPermissionGranted")
 		if (Build.VERSION.SDK_INT < 23) {
+			Log.i(TAG, "isLocationPermissionGranted true")
 			return true
 		}
 		val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
-		return permissionCheck == PackageManager.PERMISSION_GRANTED
+		val result = permissionCheck == PackageManager.PERMISSION_GRANTED
+		Log.i(TAG, "isLocationPermissionGranted $result")
+		return result
 	}
 
 	@Synchronized private fun checkScannerReady() {
