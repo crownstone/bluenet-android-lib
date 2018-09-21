@@ -31,7 +31,14 @@ class Bluenet {
 		if (initialized) {
 			return Promise.ofSuccess(Unit)
 		}
-		context = appContext
+		if (appContext is Activity) {
+			Log.e(TAG, "Context cannot be activity, use getApplicationContext() instead.")
+			return Promise.ofFail(java.lang.Exception("Context cannot be activity, use getApplicationContext() instead."))
+//			context = appContext.applicationContext // Didn't seem to work fully
+		}
+		else {
+			context = appContext
+		}
 
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
@@ -66,8 +73,6 @@ class Bluenet {
 
 	@Synchronized private fun initScanner() {
 		bleCore.initScanner()
-//		bleCore.requestEnableLocationService(activity)
-//		activity.runOnUiThread { bleScanner = BleScanner(eventBus, bleCore) }
 		if (bleScanner == null) {
 			bleScanner = BleScanner(eventBus, bleCore)
 		}
