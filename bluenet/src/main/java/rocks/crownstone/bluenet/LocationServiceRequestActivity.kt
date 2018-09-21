@@ -6,10 +6,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 
 class LocationServiceRequestActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		Log.i(TAG, "onCreate")
 		// No need to set a content view, we just use this activity to show the alert dialog
 
 		// Prevent this dialog to be shown multiple times.

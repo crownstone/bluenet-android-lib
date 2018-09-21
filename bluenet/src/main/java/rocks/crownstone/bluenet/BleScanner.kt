@@ -43,8 +43,8 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		val subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW.name, onScan)
 		val subIdScan     = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { result: Any -> onScan(result as ScanResult) })
 		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any -> onScanFail() })
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onScannerReady)
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onScannerNotReady)
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
 
 		// Had to init those here, or silly kotlin had some recursion problem
 		startScanRunnable = Runnable {
@@ -104,15 +104,15 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		}
 	}
 
-	@Synchronized private fun onScannerReady(data: Any) {
-		Log.i(TAG, "onScannerReady")
+	@Synchronized private fun onCoreScannerReady(data: Any) {
+		Log.i(TAG, "onCoreScannerReady")
 		if (wasRunning) {
 			startScan()
 		}
 	}
 
-	@Synchronized private fun onScannerNotReady(data: Any) {
-		Log.i(TAG, "onScannerNotReady")
+	@Synchronized private fun onCoreScannerNotReady(data: Any) {
+		Log.i(TAG, "onCoreScannerNotReady")
 		if (running) {
 			stopScan()
 			wasRunning = true

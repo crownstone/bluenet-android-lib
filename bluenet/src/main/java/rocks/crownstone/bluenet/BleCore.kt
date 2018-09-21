@@ -161,9 +161,9 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		if (!scannerSet) {
 			val testScanner = bleAdapter.bluetoothLeScanner // This can return null when ble is not enabled (not documented, jeey)
 			if (testScanner != null) {
-				Log.i(TAG, "scanner set")
 				scanner = testScanner
 				scannerSet = true
+				Log.i(TAG, "scanner set")
 			}
 		}
 	}
@@ -314,11 +314,13 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 				if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
 						grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					// Permission granted.
+					Log.i(TAG, "handlePermissionResult granted")
 					eventBus.emit(BluenetEvent.LOCATION_PERMISSION_GRANTED)
 					locationPermissionPromise?.resolve()
 				}
 				else {
 					// Permission not granted.
+					Log.i(TAG, "handlePermissionResult denied")
 					locationPermissionPromise?.reject(Exception("location permission denied"))
 				}
 				locationPermissionPromise = null
@@ -580,11 +582,9 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	 * @return True if bluetooth is enabled.
 	 */
 	@Synchronized private fun isBleEnabled(): Boolean {
-		Log.i(TAG, "isBleEnabled: enabled=${bleAdapter.isEnabled} state=${bleAdapter.state} STATE_ON=${BluetoothAdapter.STATE_ON}")
-		if (bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON) {
-			return true
-		}
-		return false
+		val result = bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON
+		Log.i(TAG, "isBleEnabled: $result (enabled=${bleAdapter.isEnabled}, state=${bleAdapter.state}, STATE_ON=${BluetoothAdapter.STATE_ON})")
+		return result
 	}
 
 	/**
@@ -679,11 +679,13 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 				// PROVIDERS_CHANGED_ACTION  are also triggered if mode is changed, so only
 				// create events if the _locationsServicesReady flag changes
 				if (isLocationServiceEnabled()) {
+					Log.i(TAG, "location service on")
 					onEnableLocationServiceResult(true)
 					eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_ON)
 					checkScannerReady()
 				}
 				else {
+					Log.i(TAG, "location service off")
 					eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_OFF)
 					checkScannerReady()
 				}
