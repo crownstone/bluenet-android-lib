@@ -1,6 +1,5 @@
 package rocks.crownstone.bluenet
 
-import android.os.ParcelUuid
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -33,6 +32,9 @@ class CrownstoneServiceData {
 	private val TAG = this::class.java.canonicalName
 
 	private var headerParsed = false
+	private var headerParseFailed = false
+
+	private lateinit var byteBuffer: ByteBuffer // Cache byte buffer so we can continue parsing after header is done.
 
 	// Parsed data
 	internal var version = 0
@@ -44,37 +46,63 @@ class CrownstoneServiceData {
 	// Parses first bytes to determine the advertisement type and device type, without decrypting the data.
 	// bytes should start with service UUID
 	// Returns null when parsing was unsuccessful
-	fun parseHeaderBytes(uuid: UUID, bytes: ByteArray) : Boolean {
+	fun parseHeader(uuid: UUID, bytes: ByteArray): Boolean {
 		serviceUuid = uuid
-		if (_parseHeaderBytes(bytes)) {
+		if (_parseHeader(bytes)) {
 			headerParsed = true
 			return true
 		}
+		headerParseFailed = true
 		return false
 	}
 
+	fun parse(uuid: UUID, bytes: ByteArray): Boolean {
+		if (headerParseFailed) {
+			return false
+		}
+		if (!headerParsed) {
+			val result = parseHeader(uuid, bytes)
+			if (!result) {
+				return false
+			}
+		}
+		return parseRemaining()
+	}
 
-	private fun _parseHeaderBytes(bytes: ByteArray) : Boolean {
+
+	private fun _parseHeader(bytes: ByteArray): Boolean {
 		if (bytes.size < 3) {
 			return false
 		}
-		val bb = ByteBuffer.wrap(bytes)
-		bb.order(ByteOrder.LITTLE_ENDIAN)
+//		byteBuffer
+		byteBuffer = ByteBuffer.wrap(bytes)
+		byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
 //		serviceUuid = Conversion.toUint16(bb.getShort().toInt())
-		version = Conversion.toUint8(bb.get())
+		version = Conversion.toUint8(byteBuffer.get())
 		when (version) {
-			1 -> return parseHeaderDataV1(bb)
-			3 -> return parseHeaderDataV3(bb)
-			4 -> return parseHeaderDataV4(bb)
-			5 -> return parseHeaderDataV5(bb)
-			6 -> return parseHeaderDataV6(bb)
+			1 -> return parseHeaderDataV1(byteBuffer)
+			3 -> return parseHeaderDataV3(byteBuffer)
+			4 -> return parseHeaderDataV4(byteBuffer)
+			5 -> return parseHeaderDataV5(byteBuffer)
+			6 -> return parseHeaderDataV6(byteBuffer)
+			else -> return false
+		}
+	}
+
+	private fun parseRemaining(): Boolean {
+		when (version) {
+			1-> return parseRemainingV1(byteBuffer)
+			3-> return parseRemainingV3(byteBuffer)
+			4-> return parseRemainingV4(byteBuffer)
+			5-> return parseRemainingV5(byteBuffer)
+			6-> return parseRemainingV6(byteBuffer)
 			else -> return false
 		}
 	}
 
 
-	private fun parseHeaderDataV1(bb: ByteBuffer) : Boolean {
+	private fun parseHeaderDataV1(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < 16) {
 			return false
 		}
@@ -83,7 +111,7 @@ class CrownstoneServiceData {
 		return true
 	}
 
-	private fun parseHeaderDataV3(bb: ByteBuffer) : Boolean {
+	private fun parseHeaderDataV3(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < 16) {
 			return false
 		}
@@ -92,7 +120,7 @@ class CrownstoneServiceData {
 		return true
 	}
 
-	private fun parseHeaderDataV4(bb: ByteBuffer) : Boolean {
+	private fun parseHeaderDataV4(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < 16) {
 			return false
 		}
@@ -101,7 +129,7 @@ class CrownstoneServiceData {
 		return true
 	}
 
-	private fun parseHeaderDataV5(bb: ByteBuffer) : Boolean {
+	private fun parseHeaderDataV5(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < 17) {
 			return false
 		}
@@ -110,7 +138,7 @@ class CrownstoneServiceData {
 		return true
 	}
 
-	private fun parseHeaderDataV6(bb: ByteBuffer) : Boolean {
+	private fun parseHeaderDataV6(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < 17) {
 			return false
 		}
@@ -128,6 +156,26 @@ class CrownstoneServiceData {
 			BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE -> deviceType = DeviceType.GUIDESTONE
 			else -> deviceType = DeviceType.UNKNOWN
 		}
+	}
+
+	private fun parseRemainingV1(bb: ByteBuffer): Boolean {
+		return true
+	}
+
+	private fun parseRemainingV3(bb: ByteBuffer): Boolean {
+		return true
+	}
+
+	private fun parseRemainingV4(bb: ByteBuffer): Boolean {
+		return true
+	}
+
+	private fun parseRemainingV5(bb: ByteBuffer): Boolean {
+		return true
+	}
+
+	private fun parseRemainingV6(bb: ByteBuffer): Boolean {
+		return true
 	}
 
 	override fun toString(): String {
