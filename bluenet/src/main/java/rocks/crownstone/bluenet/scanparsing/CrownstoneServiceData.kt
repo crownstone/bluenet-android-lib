@@ -1,5 +1,10 @@
-package rocks.crownstone.bluenet
+package rocks.crownstone.bluenet.scanparsing
 
+import rocks.crownstone.bluenet.BluenetProtocol
+import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.DeviceType
+import rocks.crownstone.bluenet.OperationMode
+import rocks.crownstone.bluenet.scanparsing.servicedata.V1
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -33,6 +38,8 @@ class CrownstoneServiceData {
 
 	private var headerParsed = false
 	private var headerParseFailed = false
+	private var parsed = false
+	private var parseFailed = false
 
 	private lateinit var byteBuffer: ByteBuffer // Cache byte buffer so we can continue parsing after header is done.
 
@@ -41,7 +48,40 @@ class CrownstoneServiceData {
 	internal var type = ServiceDataType.UNKNOWN
 	internal var serviceUuid: UUID? = null
 	internal var deviceType = DeviceType.UNKNOWN
+	internal var operationMode = OperationMode.UNKNOWN
 
+	internal var crownstoneId = 0
+	internal var switchState = 0
+//	internal var relay = false
+//	internal var dimmer = 0
+	internal var temperature : Byte = 0
+	internal var powerUsageReal = 0.0
+	internal var powerUsageApparent = 0.0
+	internal var powerFactor = 1.0
+	internal var energyUsed = 0L
+	internal var externalRssi = 0
+	internal var timestamp = 0L
+	internal var validation = false
+	internal var uniqueBytes: ByteArray? = null
+
+	// Flags
+	internal var flagExternalData = false
+	internal var flagSetup = false
+	internal var flagDimmingAvailable = false
+	internal var flagDimmable = false
+	internal var flagError = false
+	internal var flagSwitchLocked = false
+	internal var flagTimeSet = false
+	internal var flagSwitchCraft = false
+
+	// Errors
+	internal var errorOverCurrent = false
+	internal var errorOverCurrentDimmer = false
+	internal var errorChipTemperature = false
+	internal var errorDimmerTemperature = false
+	internal var errorDimmerFailureOn = false
+	internal var errorDimmerFailureOff = false
+	internal var errorTimestamp = 0L
 
 	// Parses first bytes to determine the advertisement type and device type, without decrypting the data.
 	// bytes should start with service UUID
@@ -69,6 +109,9 @@ class CrownstoneServiceData {
 		return parseRemaining()
 	}
 
+	fun isStone(): Boolean {
+		return deviceType != DeviceType.UNKNOWN
+	}
 
 	private fun _parseHeader(bytes: ByteArray): Boolean {
 		if (bytes.size < 3) {
@@ -81,7 +124,7 @@ class CrownstoneServiceData {
 //		serviceUuid = Conversion.toUint16(bb.getShort().toInt())
 		version = Conversion.toUint8(byteBuffer.get())
 		when (version) {
-			1 -> return parseHeaderDataV1(byteBuffer)
+			1 -> return V1.parseV1Header(byteBuffer, this)
 			3 -> return parseHeaderDataV3(byteBuffer)
 			4 -> return parseHeaderDataV4(byteBuffer)
 			5 -> return parseHeaderDataV5(byteBuffer)
@@ -147,7 +190,7 @@ class CrownstoneServiceData {
 		return true
 	}
 
-	private fun setDeviceTypeFromServiceUuid() {
+	internal fun setDeviceTypeFromServiceUuid() {
 		val uuid = serviceUuid // Make immutable
 		when (uuid) {
 			null -> deviceType = DeviceType.UNKNOWN
@@ -159,8 +202,14 @@ class CrownstoneServiceData {
 	}
 
 	private fun parseRemainingV1(bb: ByteBuffer): Boolean {
+		if (bb.remaining() < 16) {
+			return false
+		}
+		id =
 		return true
 	}
+
+	private fun parse
 
 	private fun parseRemainingV3(bb: ByteBuffer): Boolean {
 		return true

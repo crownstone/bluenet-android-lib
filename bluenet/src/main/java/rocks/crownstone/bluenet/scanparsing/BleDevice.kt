@@ -1,7 +1,11 @@
-package rocks.crownstone.bluenet
+package rocks.crownstone.bluenet.scanparsing
 
 import android.bluetooth.le.ScanResult
 import android.util.Log
+import rocks.crownstone.bluenet.BluenetProtocol
+import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.Ibeacon
+import rocks.crownstone.bluenet.IbeaconData
 
 
 // Class that contains scan data of a single ble device.
@@ -18,22 +22,12 @@ class BleDevice(result: ScanResult) {
 	val name = result.device?.name // Can be null
 	val rssi = result.rssi
 
-	// Should be called only once
-	fun parseHeader() {
-		parseIbeacon()
-		parseServiceData()
-	}
 
-	// Should be called only once
-	// Can be called after parseHeader()
-	fun parse() {
-		if (ibeaconData == null) {
-			parseIbeacon()
-		}
-		parseServiceData()
-	}
-
-	private fun parseServiceDataHeader() {
+	/**
+	 * Parses the crownstone service data header.
+	 * Should be called only once.
+	 */
+	fun parseServiceDataHeader() {
 
 		val scanRecord = scanResult.scanRecord
 		val rawServiceData = scanRecord?.serviceData
@@ -58,8 +52,12 @@ class BleDevice(result: ScanResult) {
 //		}
 	}
 
-
-	private fun parseServiceData() {
+	/**
+	 * Parses the crownstone service data.
+	 * Should be called only once.
+	 * Can be called after header has been parsed already.
+	 */
+	fun parseServiceData() {
 		val scanRecord = scanResult.scanRecord
 		val rawServiceData = scanRecord?.serviceData
 		if (rawServiceData != null) {
@@ -74,7 +72,11 @@ class BleDevice(result: ScanResult) {
 		}
 	}
 
-	private fun parseIbeacon() {
+	/**
+	 * Parses iBeacon data.
+	 * Should be called only once.
+	 */
+	fun parseIbeacon() {
 		val scanRecord = scanResult.scanRecord
 		val manufacturerData = scanRecord?.manufacturerSpecificData
 		if (manufacturerData != null) {

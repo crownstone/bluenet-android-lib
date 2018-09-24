@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet
 
+import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*

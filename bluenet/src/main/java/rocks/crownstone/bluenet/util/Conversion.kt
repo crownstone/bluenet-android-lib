@@ -1,4 +1,4 @@
-package rocks.crownstone.bluenet
+package rocks.crownstone.bluenet.util
 
 import android.bluetooth.BluetoothAdapter
 import android.util.Base64
@@ -143,7 +143,10 @@ object Conversion {
 		return result
 	}
 
-	fun bytesToHexString(bytes: ByteArray): String {
+	fun bytesToHexString(bytes: ByteArray?): String {
+		if (bytes == null) {
+			return ""
+		}
 		val sb = StringBuilder()
 		for (b in bytes) {
 			sb.append(String.format("%02x", b))
@@ -178,16 +181,6 @@ object Conversion {
 		}
 		sb.deleteCharAt(sb.length - 1) // remove last semicolon
 		return sb.toString()
-	}
-
-	// Set the Nth bit in a value
-	fun isBitSet(value: Int, bit: Int): Boolean {
-		return value and (1 shl bit) > 0
-	}
-
-	// Clear the Nth bit in a value
-	fun clearBit(value: Int, bit: Int): Int {
-		return value and (1 shl bit).inv()
 	}
 
 	// Reverse a byte array

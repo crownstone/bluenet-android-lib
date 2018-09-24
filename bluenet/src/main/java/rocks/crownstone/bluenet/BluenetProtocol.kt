@@ -7,8 +7,19 @@ object BluenetProtocol {
 	val SERVICE_DATA_UUID_CROWNSTONE_BUILTIN = UUID.fromString("0000C002-0000-1000-8000-00805F9B34FB")
 	val SERVICE_DATA_UUID_GUIDESTONE         = UUID.fromString("0000C003-0000-1000-8000-00805F9B34FB")
 
-	val APPLE_COMPANY_ID = 0x004c
-	val IBEACON_ADVERTISEMENT_ID = 0x0215 // Actually 2 separate fields: type and length
+	const val APPLE_COMPANY_ID = 0x004c
+	const val IBEACON_ADVERTISEMENT_ID = 0x0215 // Actually 2 separate fields: type and length
+
+	// Verification code for ECB encryption
+//	const val CAFEBABE = 0xCAFEBABE // Kotlin made this -0x35014542
+//	const val CAFEBABE = -0x35014542
+	const val CAFEBABE = 0xCAFEBABE.toInt()
+
+	const val AES_BLOCK_SIZE = 16
+	const val VALIDATION_KEY_LENGTH = 4
+	const val SESSION_NONCE_LENGTH = 5
+	const val PACKET_NONCE_LENGTH = 3
+	const val ACCESS_LEVEL_LENGTH = 1
 }
 
 enum class DeviceType(val num: Int) {
@@ -27,6 +38,14 @@ enum class DeviceType(val num: Int) {
 		}
 	}
 }
+
+enum class OperationMode() {
+	UNKNOWN,
+	NORMAL,
+	SETUP,
+	DFU,
+}
+
 
 
 object BluenetConfigOld {
@@ -333,13 +352,13 @@ object BluenetConfigOld {
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Recovery code
-	val RECOVERY_CODE = -0x21524111
-	val FACTORY_RESET_CODE = -0x21524111
+	val RECOVERY_CODE = 0xDEADBEEF // Kotlin made this -0x21524111
+	val FACTORY_RESET_CODE = 0xDEADBEEF // Kotlin made this -0x21524111
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Verification code for ECB encryption
-	val CAFEBABE = -0x35014542
+	val CAFEBABE = 0xCAFEBABE // Kotlin made this -0x35014542
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
