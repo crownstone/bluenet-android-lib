@@ -22,6 +22,8 @@ enum class BluenetEvent {
 	SCAN_RESULT,     // Device was scanned. BleDevice as data.
 }
 
+typealias DeviceAddress = String
+typealias SphereId = String
 
 //enum class EventType {
 //	FOO,

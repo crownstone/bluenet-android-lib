@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet.scanparsing
 import android.bluetooth.le.ScanResult
 import android.util.Log
 import rocks.crownstone.bluenet.BluenetProtocol
+import rocks.crownstone.bluenet.DeviceAddress
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.Ibeacon
 import rocks.crownstone.bluenet.IbeaconData
@@ -18,7 +19,7 @@ class BleDevice(result: ScanResult) {
 	val scanResult = result
 	var serviceData = CrownstoneServiceData()
 	var ibeaconData: IbeaconData? = null
-	val address = result.device?.address // Can be null?
+	val address: DeviceAddress = result.device?.address!! // Can be null?
 	val name = result.device?.name // Can be null
 	val rssi = result.rssi
 
