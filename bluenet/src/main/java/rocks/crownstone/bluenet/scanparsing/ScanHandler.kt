@@ -2,8 +2,7 @@ package rocks.crownstone.bluenet.scanparsing
 
 import android.bluetooth.le.ScanResult
 import android.util.Log
-import rocks.crownstone.bluenet.BluenetEvent
-import rocks.crownstone.bluenet.EventBus
+import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 
 class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
@@ -18,52 +17,35 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 	private fun onRawScan(result: ScanResult) {
 		Log.d(TAG, "onScan")
 
+		if (result.device.address == null) {
+			Log.w(TAG, "Device without address")
+			return
+		}
 		val device = BleDevice(result)
 		device.parseIbeacon()
 		device.parseServiceDataHeader()
 		if (device.serviceData.isStone()) {
-
+			when (device.serviceData.operationMode) {
+				OperationMode.NORMAL -> {
+					val key = encryptionManager.getKeySet(device)?.getGuestKey()
+					if (key != null) {
+						device.parseServiceData(key)
+					}
+				}
+				OperationMode.SETUP -> {
+					device.parseServiceData(null)
+				}
+				OperationMode.DFU -> {
+					// TODO
+				}
+				else -> {
+					// TODO
+				}
+			}
 		}
-
-//				&& encryptionManager.getKeyset(device.ibeaconData?.uuid.toString()) == null) {
-//			if (device.serviceData)
-//		}
-
-
-
-
+		
+		// TODO: validation
 
 		eventBus.emit(BluenetEvent.SCAN_RESULT, device)
-
-
-//		val scanRecord = result.scanRecord
-//		if (scanRecord == null) {
-//			return
-//		}
-//		val serviceData = scanRecord.serviceData
-//		for (uuid in serviceData.keys) {
-//			val data = serviceData.get(uuid)
-//			val dataStr = Conversion.bytesToString(data)
-//			Log.d(TAG, "serviceData uuid=$uuid data=$dataStr")
-//		}
-//
-//		val uuids = result.scanRecord?.serviceUuids
-//		if (uuids != null) {
-//			for (uuid in uuids) {
-//				val data = result.scanRecord?.getServiceData(uuid)
-//				val dataStr = Conversion.bytesToString(data)
-//				Log.d(TAG, "service uuid: $uuid data=$dataStr")
-//			}
-//		}
-//
-//		val manufacturerData = result.scanRecord?.manufacturerSpecificData
-//		if (manufacturerData != null) {
-//			for (i in 0 until manufacturerData.size()) {
-//				val manufacturerId = manufacturerData.keyAt(i)
-//				val data = manufacturerData[manufacturerId]
-//				val dataStr = Conversion.bytesToString(data)
-//				Log.d(TAG, "manufacturerData id=$manufacturerId data=$dataStr")
-//			}
-//		}
 	}
 }
