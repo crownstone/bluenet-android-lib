@@ -34,6 +34,11 @@ class BleDevice(result: ScanResult) {
 		val rawServiceData = scanRecord?.serviceData
 		if (rawServiceData != null) {
 			for (uuid in rawServiceData.keys) {
+				if (uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG &&
+						uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN &&
+						uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE) {
+					break
+				}
 				val data = rawServiceData[uuid]
 				val dataStr = Conversion.bytesToString(data)
 				Log.v(TAG, "serviceData uuid=$uuid data=$dataStr")
@@ -58,16 +63,21 @@ class BleDevice(result: ScanResult) {
 	 * Should be called only once.
 	 * Can be called after header has been parsed already.
 	 */
-	fun parseServiceData() {
+	fun parseServiceData(key: ByteArray?) {
 		val scanRecord = scanResult.scanRecord
 		val rawServiceData = scanRecord?.serviceData
 		if (rawServiceData != null) {
 			for (uuid in rawServiceData.keys) {
+				if (uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG &&
+						uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN &&
+						uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE) {
+					break
+				}
 				val data = rawServiceData[uuid]
 				val dataStr = Conversion.bytesToString(data)
 				Log.v(TAG, "serviceData uuid=$uuid data=$dataStr")
 				if (data != null) {
-					serviceData.parse(uuid.uuid, data)
+					serviceData.parse(uuid.uuid, data, key)
 				}
 			}
 		}
