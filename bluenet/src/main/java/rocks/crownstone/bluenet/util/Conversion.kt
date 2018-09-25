@@ -72,21 +72,21 @@ object Conversion {
 		return Base64.encodeToString(bytes, Base64.NO_WRAP)
 	}
 
-	@JvmOverloads
+//	@JvmOverloads
 	fun byteArrayToInt(bytes: ByteArray, offset: Int = 0): Int {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		return bb.getInt(offset)
 	}
 
-	@JvmOverloads
+//	@JvmOverloads
 	fun byteArrayToShort(bytes: ByteArray, offset: Int = 0): Int {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		return bb.getShort(offset).toInt()
 	}
 
-	@JvmOverloads
+//	@JvmOverloads
 	fun byteArrayToFloat(bytes: ByteArray, offset: Int = 0): Float {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
