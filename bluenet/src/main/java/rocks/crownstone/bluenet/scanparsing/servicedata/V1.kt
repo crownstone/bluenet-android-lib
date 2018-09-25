@@ -4,7 +4,6 @@ import rocks.crownstone.bluenet.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
-import rocks.crownstone.bluenet.scanparsing.ServiceDataType
 import rocks.crownstone.bluenet.util.Util
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -14,13 +13,9 @@ internal object V1 {
 		if (bb.remaining() < 16) {
 			return false
 		}
-		servicedata.type = ServiceDataType.V1
 		servicedata.setDeviceTypeFromServiceUuid()
 
 		// Can't just parse header, since we can only determine if stone is in setup mode after parsing all data.
-		if (bb.remaining() < 16) {
-			return false
-		}
 		parseServiceData(bb, servicedata)
 		// Check if it's in setup mode
 		if (servicedata.flagSetup &&

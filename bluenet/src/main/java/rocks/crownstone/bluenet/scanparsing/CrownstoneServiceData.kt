@@ -17,17 +17,17 @@ import java.util.*
 //		var deviceType: DeviceType = DeviceType.UNKNOWN,
 //		)
 
-enum class ServiceDataType {
-	UNKNOWN,
-	V1,
-	V3,
-	V5,
-	STATE,
-	ERROR,
-	EXT_STATE,
-	EXT_ERROR,
-	SETUP,
-}
+//enum class ServiceDataType {
+//	UNKNOWN,
+//	V1,
+//	V3,
+//	V5,
+//	STATE,
+//	ERROR,
+//	EXT_STATE,
+//	EXT_ERROR,
+//	SETUP,
+//}
 
 // Class that parses the crownstone service data.
 // This class:
@@ -45,7 +45,7 @@ class CrownstoneServiceData {
 
 	// Parsed data
 	internal var version = 0
-	internal var type = ServiceDataType.UNKNOWN
+	internal var type = 0
 	internal var serviceUuid: UUID? = null
 	internal var deviceType = DeviceType.UNKNOWN
 	internal var operationMode = OperationMode.UNKNOWN
@@ -170,7 +170,6 @@ class CrownstoneServiceData {
 		if (bb.remaining() < 16) {
 			return false
 		}
-		type = ServiceDataType.V3
 		setDeviceTypeFromServiceUuid()
 		return true
 	}
@@ -179,7 +178,6 @@ class CrownstoneServiceData {
 		if (bb.remaining() < 16) {
 			return false
 		}
-		type = ServiceDataType.SETUP
 		setDeviceTypeFromServiceUuid()
 		return true
 	}
@@ -189,7 +187,6 @@ class CrownstoneServiceData {
 			return false
 		}
 		deviceType = DeviceType.fromInt(Conversion.toUint8(bb.get()))
-		type = ServiceDataType.V5
 		return true
 	}
 
@@ -198,7 +195,6 @@ class CrownstoneServiceData {
 			return false
 		}
 		deviceType = DeviceType.fromInt(Conversion.toUint8(bb.get()))
-		type = ServiceDataType.SETUP
 		return true
 	}
 
@@ -230,7 +226,7 @@ class CrownstoneServiceData {
 	}
 
 	override fun toString(): String {
-		return "version=$version, type=${type.name}, serviceUuid=$serviceUuid, deviceType=${deviceType.name}"
+		return "version=$version, type=${type}, serviceUuid=$serviceUuid, deviceType=${deviceType.name}"
 	}
 
 
