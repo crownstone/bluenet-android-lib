@@ -36,9 +36,9 @@ enum class ServiceDataType {
 class CrownstoneServiceData {
 	private val TAG = this::class.java.canonicalName
 
-	private var headerParsed = false
+	private var headerParsedSuccess = false // Whether parsing of the header was successful (correct data format)
 	private var headerParseFailed = false
-	private var parsed = false
+	private var parsedSuccess = false       // Whether parsing of the data was successful (correct data format)
 	private var parseFailed = false
 
 	private lateinit var byteBuffer: ByteBuffer // Cache byte buffer so we can continue parsing after header is done.
@@ -83,30 +83,54 @@ class CrownstoneServiceData {
 	internal var errorDimmerFailureOff = false
 	internal var errorTimestamp = 0L
 
-	// Parses first bytes to determine the advertisement type and device type, without decrypting the data.
-	// bytes should start with service UUID
-	// Returns null when parsing was unsuccessful
-	fun parseHeader(uuid: UUID, bytes: ByteArray): Boolean {
+	/**
+	 * Parses first bytes to determine the advertisement type, device type, and operation mode, without decrypting the data.
+	 * Result is cached.
+	 *
+	 * @return true when header data format is correct
+	 */
+	fun parseHeader(uuid: UUID, data: ByteArray): Boolean {
+		if (headerParsedSuccess) {
+			return true
+		}
+		if (headerParseFailed) {
+			return false
+		}
 		serviceUuid = uuid
-		if (_parseHeader(bytes)) {
-			headerParsed = true
+		if (_parseHeader(data)) {
+			headerParsedSuccess = true
 			return true
 		}
 		headerParseFailed = true
 		return false
 	}
 
-	fun parse(uuid: UUID, bytes: ByteArray): Boolean {
-		if (headerParseFailed) {
+	/**
+	 * Parses the service data.
+	 * Result is cached.
+	 *
+	 * @param uuid Service UUID of the service data.
+	 * @param data The service data.
+	 * @param key  When not null, this key is used to decrypt the service data.
+	 *
+	 * @return true when data format and size is correct
+	 */
+	fun parse(uuid: UUID, data: ByteArray, key: ByteArray?): Boolean {
+		if (parsedSuccess) {
+			return true
+		}
+		if (parseFailed) {
 			return false
 		}
-		if (!headerParsed) {
-			val result = parseHeader(uuid, bytes)
-			if (!result) {
-				return false
-			}
+		if (!parseHeader(uuid, data)) {
+			return false
 		}
-		return parseRemaining()
+		if (parseRemaining(key)) {
+			parsedSuccess = true
+			return true
+		}
+		parseFailed = true
+		return false
 	}
 
 	fun isStone(): Boolean {
@@ -117,14 +141,12 @@ class CrownstoneServiceData {
 		if (bytes.size < 3) {
 			return false
 		}
-//		byteBuffer
 		byteBuffer = ByteBuffer.wrap(bytes)
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
-//		serviceUuid = Conversion.toUint16(bb.getShort().toInt())
 		version = Conversion.toUint8(byteBuffer.get())
 		when (version) {
-			1 -> return V1.parseV1Header(byteBuffer, this)
+			1 -> return V1.parseHeader(byteBuffer, this)
 			3 -> return parseHeaderDataV3(byteBuffer)
 			4 -> return parseHeaderDataV4(byteBuffer)
 			5 -> return parseHeaderDataV5(byteBuffer)
@@ -133,25 +155,15 @@ class CrownstoneServiceData {
 		}
 	}
 
-	private fun parseRemaining(): Boolean {
+	private fun parseRemaining(key: ByteArray?): Boolean {
 		when (version) {
-			1-> return parseRemainingV1(byteBuffer)
+			1-> return V1.parse(byteBuffer, this, key)
 			3-> return parseRemainingV3(byteBuffer)
 			4-> return parseRemainingV4(byteBuffer)
 			5-> return parseRemainingV5(byteBuffer)
 			6-> return parseRemainingV6(byteBuffer)
 			else -> return false
 		}
-	}
-
-
-	private fun parseHeaderDataV1(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < 16) {
-			return false
-		}
-		type = ServiceDataType.V1
-		setDeviceTypeFromServiceUuid()
-		return true
 	}
 
 	private fun parseHeaderDataV3(bb: ByteBuffer): Boolean {
@@ -200,16 +212,6 @@ class CrownstoneServiceData {
 			else -> deviceType = DeviceType.UNKNOWN
 		}
 	}
-
-	private fun parseRemainingV1(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < 16) {
-			return false
-		}
-		id =
-		return true
-	}
-
-	private fun parse
 
 	private fun parseRemainingV3(bb: ByteBuffer): Boolean {
 		return true
