@@ -6,25 +6,8 @@ import rocks.crownstone.bluenet.util.PartialTime
 import rocks.crownstone.bluenet.util.Util
 import java.nio.ByteBuffer
 
-object V3Types {
+internal object Shared {
 	const val VALIDATION = 0xFA.toByte()
-
-	fun parseType0(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
-		return parseStatePacket(bb, servicedata, false, false)
-	}
-
-	fun parseType1(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
-		return parseErrorPacket(bb, servicedata, false, false)
-	}
-
-	fun parseType2(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
-		return parseStatePacket(bb, servicedata, true, false)
-	}
-
-	fun parseType3(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
-		return parseErrorPacket(bb, servicedata, true, false)
-	}
-
 
 	internal fun parseStatePacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.flagExternalData = external
@@ -70,6 +53,18 @@ object V3Types {
 		return true
 	}
 
+	internal fun parseSetupPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
+		servicedata.switchState = bb.get().toInt()
+		parseFlags(bb.get(), servicedata)
+		servicedata.temperature = bb.get()
+		parsePowerFactor(bb, servicedata)
+		servicedata.powerUsageReal = bb.getShort() / 8.0
+		setPowerUsageApparent(servicedata)
+		parseErrorBitmask(Conversion.toUint32(bb.getInt()), servicedata)
+		servicedata.changingData = bb.get().toInt()
+		bb.getInt() // reserved
+		return true
+	}
 
 	private fun parseFlags(flags: Byte, servicedata: CrownstoneServiceData) {
 		servicedata.flagDimmingAvailable = Util.isBitSet(flags, 0)
@@ -118,5 +113,4 @@ object V3Types {
 		}
 		servicedata.changingData = partialTimestamp
 	}
-
 }

@@ -4,30 +4,11 @@ import rocks.crownstone.bluenet.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.DeviceType
 import rocks.crownstone.bluenet.OperationMode
-import rocks.crownstone.bluenet.scanparsing.servicedata.V1
+import rocks.crownstone.bluenet.scanparsing.servicedata.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 
-
-//data class CrownstoneServiceData(
-//		var version: Int = 0,
-//		var type: ServiceDataType = ServiceDataType.UNKNOWN,
-//		var serviceUuid: Int = 0,
-//		var deviceType: DeviceType = DeviceType.UNKNOWN,
-//		)
-
-//enum class ServiceDataType {
-//	UNKNOWN,
-//	V1,
-//	V3,
-//	V5,
-//	STATE,
-//	ERROR,
-//	EXT_STATE,
-//	EXT_ERROR,
-//	SETUP,
-//}
 
 // Class that parses the crownstone service data.
 // This class:
@@ -147,10 +128,10 @@ class CrownstoneServiceData {
 		version = Conversion.toUint8(byteBuffer.get())
 		when (version) {
 			1 -> return V1.parseHeader(byteBuffer, this)
-			3 -> return parseHeaderDataV3(byteBuffer)
-			4 -> return parseHeaderDataV4(byteBuffer)
-			5 -> return parseHeaderDataV5(byteBuffer)
-			6 -> return parseHeaderDataV6(byteBuffer)
+			3 -> return V3.parseHeader(byteBuffer, this)
+			4 -> return V4.parseHeader(byteBuffer, this)
+			5 -> return V5.parseHeader(byteBuffer, this)
+			6 -> return V6.parseHeader(byteBuffer, this)
 			else -> return false
 		}
 	}
@@ -158,44 +139,12 @@ class CrownstoneServiceData {
 	private fun parseRemaining(key: ByteArray?): Boolean {
 		when (version) {
 			1-> return V1.parse(byteBuffer, this, key)
-			3-> return parseRemainingV3(byteBuffer)
-			4-> return parseRemainingV4(byteBuffer)
-			5-> return parseRemainingV5(byteBuffer)
-			6-> return parseRemainingV6(byteBuffer)
+			3-> return V3.parse(byteBuffer, this, key)
+			4-> return V4.parse(byteBuffer, this, key)
+			5-> return V5.parse(byteBuffer, this, key)
+			6-> return V6.parse(byteBuffer, this, key)
 			else -> return false
 		}
-	}
-
-	private fun parseHeaderDataV3(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < 16) {
-			return false
-		}
-		setDeviceTypeFromServiceUuid()
-		return true
-	}
-
-	private fun parseHeaderDataV4(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < 16) {
-			return false
-		}
-		setDeviceTypeFromServiceUuid()
-		return true
-	}
-
-	private fun parseHeaderDataV5(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < 17) {
-			return false
-		}
-		deviceType = DeviceType.fromInt(Conversion.toUint8(bb.get()))
-		return true
-	}
-
-	private fun parseHeaderDataV6(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < 17) {
-			return false
-		}
-		deviceType = DeviceType.fromInt(Conversion.toUint8(bb.get()))
-		return true
 	}
 
 	internal fun setDeviceTypeFromServiceUuid() {
@@ -207,22 +156,6 @@ class CrownstoneServiceData {
 			BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE -> deviceType = DeviceType.GUIDESTONE
 			else -> deviceType = DeviceType.UNKNOWN
 		}
-	}
-
-	private fun parseRemainingV3(bb: ByteBuffer): Boolean {
-		return true
-	}
-
-	private fun parseRemainingV4(bb: ByteBuffer): Boolean {
-		return true
-	}
-
-	private fun parseRemainingV5(bb: ByteBuffer): Boolean {
-		return true
-	}
-
-	private fun parseRemainingV6(bb: ByteBuffer): Boolean {
-		return true
 	}
 
 	override fun toString(): String {

@@ -1,17 +1,18 @@
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
+import rocks.crownstone.bluenet.DeviceType
 import rocks.crownstone.bluenet.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-internal object V3 {
+internal object V5 {
 	fun parseHeader(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
-		if (bb.remaining() < 16) {
+		if (bb.remaining() < 17) {
 			return false
 		}
-		servicedata.setDeviceTypeFromServiceUuid()
+		servicedata.deviceType = DeviceType.fromInt(bb.get().toInt())
 		servicedata.operationMode = OperationMode.NORMAL // TODO: set this before full parse was successful?
 		return true
 	}
@@ -34,10 +35,9 @@ internal object V3 {
 		when (servicedata.type) {
 			0 -> return Shared.parseStatePacket(bb, servicedata, false, false)
 			1 -> return Shared.parseErrorPacket(bb, servicedata, false, false)
-			2 -> return Shared.parseStatePacket(bb, servicedata, true, false)
-			3 -> return Shared.parseErrorPacket(bb, servicedata, true, false)
+			2 -> return Shared.parseStatePacket(bb, servicedata, true, true)
+			3 -> return Shared.parseErrorPacket(bb, servicedata, true, true)
 			else -> return false
 		}
 	}
-
 }
