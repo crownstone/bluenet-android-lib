@@ -62,7 +62,7 @@ class CrownstoneServiceData {
 	internal var externalRssi = 0
 	internal var timestamp = 0L
 	internal var validation = false
-	internal var uniqueBytes: ByteArray? = null
+	internal var changingData = 0
 
 	// Flags
 	internal var flagExternalData = false

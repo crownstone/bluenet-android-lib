@@ -62,6 +62,6 @@ internal object V1 {
 		servicedata.energyUsed = bb.getInt().toLong()
 		val byteArray = ByteArray(3)
 		bb.get(byteArray)
-		servicedata.uniqueBytes = byteArray
+		servicedata.changingData = Conversion.byteArrayToShort(byteArray) // Only use 2 bytes, should be enough
 	}
 }

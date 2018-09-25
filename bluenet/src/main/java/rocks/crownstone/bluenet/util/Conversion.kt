@@ -118,6 +118,10 @@ object Conversion {
 		return b.toInt() and 0xFF
 	}
 
+	fun toUint16(num: Short): Int {
+		return num.toInt() and 0xFFFF
+	}
+
 	fun toUint16(num: Int): Int {
 		return num and 0xFFFF
 	}
