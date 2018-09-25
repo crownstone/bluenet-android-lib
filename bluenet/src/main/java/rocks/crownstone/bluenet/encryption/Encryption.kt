@@ -7,6 +7,7 @@ import rocks.crownstone.bluenet.BluenetProtocol.SESSION_NONCE_LENGTH
 import rocks.crownstone.bluenet.BluenetProtocol.VALIDATION_KEY_LENGTH
 import rocks.crownstone.bluenet.BluenetProtocol.ACCESS_LEVEL_LENGTH
 import rocks.crownstone.bluenet.util.Conversion
+import java.nio.ByteBuffer
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -33,13 +34,13 @@ object Encryption {
 			Log.w(TAG, "wrong key length")
 			return null
 		}
-		Log.v(TAG, "payloadData: " + Conversion.bytesToString(payloadData))
+		Log.v(TAG, "payloadData: ${Conversion.bytesToString(payloadData)}")
 
 		// Packet nonce is randomly generated.
 		val random = SecureRandom()
 		val packetNonce = ByteArray(PACKET_NONCE_LENGTH)
 		random.nextBytes(packetNonce)
-		Log.v(TAG, "packetNonce: " + Conversion.bytesToString(packetNonce))
+		Log.v(TAG, "packetNonce: ${Conversion.bytesToString(packetNonce)}")
 
 		// Create iv by concatting session nonce and packet nonce.
 		val iv = ByteArray(AES_BLOCK_SIZE)
@@ -53,7 +54,7 @@ object Encryption {
 		//Arrays.fill(payload, (byte)0); // Already zeroes by default
 		System.arraycopy(validationKey, 0, payload, 0, VALIDATION_KEY_LENGTH)
 		System.arraycopy(payloadData, 0, payload, VALIDATION_KEY_LENGTH, payloadData.size)
-		Log.v(TAG, "payload: " + Conversion.bytesToString(payload))
+		Log.v(TAG, "payload: ${Conversion.bytesToString(payload)}")
 
 		// Allocate output array
 		val encryptedData = ByteArray(PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH + payloadLen + paddingLen)
@@ -64,16 +65,16 @@ object Encryption {
 		try {
 			val cipher = Cipher.getInstance("AES/CTR/NoPadding")
 			cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), IvParameterSpec(iv))
-			Log.v(TAG, "IV before: " + Conversion.bytesToString(cipher.iv))
+			Log.v(TAG, "IV before: ${Conversion.bytesToString(cipher.iv)}")
 			// doFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
 			cipher.doFinal(payload, 0, payload.size, encryptedData, PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH)
-			Log.v(TAG, "IV after: " + Conversion.bytesToString(cipher.iv))
+			Log.v(TAG, "IV after: ${Conversion.bytesToString(cipher.iv)}")
 		}
 		catch (e: GeneralSecurityException) {
 			e.printStackTrace()
 			return null
 		}
-		Log.v(TAG, "encryptedData: " + Conversion.bytesToString(encryptedData))
+		Log.v(TAG, "encryptedData: ${Conversion.bytesToString(encryptedData)}")
 		return encryptedData
 	}
 
@@ -94,7 +95,7 @@ object Encryption {
 			Log.w(TAG, "no keys supplied")
 			return null
 		}
-		Log.v(TAG, "encryptedData: " + Conversion.bytesToString(encryptedData))
+		Log.v(TAG, "encryptedData: ${Conversion.bytesToString(encryptedData)}")
 
 		val decryptedData = ByteArray(encryptedData.size - PACKET_NONCE_LENGTH - ACCESS_LEVEL_LENGTH)
 		if (decryptedData.size % AES_BLOCK_SIZE != 0) {
@@ -103,10 +104,10 @@ object Encryption {
 		}
 
 		val accessLevel = Conversion.toUint8(encryptedData[PACKET_NONCE_LENGTH])
-		Log.v(TAG, "accessLevel: " + accessLevel.toInt())
+		Log.v(TAG, "accessLevel: $accessLevel")
 		val key = keys.getKey(accessLevel)
 		if (key == null || key.size != AES_BLOCK_SIZE) {
-			Log.w(TAG, "wrong key length: " + key!!)
+			Log.w(TAG, "wrong key length: $key")
 			return null
 		}
 
@@ -118,8 +119,8 @@ object Encryption {
 		// Decrypt encrypted payload
 		try {
 			val cipher = Cipher.getInstance("AES/CTR/NoPadding")
-			cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key!!, "AES"), IvParameterSpec(iv))
-			Log.v(TAG, "IV: " + Conversion.bytesToString(cipher.iv))
+			cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), IvParameterSpec(iv))
+			Log.v(TAG, "IV: ${Conversion.bytesToString(cipher.iv)}")
 			// doFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
 			cipher.doFinal(encryptedData, PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH, decryptedData.size, decryptedData, 0)
 		}
@@ -131,7 +132,7 @@ object Encryption {
 		// Check validation key
 		for (i in 0 until VALIDATION_KEY_LENGTH) {
 			if (decryptedData[i] != validationKey[i]) {
-				Log.w(TAG, "validationkey: " + Conversion.bytesToString(validationKey) + " decrypted: " + Conversion.bytesToString(decryptedData))
+				Log.w(TAG, "validationkey: ${Conversion.bytesToString(validationKey)} decrypted: ${Conversion.bytesToString(decryptedData)}")
 				Log.w(TAG, "incorrect validation key")
 				return null
 			}
@@ -140,6 +141,16 @@ object Encryption {
 		val payloadData = ByteArray(decryptedData.size - VALIDATION_KEY_LENGTH)
 		System.arraycopy(decryptedData, VALIDATION_KEY_LENGTH, payloadData, 0, payloadData.size)
 		return payloadData
+	}
+
+	fun decryptEcb(payloadData: ByteBuffer, key: ByteArray): ByteArray? {
+		if (payloadData.remaining() < AES_BLOCK_SIZE) {
+			Log.w(TAG, "payload data too short")
+			return null
+		}
+		val byteArray = ByteArray(AES_BLOCK_SIZE)
+		payloadData.get(byteArray)
+		return decryptEcb(byteArray, key)
 	}
 
 	fun decryptEcb(payloadData: ByteArray, key: ByteArray, inputOffset: Int = 0): ByteArray? {
@@ -162,7 +173,7 @@ object Encryption {
 			return decryptedData
 		}
 		if (key.size != AES_BLOCK_SIZE) {
-			Log.w(TAG, "wrong key length: " + key.size)
+			Log.w(TAG, "wrong key length: ${key.size}")
 			return null
 		}
 		try {
