@@ -19,7 +19,7 @@ enum class BluenetEvent {
 	NOT_READY,         // BleCore is no longer ready to be used.
 	SCAN_RESULT_RAW, // Device was scanned. ScanResult as data.
 	SCAN_FAILURE,    // Scanning failed.
-	SCAN_RESULT,     // Device was scanned. BleDevice as data.
+	SCAN_RESULT,     // Device was scanned. ScannedDevice as data.
 }
 
 typealias DeviceAddress = String

@@ -10,7 +10,7 @@ import rocks.crownstone.bluenet.util.Conversion
 // This class:
 // - Parses advertisement data (ScanRecord)
 // - Keeps up address, name, rssi, iBeacon, Crownstone service data
-class BleDevice(result: ScanResult) {
+class ScannedDevice(result: ScanResult) {
 	private val TAG = this::class.java.canonicalName
 
 	val scanResult = result
@@ -101,6 +101,6 @@ class BleDevice(result: ScanResult) {
 	}
 
 	override fun toString(): String {
-		return "${scanResult.device.address} ${scanResult.device.name}   ServiceData: $serviceData   Ibeacon: $ibeaconData"
+		return "$address name=$name rssi=$rssi operationMode=${operationMode.name} validated=$validated serviceData=[$serviceData] ibeacon=[$ibeaconData]"
 	}
 }

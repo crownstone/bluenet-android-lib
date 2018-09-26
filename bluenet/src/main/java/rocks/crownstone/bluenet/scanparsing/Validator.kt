@@ -29,7 +29,7 @@ class Validator {
 	 *
 	 * @return true when validated
 	 */
-	fun validate(device: BleDevice): Boolean {
+	fun validate(device: ScannedDevice): Boolean {
 		Log.v(TAG, "validate ${device.address} operationMode=${device.operationMode.name}")
 		when (device.operationMode) {
 			OperationMode.UNKNOWN -> {

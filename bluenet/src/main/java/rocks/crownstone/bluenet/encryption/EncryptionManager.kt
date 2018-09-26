@@ -3,7 +3,7 @@ package rocks.crownstone.bluenet.encryption
 import rocks.crownstone.bluenet.DeviceAddress
 import rocks.crownstone.bluenet.IbeaconData
 import rocks.crownstone.bluenet.SphereId
-import rocks.crownstone.bluenet.scanparsing.BleDevice
+import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -41,7 +41,7 @@ class EncryptionManager {
 		return getKeySet(addresses.get(address))
 	}
 
-	fun getKeySet(device: BleDevice): KeySet? {
+	fun getKeySet(device: ScannedDevice): KeySet? {
 		val uuid = device.ibeaconData?.uuid
 		if (uuid != null) {
 			val sphereId = uuids.get(uuid)

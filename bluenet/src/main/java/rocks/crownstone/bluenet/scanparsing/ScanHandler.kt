@@ -22,7 +22,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 			Log.w(TAG, "Device without address")
 			return
 		}
-		val device = BleDevice(result)
+		val device = ScannedDevice(result)
 		device.parseIbeacon()
 		device.parseServiceDataHeader()
 		device.parseDfu()
@@ -55,7 +55,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		eventBus.emit(BluenetEvent.SCAN_RESULT, device)
 	}
 
-	private fun getValidator(device: BleDevice): Validator {
+	private fun getValidator(device: ScannedDevice): Validator {
 		var validator: Validator?
 		validator = validators.get(device.address)
 		if (validator == null) {
