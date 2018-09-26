@@ -20,6 +20,7 @@ class BleDevice(result: ScanResult) {
 	val name = result.device?.name // Can be null
 	val rssi = result.rssi
 	var operationMode = OperationMode.UNKNOWN
+	var validated = false
 
 
 
@@ -74,6 +75,26 @@ class BleDevice(result: ScanResult) {
 				Log.v(TAG, "manufacturerData id=$manufacturerId data=$dataStr")
 				if (manufacturerId == BluenetProtocol.APPLE_COMPANY_ID && data != null) {
 					ibeaconData = Ibeacon.parse(data)
+					return
+				}
+			}
+		}
+	}
+
+	/**
+	 * Parses dfu data.
+	 */
+	fun parseDfu() {
+		val scanRecord = scanResult.scanRecord
+		val serviceUuids = scanRecord?.serviceUuids
+		if (serviceUuids != null) {
+			for (uuid in serviceUuids) {
+				val data = scanRecord.getServiceData(uuid)
+				val dataStr = Conversion.bytesToString(data)
+				Log.v(TAG, "service uuid: $uuid data=$dataStr")
+				if (uuid.uuid == BluenetProtocol.SERVICE_DATA_UUID_DFU) {
+					operationMode = OperationMode.DFU
+					return
 				}
 			}
 		}
