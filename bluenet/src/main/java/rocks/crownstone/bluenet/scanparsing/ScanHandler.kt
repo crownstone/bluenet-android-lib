@@ -9,6 +9,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 	private val TAG = this::class.java.canonicalName
 	private val eventBus = evtBus
 	private val encryptionManager = encryptionMngr
+	private val validators = HashMap<DeviceAddress, Validator>() // TODO: this grows over time!
 
 	init {
 		eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { result: Any -> onRawScan(result as ScanResult) })
@@ -24,8 +25,10 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		val device = BleDevice(result)
 		device.parseIbeacon()
 		device.parseServiceDataHeader()
-		if (device.serviceData.isStone()) {
-			when (device.serviceData.operationMode) {
+		device.parseDfu()
+
+		// After parsing service data header and dfu, the operation mode should be known.
+		when (device.operationMode) {
 				OperationMode.NORMAL -> {
 					val key = encryptionManager.getKeySet(device)?.getGuestKey()
 					if (key != null) {
@@ -41,11 +44,24 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 				else -> {
 					// TODO
 				}
-			}
 		}
-		
-		// TODO: validation
+
+		// Validate device
+		val validator = getValidator(device)
+		if (validator.validate(device)) {
+			device.validated = true
+		}
 
 		eventBus.emit(BluenetEvent.SCAN_RESULT, device)
+	}
+
+	private fun getValidator(device: BleDevice): Validator {
+		var validator: Validator?
+		validator = validators.get(device.address)
+		if (validator == null) {
+			validator = Validator()
+			validators.put(device.address, validator)
+		}
+		return validator
 	}
 }
