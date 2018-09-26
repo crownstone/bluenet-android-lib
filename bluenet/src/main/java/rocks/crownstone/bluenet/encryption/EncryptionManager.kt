@@ -8,13 +8,13 @@ import java.util.*
 import kotlin.collections.HashMap
 
 
-class EncryptionManager() {
+class EncryptionManager {
 	private val TAG = this::class.java.canonicalName
 
 	private val keys = HashMap<SphereId, KeySet>()
 	private val sessionData: SessionData? = null
 	private val uuids = HashMap<UUID, SphereId>()
-	private val addresses = HashMap<DeviceAddress, SphereId>()
+	private val addresses = HashMap<DeviceAddress, SphereId>() // TODO: this grows over time!
 
 	fun getKeySet(id: SphereId?): KeySet? {
 		if (id == null) {
