@@ -9,8 +9,8 @@ import rocks.crownstone.bluenet.OperationMode
  * It does this by comparing fields in the service data that should remain constant.
  */
 class Validator {
+	val TAG = this::class.java.canonicalName
 	companion object {
-		val TAG = this::class.java.canonicalName
 		const val THRESHOLD = 3 // Validated once 3 scans with different data have similar constant fields
 		const val CROWNSTONE_ID_INIT = -1 // Init with an invalid value
 		const val CHANGING_DATA_INIT = -1 // Init with an invalid value
@@ -30,7 +30,7 @@ class Validator {
 	 * @return true when validated
 	 */
 	fun validate(device: ScannedDevice): Boolean {
-		Log.v(TAG, "validate ${device.address} operationMode=${device.operationMode.name}")
+		Log.v(TAG, "validate ${device.address} operationMode=${device.operationMode.name} this=$this")
 		when (device.operationMode) {
 			OperationMode.UNKNOWN -> {
 				isValidated = false

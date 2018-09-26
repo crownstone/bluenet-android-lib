@@ -16,7 +16,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 	}
 
 	private fun onRawScan(result: ScanResult) {
-		Log.d(TAG, "onScan")
+		Log.v(TAG, "onRawScan")
 
 		if (result.device.address == null) {
 			Log.w(TAG, "Device without address")
@@ -28,6 +28,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		device.parseDfu()
 
 		// After parsing service data header and dfu, the operation mode should be known.
+		// But only if the scan has service data at all..
 		when (device.operationMode) {
 				OperationMode.NORMAL -> {
 					val key = encryptionManager.getKeySet(device)?.getGuestKey()
@@ -47,9 +48,11 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		}
 
 		// Validate device
-		val validator = getValidator(device)
-		if (validator.validate(device)) {
-			device.validated = true
+		if (device.hasServiceData) {
+			val validator = getValidator(device)
+			if (validator.validate(device)) {
+				device.validated = true
+			}
 		}
 
 		eventBus.emit(BluenetEvent.SCAN_RESULT, device)

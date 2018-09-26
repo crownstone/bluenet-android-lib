@@ -14,6 +14,7 @@ class ScannedDevice(result: ScanResult) {
 	private val TAG = this::class.java.canonicalName
 
 	val scanResult = result
+	var hasServiceData = false // True when there is service data (even if it's invalid data)
 	var serviceData = CrownstoneServiceData()
 	var ibeaconData: IbeaconData? = null
 	val address: DeviceAddress = result.device?.address!! // Can be null?
@@ -39,8 +40,9 @@ class ScannedDevice(result: ScanResult) {
 				}
 				val data = rawServiceData[uuid]
 				val dataStr = Conversion.bytesToString(data)
-				Log.v(TAG, "serviceData uuid=$uuid data=$dataStr")
+				Log.v(TAG, "parseServiceDataHeader: serviceDataUuid=$uuid data=$dataStr")
 				if (data != null) {
+					hasServiceData = true
 					if (serviceData.parseHeader(uuid.uuid, data)) {
 						operationMode = serviceData.operationMode
 					}
@@ -54,6 +56,7 @@ class ScannedDevice(result: ScanResult) {
 	 * Parses the crownstone service data.
 	 */
 	fun parseServiceData(key: ByteArray?) {
+		Log.v(TAG, "parseServiceData")
 		if (!serviceData.headerParsedSuccess && !serviceData.headerParseFailed) {
 			parseServiceDataHeader()
 		}
@@ -72,7 +75,7 @@ class ScannedDevice(result: ScanResult) {
 				val manufacturerId = manufacturerData.keyAt(i)
 				val data = manufacturerData[manufacturerId]
 				val dataStr = Conversion.bytesToString(data)
-				Log.v(TAG, "manufacturerData id=$manufacturerId data=$dataStr")
+				Log.v(TAG, "parseIbeacon: manufacturerId=$manufacturerId data=$dataStr")
 				if (manufacturerId == BluenetProtocol.APPLE_COMPANY_ID && data != null) {
 					ibeaconData = Ibeacon.parse(data)
 					return
@@ -91,7 +94,7 @@ class ScannedDevice(result: ScanResult) {
 			for (uuid in serviceUuids) {
 				val data = scanRecord.getServiceData(uuid)
 				val dataStr = Conversion.bytesToString(data)
-				Log.v(TAG, "service uuid: $uuid data=$dataStr")
+				Log.v(TAG, "parseDfu: serviceUuid=$uuid data=$dataStr")
 				if (uuid.uuid == BluenetProtocol.SERVICE_DATA_UUID_DFU) {
 					operationMode = OperationMode.DFU
 					return
