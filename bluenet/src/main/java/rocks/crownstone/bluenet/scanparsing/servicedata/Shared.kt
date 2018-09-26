@@ -49,6 +49,7 @@ internal object Shared {
 		}
 		else {
 			servicedata.powerUsageReal = bb.getShort() / 8.0
+			servicedata.validation = true // No validation to perform, so assume it's true
 		}
 		return true
 	}
@@ -63,6 +64,7 @@ internal object Shared {
 		parseErrorBitmask(Conversion.toUint32(bb.getInt()), servicedata)
 		servicedata.changingData = bb.get().toInt()
 		bb.getInt() // reserved
+		servicedata.validation = true // No need for validation so set to true
 		return true
 	}
 
