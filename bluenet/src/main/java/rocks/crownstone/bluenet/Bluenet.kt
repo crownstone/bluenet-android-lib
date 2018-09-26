@@ -7,6 +7,8 @@ import android.content.Intent
 import android.util.Log
 import nl.komponents.kovenant.*
 import nl.komponents.kovenant.ui.successUi
+import rocks.crownstone.bluenet.encryption.EncryptionManager
+import rocks.crownstone.bluenet.scanparsing.ScanHandler
 
 class Bluenet {
 	private val TAG = this::class.java.canonicalName
@@ -14,7 +16,9 @@ class Bluenet {
 	private lateinit var context: Context
 	private lateinit var bleCore: BleCore
 	private var bleScanner: BleScanner? = null
+	private var scanHandler: ScanHandler? = null
 	private lateinit var service: BleServiceManager
+	private val encryptionManager = EncryptionManager()
 
 	private var initialized = false
 
@@ -76,6 +80,9 @@ class Bluenet {
 		bleCore.initScanner()
 		if (bleScanner == null) {
 			bleScanner = BleScanner(eventBus, bleCore)
+		}
+		if (scanHandler == null) {
+			scanHandler = ScanHandler(eventBus, encryptionManager)
 		}
 	}
 
