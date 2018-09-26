@@ -17,10 +17,10 @@ import java.util.*
 class CrownstoneServiceData {
 	private val TAG = this::class.java.canonicalName
 
-	private var headerParsedSuccess = false // Whether parsing of the header was successful (correct data format)
-	private var headerParseFailed = false
-	private var parsedSuccess = false       // Whether parsing of the data was successful (correct data format)
-	private var parseFailed = false
+	internal var headerParsedSuccess = false // Whether parsing of the header was successful (correct data format)
+	internal var headerParseFailed = false
+	internal var parsedSuccess = false       // Whether parsing of the data was successful (correct data format)
+	internal var parseFailed = false
 
 	private lateinit var byteBuffer: ByteBuffer // Cache byte buffer so we can continue parsing after header is done.
 
@@ -87,23 +87,18 @@ class CrownstoneServiceData {
 	}
 
 	/**
-	 * Parses the service data.
+	 * Parses the remaining service data, after header has been parsed.
 	 * Result is cached.
 	 *
-	 * @param uuid Service UUID of the service data.
-	 * @param data The service data.
 	 * @param key  When not null, this key is used to decrypt the service data.
 	 *
 	 * @return true when data format and size is correct
 	 */
-	fun parse(uuid: UUID, data: ByteArray, key: ByteArray?): Boolean {
+	fun parse(key: ByteArray?): Boolean {
 		if (parsedSuccess) {
 			return true
 		}
 		if (parseFailed) {
-			return false
-		}
-		if (!parseHeader(uuid, data)) {
 			return false
 		}
 		if (parseRemaining(key)) {

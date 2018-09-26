@@ -2,11 +2,8 @@ package rocks.crownstone.bluenet.scanparsing
 
 import android.bluetooth.le.ScanResult
 import android.util.Log
-import rocks.crownstone.bluenet.BluenetProtocol
-import rocks.crownstone.bluenet.DeviceAddress
+import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.Ibeacon
-import rocks.crownstone.bluenet.IbeaconData
 
 
 // Class that contains scan data of a single ble device.
@@ -22,14 +19,14 @@ class BleDevice(result: ScanResult) {
 	val address: DeviceAddress = result.device?.address!! // Can be null?
 	val name = result.device?.name // Can be null
 	val rssi = result.rssi
+	var operationMode = OperationMode.UNKNOWN
+
 
 
 	/**
 	 * Parses the crownstone service data header.
-	 * Should be called only once.
 	 */
 	fun parseServiceDataHeader() {
-
 		val scanRecord = scanResult.scanRecord
 		val rawServiceData = scanRecord?.serviceData
 		if (rawServiceData != null) {
@@ -43,44 +40,23 @@ class BleDevice(result: ScanResult) {
 				val dataStr = Conversion.bytesToString(data)
 				Log.v(TAG, "serviceData uuid=$uuid data=$dataStr")
 				if (data != null) {
-					serviceData.parseHeader(uuid.uuid, data)
+					if (serviceData.parseHeader(uuid.uuid, data)) {
+						operationMode = serviceData.operationMode
+					}
+
 				}
 			}
 		}
-
-//		val serviceUuids = scanRecord?.serviceUuids
-//		if (serviceUuids != null) {
-//			for (uuid in serviceUuids) {
-//				val data = result.scanRecord?.getServiceData(uuid)
-//				val dataStr = Conversion.bytesToString(data)
-//				Log.v(TAG, "service uuid: $uuid data=$dataStr")
-//			}
-//		}
 	}
 
 	/**
 	 * Parses the crownstone service data.
-	 * Should be called only once.
-	 * Can be called after header has been parsed already.
 	 */
 	fun parseServiceData(key: ByteArray?) {
-		val scanRecord = scanResult.scanRecord
-		val rawServiceData = scanRecord?.serviceData
-		if (rawServiceData != null) {
-			for (uuid in rawServiceData.keys) {
-				if (uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG &&
-						uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN &&
-						uuid.uuid != BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE) {
-					break
-				}
-				val data = rawServiceData[uuid]
-				val dataStr = Conversion.bytesToString(data)
-				Log.v(TAG, "serviceData uuid=$uuid data=$dataStr")
-				if (data != null) {
-					serviceData.parse(uuid.uuid, data, key)
-				}
-			}
+		if (!serviceData.headerParsedSuccess && !serviceData.headerParseFailed) {
+			parseServiceDataHeader()
 		}
+		serviceData.parse(key)
 	}
 
 	/**
