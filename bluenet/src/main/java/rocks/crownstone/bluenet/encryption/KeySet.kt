@@ -2,36 +2,9 @@ package rocks.crownstone.bluenet.encryption
 
 import android.util.Log
 import rocks.crownstone.bluenet.BluenetProtocol.AES_BLOCK_SIZE
+import rocks.crownstone.bluenet.KeyAccessLevelPair
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.charset.Charset
-
-/**
- * Class that holds a key with its access level
- */
-data class KeyAccessLevelPair(val key: ByteArray?, val accessLevel: AccessLevel) {
-	override fun toString(): String {
-		return "key: " + Conversion.bytesToString(key) + " access level: " + accessLevel
-	}
-
-//	override fun equals(other: Any?): Boolean {
-//		if (this === other) return true
-//		if (javaClass != other?.javaClass) return false
-//
-//		other as KeyAccessLevelPair
-//
-//		if (!Arrays.equals(key, other.key)) return false
-//		if (accessLevel != other.accessLevel) return false
-//
-//		return true
-//	}
-//
-//	override fun hashCode(): Int {
-//		var result = Arrays.hashCode(key)
-//		result = 31 * result + accessLevel.hashCode()
-//		return result
-//	}
-
-}
 
 /**
  * Class that holds keys with different access levels

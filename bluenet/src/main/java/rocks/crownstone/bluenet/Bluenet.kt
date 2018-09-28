@@ -137,6 +137,13 @@ class Bluenet {
 	}
 
 	/**
+	 * Set the keys.
+	 */
+	fun loadSphereData(keys: Keys) {
+		encryptionManager.setKeys(keys)
+	}
+
+	/**
 	 * Handles an enable request result.
 	 *
 	 * @return return true if permission result was handled, false otherwise.

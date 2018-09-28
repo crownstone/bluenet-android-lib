@@ -1,5 +1,10 @@
 package rocks.crownstone.bluenet
 
+import rocks.crownstone.bluenet.encryption.AccessLevel
+import rocks.crownstone.bluenet.encryption.KeySet
+import rocks.crownstone.bluenet.util.Conversion
+import java.util.*
+
 
 enum class BluenetEvent {
 	INITIALIZED, // Sent when bluenet has been initialized.
@@ -24,9 +29,16 @@ enum class BluenetEvent {
 
 typealias DeviceAddress = String
 typealias SphereId = String
+typealias Keys = HashMap<SphereId, KeyData>
+data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)
 
-//enum class EventType {
-//	FOO,
-//	BAR,
-//}
+/**
+ * Class that holds a key with its access level
+ */
+data class KeyAccessLevelPair(val key: ByteArray?, val accessLevel: AccessLevel) {
+	override fun toString(): String {
+		return "key: " + Conversion.bytesToString(key) + " access level: " + accessLevel
+	}
+	// TODO: override equals() and hashCode()
+}
 

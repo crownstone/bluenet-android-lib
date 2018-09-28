@@ -1,7 +1,9 @@
 package rocks.crownstone.bluenet.encryption
 
+import android.util.Log
 import rocks.crownstone.bluenet.DeviceAddress
 import rocks.crownstone.bluenet.IbeaconData
+import rocks.crownstone.bluenet.Keys
 import rocks.crownstone.bluenet.SphereId
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import java.util.*
@@ -11,19 +13,32 @@ import kotlin.collections.HashMap
 class EncryptionManager {
 	private val TAG = this::class.java.canonicalName
 
-	private val keys = HashMap<SphereId, KeySet>()
+	private lateinit var keys: Keys
 	private val sessionData: SessionData? = null
 	private val uuids = HashMap<UUID, SphereId>()
-	private val addresses = HashMap<DeviceAddress, SphereId>() // TODO: this grows over time!
+	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
 
-	fun getKeySet(id: SphereId?): KeySet? {
+	@Synchronized fun setKeys(keys: Keys) {
+		Log.i(TAG, "setKeys")
+		this.keys = keys
+		uuids.clear()
+		addresses.clear()
+		for (entry in keys.entries) {
+			val sphereId = entry.key
+			val ibeaconUuid = entry.value.ibeaconUuid
+			Log.i(TAG, "sphereId=$sphereId ibeaconUuid=$ibeaconUuid keys=${entry.value.keySet}")
+			uuids.put(ibeaconUuid, sphereId)
+		}
+	}
+
+	@Synchronized fun getKeySet(id: SphereId?): KeySet? {
 		if (id == null) {
 			return null
 		}
-		return keys.get(id)
+		return keys.get(id)?.keySet
 	}
 
-	fun getKeySet(ibeaconData: IbeaconData?): KeySet? {
+	@Synchronized fun getKeySet(ibeaconData: IbeaconData?): KeySet? {
 		val uuid = ibeaconData?.uuid
 		if (uuid != null) {
 			val sphereId = uuids.get(uuid)
@@ -34,22 +49,21 @@ class EncryptionManager {
 		return null
 	}
 
-	fun getKeySetFromAddress(address: DeviceAddress): KeySet? {
-//		if (address == null) {
-//			return null
-//		}
+	@Synchronized fun getKeySetFromAddress(address: DeviceAddress): KeySet? {
 		return getKeySet(addresses.get(address))
 	}
 
-	fun getKeySet(device: ScannedDevice): KeySet? {
+	@Synchronized fun getKeySet(device: ScannedDevice): KeySet? {
 		val uuid = device.ibeaconData?.uuid
 		if (uuid != null) {
 			val sphereId = uuids.get(uuid)
 			if (sphereId != null) {
+				// Cache result
 				addresses.put(device.address, sphereId)
 				return getKeySet(sphereId)
 			}
 		}
+		// Fall back to cached result
 		return getKeySetFromAddress(device.address)
 	}
 }
