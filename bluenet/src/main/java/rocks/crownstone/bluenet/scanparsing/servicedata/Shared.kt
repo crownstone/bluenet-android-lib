@@ -93,7 +93,7 @@ internal object Shared {
 			servicedata.powerFactor = 1.0
 		}
 		else {
-			servicedata.powerFactor = bb.get() / 127.0
+			servicedata.powerFactor = powerFactor / 127.0
 		}
 	}
 
