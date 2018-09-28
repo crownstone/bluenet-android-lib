@@ -43,8 +43,17 @@ class Validator {
 
 			OperationMode.NORMAL -> {
 				if (lastOperationMode != OperationMode.NORMAL) {
-					// Invalidate after mode change
-					Log.v(TAG, "invalidate")
+					// Invalidate after mode change.
+					Log.v(TAG, "mode change: invalidate")
+					lastCrownstoneId = CROWNSTONE_ID_INIT
+					lastChangingData = CHANGING_DATA_INIT
+					validCount = 0
+					isValidated = false
+				}
+
+				if (!device.serviceData.parsedSuccess) {
+					// Invalidate when not parsed, or parse failed.
+					Log.v(TAG, "parse not successful: invalidate")
 					lastCrownstoneId = CROWNSTONE_ID_INIT
 					lastChangingData = CHANGING_DATA_INIT
 					validCount = 0
@@ -63,7 +72,7 @@ class Validator {
 					// Compare crownstone id with previous crownstone id
 					if (device.serviceData.crownstoneId == lastCrownstoneId && device.serviceData.validation) {
 						if (!isValidated) {
-							Log.v(TAG, "validCount=${validCount+1}")
+							Log.v(TAG, "validCount=${validCount + 1}")
 							if (++validCount >= THRESHOLD) {
 								Log.v(TAG, "validated!")
 								isValidated = true
