@@ -15,7 +15,8 @@ class ScannedDevice(result: ScanResult) {
 
 	val scanResult = result
 	var hasServiceData = false // True when there is service data (even if it's invalid data)
-	var serviceData = CrownstoneServiceData()
+//	val serviceData = CrownstoneServiceData()
+	var serviceData: CrownstoneServiceData? = null
 	var ibeaconData: IbeaconData? = null
 	val address: DeviceAddress = result.device?.address!! // Can be null?
 	val name = result.device?.name // Can be null
@@ -42,9 +43,8 @@ class ScannedDevice(result: ScanResult) {
 				val dataStr = Conversion.bytesToString(data)
 				Log.v(TAG, "parseServiceDataHeader: serviceDataUuid=$uuid data=$dataStr")
 				if (data != null) {
-					hasServiceData = true
-					if (serviceData.parseHeader(uuid.uuid, data)) {
-						operationMode = serviceData.operationMode
+					if (_getServiceData().parseHeader(uuid.uuid, data)) {
+						operationMode = _getServiceData().operationMode
 					}
 
 				}
@@ -57,10 +57,10 @@ class ScannedDevice(result: ScanResult) {
 	 */
 	fun parseServiceData(key: ByteArray?) {
 		Log.v(TAG, "parseServiceData")
-		if (!serviceData.headerParsedSuccess && !serviceData.headerParseFailed) {
+		if (!_getServiceData().headerParsedSuccess && !_getServiceData().headerParseFailed) {
 			parseServiceDataHeader()
 		}
-		serviceData.parse(key)
+		_getServiceData().parse(key)
 	}
 
 	/**
@@ -101,6 +101,16 @@ class ScannedDevice(result: ScanResult) {
 				}
 			}
 		}
+	}
+
+	private fun _getServiceData(): CrownstoneServiceData {
+		var tempServiceData = serviceData
+		if (tempServiceData == null) {
+			tempServiceData = CrownstoneServiceData()
+			serviceData = tempServiceData
+			hasServiceData = true
+		}
+		return tempServiceData
 	}
 
 	override fun toString(): String {

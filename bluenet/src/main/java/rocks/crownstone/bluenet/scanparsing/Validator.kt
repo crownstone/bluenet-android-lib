@@ -56,31 +56,32 @@ class Validator {
 			reset()
 		}
 
-		if (!device.serviceData.parsedSuccess) {
+		val serviceData = device.serviceData
+		if (serviceData == null || !serviceData.parsedSuccess) {
 			// Reset when not parsed, or parse failed.
 			Log.v(TAG, "parse not successful: invalidate")
 			reset()
 			return
 		}
 
-		if (!device.serviceData.validation) {
+		if (!serviceData.validation) {
 			Log.v(TAG, "incorrect validation data: invalidate")
 			reset()
 			return
 		}
 
-		Log.v(TAG, "lastId=$lastCrownstoneId curId=${device.serviceData.crownstoneId}   lastData=$lastChangingData curData=${device.serviceData.changingData}")
+		Log.v(TAG, "lastId=$lastCrownstoneId curId=${serviceData.crownstoneId}   lastData=$lastChangingData curData=${serviceData.changingData}")
 		if (lastCrownstoneId != CROWNSTONE_ID_INIT && lastChangingData != CHANGING_DATA_INIT) {
 
 			// Can't validate with service data of external stone, or service data that was the same as previous.
-			if (device.serviceData.flagExternalData || device.serviceData.changingData == lastChangingData) {
+			if (serviceData.flagExternalData || serviceData.changingData == lastChangingData) {
 				// Keep last values as they were.
 				Log.v(TAG, "ignored")
 				return
 			}
 
 			// Compare crownstone id with previous crownstone id
-			if (device.serviceData.crownstoneId != lastCrownstoneId) {
+			if (serviceData.crownstoneId != lastCrownstoneId) {
 				reset()
 				return
 			}
@@ -91,8 +92,8 @@ class Validator {
 				isValidated = true
 			}
 		}
-		lastCrownstoneId = device.serviceData.crownstoneId
-		lastChangingData = device.serviceData.changingData
+		lastCrownstoneId = serviceData.crownstoneId
+		lastChangingData = serviceData.changingData
 	}
 
 	private fun reset() {
