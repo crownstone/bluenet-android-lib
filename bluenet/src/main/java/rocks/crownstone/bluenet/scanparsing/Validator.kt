@@ -11,7 +11,7 @@ import rocks.crownstone.bluenet.OperationMode
 class Validator {
 	val TAG = this::class.java.canonicalName
 	companion object {
-		const val THRESHOLD = 3 // Validated once 3 scans with different data have similar constant fields
+		const val THRESHOLD = 1 // Validated once 2 scans with different data have similar constant fields
 		const val CROWNSTONE_ID_INIT = -1 // Init with an invalid value
 		const val CHANGING_DATA_INIT = -1 // Init with an invalid value
 	}
