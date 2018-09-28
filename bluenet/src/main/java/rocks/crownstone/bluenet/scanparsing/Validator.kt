@@ -42,54 +42,63 @@ class Validator {
 			}
 
 			OperationMode.NORMAL -> {
-				if (lastOperationMode != OperationMode.NORMAL) {
-					// Invalidate after mode change.
-					Log.v(TAG, "mode change: invalidate")
-					lastCrownstoneId = CROWNSTONE_ID_INIT
-					lastChangingData = CHANGING_DATA_INIT
-					validCount = 0
-					isValidated = false
-				}
-
-				if (!device.serviceData.parsedSuccess) {
-					// Invalidate when not parsed, or parse failed.
-					Log.v(TAG, "parse not successful: invalidate")
-					lastCrownstoneId = CROWNSTONE_ID_INIT
-					lastChangingData = CHANGING_DATA_INIT
-					validCount = 0
-					isValidated = false
-				}
-
-				Log.v(TAG, "lastId=$lastCrownstoneId curId=${device.serviceData.crownstoneId}   lastData=$lastChangingData curData=${device.serviceData.changingData}")
-				if (lastCrownstoneId != CROWNSTONE_ID_INIT && lastChangingData != CHANGING_DATA_INIT) {
-					// Can't validate with service data of external stone, or service data that was the same as previous.
-					if (device.serviceData.flagExternalData || device.serviceData.changingData == lastChangingData) {
-						// Keep last values as they were.
-						Log.v(TAG, "ignored")
-						return isValidated
-					}
-
-					// Compare crownstone id with previous crownstone id
-					if (device.serviceData.crownstoneId == lastCrownstoneId && device.serviceData.validation) {
-						if (!isValidated) {
-							Log.v(TAG, "validCount=${validCount + 1}")
-							if (++validCount >= THRESHOLD) {
-								Log.v(TAG, "validated!")
-								isValidated = true
-							}
-						}
-					}
-					else {
-						// Reset count and invalidate
-						validCount = 0
-						isValidated = false
-					}
-				}
-				lastCrownstoneId = device.serviceData.crownstoneId
-				lastChangingData = device.serviceData.changingData
+				validateNormalMode(device)
 			}
 		}
 		lastOperationMode = device.operationMode
 		return isValidated
+	}
+
+	private fun validateNormalMode(device: ScannedDevice) {
+		if (lastOperationMode != OperationMode.NORMAL) {
+			// Reset after mode change.
+			Log.v(TAG, "mode change: invalidate")
+			reset()
+		}
+
+		if (!device.serviceData.parsedSuccess) {
+			// Reset when not parsed, or parse failed.
+			Log.v(TAG, "parse not successful: invalidate")
+			reset()
+			return
+		}
+
+		if (!device.serviceData.validation) {
+			Log.v(TAG, "incorrect validation data: invalidate")
+			reset()
+			return
+		}
+
+		Log.v(TAG, "lastId=$lastCrownstoneId curId=${device.serviceData.crownstoneId}   lastData=$lastChangingData curData=${device.serviceData.changingData}")
+		if (lastCrownstoneId != CROWNSTONE_ID_INIT && lastChangingData != CHANGING_DATA_INIT) {
+
+			// Can't validate with service data of external stone, or service data that was the same as previous.
+			if (device.serviceData.flagExternalData || device.serviceData.changingData == lastChangingData) {
+				// Keep last values as they were.
+				Log.v(TAG, "ignored")
+				return
+			}
+
+			// Compare crownstone id with previous crownstone id
+			if (device.serviceData.crownstoneId != lastCrownstoneId) {
+				reset()
+				return
+			}
+
+			Log.v(TAG, "validCount=${validCount + 1}")
+			if (!isValidated && ++validCount >= THRESHOLD) {
+				Log.v(TAG, "validated!")
+				isValidated = true
+			}
+		}
+		lastCrownstoneId = device.serviceData.crownstoneId
+		lastChangingData = device.serviceData.changingData
+	}
+
+	private fun reset() {
+		lastCrownstoneId = CROWNSTONE_ID_INIT
+		lastChangingData = CHANGING_DATA_INIT
+		validCount = 0
+		isValidated = false
 	}
 }
