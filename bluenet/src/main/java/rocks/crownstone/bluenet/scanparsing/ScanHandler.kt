@@ -47,7 +47,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 				}
 		}
 
-		// Validate device
+		// Validate or invalidate device
 		if (device.hasServiceData) {
 			val validator = getValidator(device)
 			if (validator.validate(device)) {

@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
+import android.util.Log
 import rocks.crownstone.bluenet.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
@@ -36,7 +37,10 @@ internal object V3 {
 			1 -> return Shared.parseErrorPacket(bb, servicedata, false, false)
 			2 -> return Shared.parseStatePacket(bb, servicedata, true, false)
 			3 -> return Shared.parseErrorPacket(bb, servicedata, true, false)
-			else -> return false
+			else -> {
+				Log.v("V3", "invalid type")
+				return false
+			}
 		}
 	}
 

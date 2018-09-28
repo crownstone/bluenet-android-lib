@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet.scanparsing
 
+import android.util.Log
 import rocks.crownstone.bluenet.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.DeviceType
@@ -132,13 +133,17 @@ class CrownstoneServiceData {
 	}
 
 	private fun parseRemaining(key: ByteArray?): Boolean {
+		Log.v(TAG, "parseRemaining version=$version remaining=${byteBuffer.remaining()}")
 		when (version) {
 			1-> return V1.parse(byteBuffer, this, key)
 			3-> return V3.parse(byteBuffer, this, key)
 			4-> return V4.parse(byteBuffer, this, key)
 			5-> return V5.parse(byteBuffer, this, key)
 			6-> return V6.parse(byteBuffer, this, key)
-			else -> return false
+			else -> {
+				Log.v(TAG, "invalid version")
+				return false
+			}
 		}
 	}
 
@@ -154,7 +159,7 @@ class CrownstoneServiceData {
 	}
 
 	override fun toString(): String {
-		return "version=$version, type=${type}, serviceUuid=$serviceUuid, deviceType=${deviceType.name}"
+		return "version=$version type=${type} serviceUuid=$serviceUuid deviceType=${deviceType.name} id=$crownstoneId switchState=$switchState temperature=$temperature powerUsageReal=$powerUsageReal powerUsageApparent=$powerUsageApparent powerFactor=$powerFactor energyUsed=$energyUsed externalRssi=$externalRssi timestamp=$timestamp validation=$validation changingData=$changingData"
 	}
 
 
