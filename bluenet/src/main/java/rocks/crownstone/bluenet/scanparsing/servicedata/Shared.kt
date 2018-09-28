@@ -11,9 +11,9 @@ internal object Shared {
 
 	internal fun parseStatePacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.flagExternalData = external
-		servicedata.crownstoneId = bb.get().toInt()
-		servicedata.switchState = bb.get().toInt()
-		parseFlags(bb.get(), servicedata)
+		servicedata.crownstoneId = Conversion.toUint8(bb.get())
+		servicedata.switchState = Conversion.toUint8(bb.get())
+		parseFlags(Conversion.toUint8(bb.get()), servicedata)
 		servicedata.temperature = bb.get()
 		parsePowerFactor(bb, servicedata)
 		servicedata.powerUsageReal = bb.getShort() / 8.0
@@ -32,10 +32,10 @@ internal object Shared {
 
 	internal fun parseErrorPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.flagExternalData = external
-		servicedata.crownstoneId = bb.get().toInt()
+		servicedata.crownstoneId = Conversion.toUint8(bb.get())
 		parseErrorBitmask(Conversion.toUint32(bb.getInt()), servicedata)
 		servicedata.errorTimestamp = Conversion.toUint32(bb.getInt())
-		parseFlags(bb.get(), servicedata)
+		parseFlags(Conversion.toUint8(bb.get()), servicedata)
 		servicedata.temperature = bb.get()
 		parsePartialTimestamp(bb, servicedata)
 		if (external) {
@@ -55,8 +55,8 @@ internal object Shared {
 	}
 
 	internal fun parseSetupPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
-		servicedata.switchState = bb.get().toInt()
-		parseFlags(bb.get(), servicedata)
+		servicedata.switchState = Conversion.toUint8(bb.get())
+		parseFlags(Conversion.toUint8(bb.get()), servicedata)
 		servicedata.temperature = bb.get()
 		parsePowerFactor(bb, servicedata)
 		servicedata.powerUsageReal = bb.getShort() / 8.0
@@ -68,7 +68,7 @@ internal object Shared {
 		return true
 	}
 
-	private fun parseFlags(flags: Byte, servicedata: CrownstoneServiceData) {
+	private fun parseFlags(flags: Int, servicedata: CrownstoneServiceData) {
 		servicedata.flagDimmingAvailable = Util.isBitSet(flags, 0)
 		servicedata.flagDimmable         = Util.isBitSet(flags, 1)
 		servicedata.flagError            = Util.isBitSet(flags, 2)
