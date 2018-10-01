@@ -1,10 +1,11 @@
-package rocks.crownstone.bluenet
+package rocks.crownstone.bluenet.core
 
 import android.Manifest
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.*
+import android.bluetooth.le.BluetoothLeAdvertiser
+import android.bluetooth.le.BluetoothLeScanner
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,15 +18,22 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import nl.komponents.kovenant.*
+import rocks.crownstone.bluenet.BluenetEvent
+import rocks.crownstone.bluenet.EventBus
+import rocks.crownstone.bluenet.LocationServiceRequestActivity
 
-class BleCore(appContext: Context, evtBus: EventBus) {
-	private val TAG = this::class.java.canonicalName
-	private val eventBus = evtBus
-	private val context = appContext
-	private lateinit var bleManager: BluetoothManager
-	private lateinit var bleAdapter: BluetoothAdapter
-	private lateinit var scanner: BluetoothLeScanner
-	private lateinit var advertiser: BluetoothLeAdvertiser
+/**
+ * Class that initializes the bluetooth LE core.
+ */
+open class CoreInit(appContext: Context, evtBus: EventBus) {
+	protected val TAG = "BleCore"
+	protected val eventBus = evtBus
+	protected val context = appContext
+
+	protected lateinit var bleManager: BluetoothManager
+	protected lateinit var bleAdapter: BluetoothAdapter
+	protected lateinit var scanner: BluetoothLeScanner
+	protected lateinit var advertiser: BluetoothLeAdvertiser
 
 	private var bleInitialized = false
 	private var scannerInitialized = false
@@ -43,10 +51,6 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	// Keep up if broadcast receivers are registered
 	private var receiverRegisteredBle = false
 	private var receiverRegisteredLocation = false
-
-	private var scanFilters = ArrayList<ScanFilter>()
-	private var scanSettings: ScanSettings
-	private var scanning = false
 
 	companion object {
 		// The permission request code for requesting location (required for ble scanning).
@@ -66,23 +70,6 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 	}
 
 
-	init {
-		// Init scan settings
-		val builder = ScanSettings.Builder()
-		builder.setScanMode(ScanSettings.SCAN_MODE_BALANCED)
-		//builder.setScanResultType(SCAN_RESULT_TYPE_FULL)
-		builder.setReportDelay(0)
-		if (Build.VERSION.SDK_INT >= 23) {
-			builder.setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-			builder.setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-			builder.setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT)
-		}
-		if (Build.VERSION.SDK_INT >= 26) {
-			builder.setLegacy(true)
-		}
-		scanSettings = builder.build()
-	}
-
 	/**
 	 * Initializes BLE
 	 *
@@ -97,7 +84,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 			return true
 		}
 
-		// Check if phone has bluetooth LE
+		// Check if phone has bluetooth LE. Should already have been checked by manifest (android.hardware.bluetooth_le).
 		if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
 			Log.e(TAG,"No BLE hardware")
 			return false
@@ -105,6 +92,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 
 		bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		bleAdapter = bleManager.adapter
+//		bleAdapter = BluetoothAdapter.getDefaultAdapter()
 
 		// Register the broadcast receiver for bluetooth action state changes
 		// Must be done before attempting to enable bluetooth
@@ -693,60 +681,7 @@ class BleCore(appContext: Context, evtBus: EventBus) {
 		}
 	}
 
-	@Synchronized fun startScan() {
-		if (!initScanner()) {
-			return
-		}
-		if (!isScannerReady()) {
-			return
-		}
-		scanner.startScan(scanFilters, scanSettings, scanCallback)
-		scanning = true
-	}
 
-	@Synchronized fun stopScan() {
-		if (!initScanner()) {
-			return
-		}
-		scanning = false
-		if (!isScannerReady()) {
-			return
-		}
-		scanner.stopScan(scanCallback)
-
-	}
-
-
-	private val scanCallback = object: ScanCallback() {
-		@Synchronized override fun onScanResult(callbackType: Int, result: ScanResult?) {
-
-			// Sometimes a scan result is still received after scanning has been stopped.
-			// Sometimes a scan with invalid rssi is received, ignore this result.
-			if (!scanning || result == null || result.rssi >= 0) {
-				return
-			}
-
-			eventBus.emit(BluenetEvent.SCAN_RESULT_RAW, result)
-		}
-
-		@Synchronized override fun onBatchScanResults(results: MutableList<ScanResult>?) {
-			if (results != null) {
-				for (result in results) {
-					onScanResult(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, result)
-				}
-			}
-		}
-
-		@Synchronized override fun onScanFailed(errorCode: Int) {
-			Log.e(TAG, "onScanFailed: $errorCode")
-			if (errorCode == SCAN_FAILED_ALREADY_STARTED) {
-				// No problem!
-				return
-			}
-			scanning = false
-			eventBus.emit(BluenetEvent.SCAN_FAILURE)
-		}
-	}
 
 
 
