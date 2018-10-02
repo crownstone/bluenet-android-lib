@@ -9,7 +9,7 @@ import rocks.crownstone.bluenet.util.Conversion
 // Class that contains scan data of a single ble device.
 // This class:
 // - Parses advertisement data (ScanRecord)
-// - Keeps up address, name, rssi, iBeacon, Crownstone service data
+// - Keeps up address, name, rssi, iBeacon, service data, etc
 class ScannedDevice(result: ScanResult) {
 	private val TAG = this::class.java.canonicalName
 

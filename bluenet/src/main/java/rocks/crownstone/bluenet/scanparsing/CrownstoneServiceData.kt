@@ -25,17 +25,16 @@ class CrownstoneServiceData {
 
 	private lateinit var byteBuffer: ByteBuffer // Cache byte buffer so we can continue parsing after header is done.
 
-	// Parsed data
+	// Header
 	internal var version = 0
 	internal var type = 0
 	internal var serviceUuid: UUID? = null
 	internal var deviceType = DeviceType.UNKNOWN
 	internal var operationMode = OperationMode.UNKNOWN
 
+	// State
 	internal var crownstoneId = 0
 	internal var switchState = 0
-//	internal var relay = false
-//	internal var dimmer = 0
 	internal var temperature : Byte = 0
 	internal var powerUsageReal = 0.0
 	internal var powerUsageApparent = 0.0
