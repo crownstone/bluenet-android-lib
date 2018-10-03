@@ -47,7 +47,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	private var enableBlePromise: Deferred<Unit, Exception>? = null
 	private var enableLocationServicePromise: Deferred<Unit, Exception>? = null
 
-	private val handler = Handler() // Same thread
+	protected val handler = Handler() // Same thread
 
 	// Keep up if broadcast receivers are registered
 	private var receiverRegisteredBle = false

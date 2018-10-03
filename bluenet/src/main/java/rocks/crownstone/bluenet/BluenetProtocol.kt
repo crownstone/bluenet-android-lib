@@ -11,6 +11,23 @@ object BluenetProtocol {
 	const val APPLE_COMPANY_ID = 0x004c
 	const val IBEACON_ADVERTISEMENT_ID = 0x0215 // Actually 2 separate fields: type and length
 
+	// Crownstone service
+	val CROWNSTONE_SERVICE_UUID =  UUID.fromString("24f00000-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_CONTROL_UUID =        UUID.fromString("24f00001-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_MESH_CONTROL_UUID =   UUID.fromString("24f00002-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_CONFIG_CONTROL_UUID = UUID.fromString("24f00004-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_CONFIG_READ_UUID =    UUID.fromString("24f00005-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_STATE_CONTROL_UUID =  UUID.fromString("24f00006-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_STATE_READ_UUID =     UUID.fromString("24f00007-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_SESSION_NONCE_UUID =  UUID.fromString("24f00008-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_RECOVERY_UUID =       UUID.fromString("24f00009-7d10-4805-bfc1-7663a01c3bff")
+
+	// Device Information Service
+	val DEVICE_INFO_SERVICE_UUID =    UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
+	val CHAR_HARDWARE_REVISION_UUID = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
+	val CHAR_FIRMWARE_REVISION_UUID = UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb")
+
+
 	// Verification code for ECB encryption
 //	const val CAFEBABE = 0xCAFEBABE // Kotlin made this -0x35014542
 //	const val CAFEBABE = -0x35014542

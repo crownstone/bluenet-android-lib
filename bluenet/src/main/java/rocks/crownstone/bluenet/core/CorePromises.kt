@@ -30,8 +30,8 @@ class CorePromises {
 
 	// Keep up promises
 	private var promiseType = PromiseType.NONE
-	//	private var rejectFun:
 	private var unitPromise: Deferred<Unit, Exception>? = null
+	private var byteArrayPromise: Deferred<ByteArray, Exception>? = null
 
 	@Synchronized fun isBusy(): Boolean {
 		Log.d(TAG, "isBusy action=${action.name} promiseType=${promiseType.name}")
@@ -45,24 +45,67 @@ class CorePromises {
 		return true
 	}
 
-	@Synchronized fun setBusy(action: Action, deferred: Deferred<Unit, Exception>): Boolean {
+	@Synchronized fun <V> setBusy(action: Action, deferred: Deferred<V, Exception>): Boolean {
 		if (isBusy()) {
 			return false
 		}
 		Log.d(TAG, "setBusy action=${action.name}")
 		when (action) {
-			Action.CONNECT, Action.DISCONNECT, Action.REFRESH -> {
+			Action.CONNECT, Action.DISCONNECT, Action.REFRESH, Action.DISCOVER, Action.WRITE -> {
 				promiseType = PromiseType.UNIT
-				unitPromise = deferred
+				unitPromise = deferred as Deferred<Unit, Exception> // Can't check :(
+				this.action = action
+			}
+			Action.READ -> {
+				promiseType = PromiseType.BYTE_ARRAY
+				byteArrayPromise = deferred as Deferred<ByteArray, Exception> // Can't check :(
 				this.action = action
 			}
 			else -> {
 				Log.e(TAG, "wrong action or promise type")
+				deferred.reject(Exception("wrong action or promise type"))
 				return false
 			}
 		}
 		return true
 	}
+
+//	@Synchronized fun setBusy(action: Action, deferred: Deferred<Unit, Exception>): Boolean {
+//		if (isBusy()) {
+//			return false
+//		}
+//		Log.d(TAG, "setBusy action=${action.name}")
+//		when (action) {
+//			Action.CONNECT, Action.DISCONNECT, Action.REFRESH, Action.DISCOVER, Action.WRITE -> {
+//				promiseType = PromiseType.UNIT
+//				unitPromise = deferred
+//				this.action = action
+//			}
+//			else -> {
+//				Log.e(TAG, "wrong action or promise type")
+//				return false
+//			}
+//		}
+//		return true
+//	}
+//
+//	@Synchronized fun setBusyByteArray(action: Action, deferred: Deferred<ByteArray, Exception>): Boolean {
+//		if (isBusy()) {
+//			return false
+//		}
+//		Log.d(TAG, "setBusy action=${action.name}")
+//		when (action) {
+//			Action.READ -> {
+//				promiseType = PromiseType.BYTE_ARRAY
+//				byteArrayPromise = deferred
+//			}
+//			else -> {
+//				Log.e(TAG, "wrong action or promise type")
+//				return false
+//			}
+//		}
+//		return true
+//	}
 
 	@Synchronized fun resolve(action: Action) {
 		Log.d(TAG, "resolve unit action=${action.name}")
@@ -82,6 +125,24 @@ class CorePromises {
 		cleanupPromises()
 	}
 
+	@Synchronized fun resolve(action: Action, byteArray: ByteArray) {
+		Log.d(TAG, "resolve byte array action=${action.name}")
+		if (action != this.action) {
+			// This shouldn't happen
+			Log.e(TAG, "wrong action resolved")
+			reject(Exception("wrong action resolved"))
+			return
+		}
+		if (promiseType != PromiseType.BYTE_ARRAY) {
+			// Reject, cause wrong resolve type
+			reject(Exception("wrong promise type"))
+			return
+		}
+
+		byteArrayPromise?.resolve(byteArray)
+		cleanupPromises()
+	}
+
 	@Synchronized fun reject(error: Exception) {
 		Log.d(TAG, "reject error=${error.message}")
 		when (promiseType) {
@@ -98,5 +159,6 @@ class CorePromises {
 		action = Action.NONE
 		promiseType = PromiseType.NONE
 		unitPromise = null
+		byteArrayPromise = null
 	}
 }

@@ -9,6 +9,7 @@ import nl.komponents.kovenant.*
 import nl.komponents.kovenant.ui.successUi
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.scanparsing.ScanHandler
+import java.util.*
 
 class Bluenet {
 	private val TAG = this::class.java.canonicalName
@@ -196,12 +197,12 @@ class Bluenet {
 	}
 
 
-	fun connect(address: DeviceAddress): Promise<Unit, Exception> {
+	@Synchronized fun connect(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		return bleCore.connect(address, 0)
 	}
 
-	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
+	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
 		if (clearCache) {
 			return bleCore.disconnect()
@@ -209,6 +210,18 @@ class Bluenet {
 		}
 		bleCore.close(false)
 		return Promise.ofSuccess(Unit)
+	}
+
+	@Synchronized fun discoverServices(): Promise<Unit, Exception> {
+		return bleCore.discoverServices(true)
+	}
+
+	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID): Promise<ByteArray, Exception> {
+		return bleCore.read(serviceUuid, characteristicUuid)
+	}
+
+	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray): Promise<Unit, Exception> {
+		return bleCore.write(serviceUuid, characteristicUuid, data)
 	}
 
 	@Synchronized private fun onCoreScannerReady(data: Any) {
