@@ -14,12 +14,7 @@ import rocks.crownstone.bluenet.EventBus
  * Class that adds connection functions to the bluetooth LE core class.
  */
 open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appContext, evtBus) {
-	private var gatt: BluetoothGatt? = null
-
-	private var currentAction = Action.NONE
-
-	// Keep up promises
-	private var unitPromise: Deferred<Unit, Exception>? = null
+	private var currentGatt: BluetoothGatt? = null
 
 //	private var
 
@@ -29,26 +24,26 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		if (!isBleReady()) {
 			return Promise.ofFail(Exception("BLE not ready"))
 		}
-		val gatt = this.gatt
+		val gatt = this.currentGatt
 		val deferred = deferred<Unit, Exception>()
 
 		if (gatt != null) {
-			Log.d(TAG, "gatt already open")
+			Log.d(TAG, "currentGatt already open")
 			if (gatt.device.address != address) {
 				return Promise.ofFail(Exception("busy with another device"))
 			}
-			val state = gatt.getConnectionState(gatt.device)
+			val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
 			Log.i(TAG, "state=${getStateString(state)}")
 			when (state) {
 				BluetoothProfile.STATE_CONNECTED -> {
 					deferred.resolve()
 				}
 				BluetoothProfile.STATE_DISCONNECTED -> {
-					if (isBusy(Action.CONNECT)) {
+					if (promises.isBusy()) {
 						return Promise.ofFail(Exception("busy"))
 					}
-					setBusy(Action.CONNECT, deferred) // Resolve later
-					Log.d(TAG, "gatt.connect")
+					promises.setBusy(Action.CONNECT, deferred) // Resolve later
+					Log.d(TAG, "currentGatt.connect")
 					gatt.connect()
 					// TODO: timeout
 				}
@@ -70,16 +65,20 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			when (state) {
 				BluetoothProfile.STATE_CONNECTED -> {
 					// This shouldn't happen, maybe when another app connected?
-					deferred.reject(Exception("gatt is null"))
+					deferred.reject(Exception("currentGatt is null"))
 				}
 				BluetoothProfile.STATE_DISCONNECTED -> {
-					if (isBusy()) {
+					if (promises.isBusy()) {
 						return Promise.ofFail(Exception("busy"))
 					}
-					setBusy(Action.CONNECT, deferred) // Resolve later
+					promises.setBusy(Action.CONNECT, deferred) // Resolve later
 					Log.d(TAG, "device.connectGatt")
-					this.gatt = device.connectGatt(context, false, gattCallback)
-//					this.gatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_AUTO, BluetoothDevice.PHY_LE_1M_MASK, handler)
+					if (android.os.Build.VERSION.SDK_INT >= 23) {
+						this.currentGatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+					}
+					else {
+						this.currentGatt = device.connectGatt(context, false, gattCallback)
+					}
 					// TODO: timeout
 				}
 				else -> {
@@ -100,24 +99,24 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 //			return Promise.ofFail(Exception("BLE not ready"))
 			return Promise.ofSuccess(Unit) // Always disconnected when BLE is off
 		}
-		val gatt = this.gatt
+		val gatt = this.currentGatt
 		if (gatt == null) {
 			Log.d(TAG, "already closed")
 			return Promise.ofSuccess(Unit)
 		}
 		val deferred = deferred<Unit, Exception>()
-		val state = gatt.getConnectionState(gatt.device)
+		val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
 				deferred.resolve()
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
-				if (isBusy()) {
+				if (promises.isBusy()) {
 					return Promise.ofFail(Exception("busy"))
 				}
-				setBusy(Action.DISCONNECT, deferred) // Resolve later
-				Log.d(TAG, "gatt.disconnect")
+				promises.setBusy(Action.DISCONNECT, deferred) // Resolve later
+				Log.d(TAG, "currentGatt.disconnect")
 				gatt.disconnect()
 			}
 			else -> {
@@ -136,8 +135,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 ////			return Promise.ofFail(Exception("BLE not ready"))
 //			return Promise.ofSuccess(Unit) // Always closed when BLE is off?? // TODO: check this
 //		}
-//		val gatt = this.gatt
-//		if (gatt == null) {
+//		val currentGatt = this.currentGatt
+//		if (currentGatt == null) {
 //			Log.d(TAG, "already closed")
 //			return Promise.ofSuccess(Unit)
 //		}
@@ -146,11 +145,11 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 //			return Promise.ofFail(Exception("busy"))
 //		}
 //		val deferred = deferred<Unit, Exception>()
-//		val state = gatt.getConnectionState(gatt.device)
+//		val state = currentGatt.getConnectionState(currentGatt.device)
 //		Log.i(TAG, "state=${getStateString(state)}")
 //		when (state) {
 //			BluetoothProfile.STATE_DISCONNECTED -> {
-//				close(gatt)
+//				close(currentGatt)
 //				deferred.resolve()
 //			}
 //			BluetoothProfile.STATE_CONNECTED -> {
@@ -158,7 +157,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 ////					return Promise.ofFail(Exception("busy"))
 ////				}
 ////				setBusy(Action.DISCONNECT, deferred) // Resolve later
-//				close(gatt)
+//				close(currentGatt)
 //				deferred.resolve()
 //			}
 //			else -> {
@@ -178,24 +177,24 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		if (!isBleReady()) {
 			return true // Always closed when BLE is off?? // TODO: check this
 		}
-		val gatt = this.gatt
+		val gatt = this.currentGatt
 		if (gatt == null) {
 			Log.d(TAG, "already closed")
 			return true
 		}
-		if (isBusy()) {
+		if (promises.isBusy()) {
 			Log.w(TAG, "busy")
 			return false
 		}
-		val state = gatt.getConnectionState(gatt.device)
+		val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
-				close()
+				closeFinal(clearCache)
 				return true
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
-				close()
+				closeFinal(clearCache)
 				return true
 			}
 			else -> {
@@ -206,13 +205,12 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	}
 
 	@Synchronized private fun closeFinal(clearCache: Boolean) {
-		Log.d(TAG, "gatt.close")
+		Log.d(TAG, "currentGatt.close")
 		if (clearCache) {
 			refreshGatt()
 		}
-		gatt?.close()
-		gatt = null
-		currentAction = Action.NONE
+		currentGatt?.close()
+		currentGatt = null
 	}
 
 	/**
@@ -220,23 +218,24 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	 */
 	@Synchronized fun refreshDeviceCache(): Promise<Unit, Exception> {
 		Log.i(TAG, "refreshDeviceCache")
-//		val gatt = this.gatt
+		val gatt = this.currentGatt
 		if (gatt == null) {
 			return Promise.ofFail(Exception("not connected"))
 		}
 		val deferred = deferred<Unit, Exception>()
-		val state = gatt.getConnectionState(gatt.device)
+		val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
 				deferred.reject(Exception("not connected"))
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
-				if (isBusy()) {
+				// Need to wait some time after refresh call, so set to busy
+				if (promises.isBusy()) {
 					return Promise.ofFail(Exception("busy"))
 				}
-				setBusy(Action.REFRESH, deferred) // Resolve later
-				Log.d(TAG, "gatt.disconnect")
+				promises.setBusy(Action.REFRESH, deferred) // Resolve later
+				Log.d(TAG, "currentGatt.disconnect")
 				refreshGatt()
 			}
 			else -> {
@@ -256,9 +255,9 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		Log.i(TAG, "refreshDeviceCache")
 		var success = false
 		try {
-			val refresh = gatt?.javaClass?.getMethod("refresh")
+			val refresh = currentGatt?.javaClass?.getMethod("refresh")
 			if (refresh != null) {
-				success = refresh.invoke(gatt) as Boolean
+				success = refresh.invoke(currentGatt) as Boolean
 				Log.d(TAG, "Refreshing result: $success")
 			}
 		}
@@ -267,34 +266,6 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			return false
 		}
 		return success
-	}
-
-	@Synchronized private fun isBusy(): Boolean {
-		// TODO: more sanity checks?
-		if (currentAction == Action.NONE) {
-			if (unitPromise != null) {
-				Log.e(TAG, "promise is not null")
-			}
-			return true
-		}
-		return false
-	}
-
-	@Synchronized private fun setBusy(action: Action, deferred: Deferred<Unit, Exception>): Boolean {
-		if (isBusy()) {
-			return false
-		}
-		when (action) {
-			Action.CONNECT -> {
-				unitPromise = deferred
-				currentAction = action
-			}
-			else -> {
-				Log.e(TAG, "wrong action or promise type")
-				return false
-			}
-		}
-		return true
 	}
 
 	private fun getStateString(state: Int): String {
@@ -316,37 +287,52 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 //	}
 
 
-	enum class Action {
-		NONE,
-		CONNECT,
-		DISCONNECT,
-		DISCOVER,
-		READ,
-		WRITE,
-		SUBSCRIBE,
-		UNSUBSCRIBE,
-		REFRESH,
-	}
-
 	private val gattCallback = object: BluetoothGattCallback() {
 		override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+			val address = gatt?.device?.address
+			Log.i(TAG, "onConnectionStateChange address=$address status=$status newState=$newState")
 
+			if (status != BluetoothGatt.GATT_SUCCESS) {
+				// TODO
+				Log.e(TAG, "onConnectionStateChange address=$address status=$status newState=$newState")
+			}
+
+			if (gatt == null || address == null || address != currentGatt?.device?.address) {
+				return
+			}
+
+			when (newState) {
+				BluetoothProfile.STATE_CONNECTED -> {
+					promises.resolve(Action.CONNECT)
+				}
+				BluetoothProfile.STATE_DISCONNECTED -> {
+					promises.resolve(Action.DISCONNECT)
+				}
+			}
 		}
 
 		override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-
+			Log.i(TAG, "onServicesDiscovered status=$status")
 		}
 
 		override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+			Log.i(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
 		}
+
 		override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+			Log.i(TAG, "onCharacteristicChanged characteristic=$characteristic")
 		}
+
 		override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+			Log.i(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
 		}
 
 		override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
+			Log.i(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
 		}
+
 		override fun onDescriptorRead(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
+			Log.i(TAG, "onDescriptorRead descriptor=$descriptor status=$status")
 		}
 	}
 }

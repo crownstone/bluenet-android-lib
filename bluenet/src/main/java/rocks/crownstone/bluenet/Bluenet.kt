@@ -196,13 +196,20 @@ class Bluenet {
 	}
 
 
-//	fun connect(): Promise<Unit, Exception> {
-//
-//	}
+	fun connect(address: DeviceAddress): Promise<Unit, Exception> {
+		Log.i(TAG, "connect $address")
+		return bleCore.connect(address, 0)
+	}
 
-//	fun disconnect(): Promise<Unit, Exception> {
-//
-//	}
+	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
+		Log.i(TAG, "disconnect clearCache=$clearCache")
+		if (clearCache) {
+			return bleCore.disconnect()
+					.always { bleCore.close(true) }
+		}
+		bleCore.close(false)
+		return Promise.ofSuccess(Unit)
+	}
 
 	@Synchronized private fun onCoreScannerReady(data: Any) {
 		initScanner()

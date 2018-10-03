@@ -34,7 +34,7 @@ class EventBus {
 
 	@Synchronized fun emit(eventType: EventType, data: Any = Unit) {
 		when (eventType) {
-			BluenetEvent.SCAN_RESULT.name, BluenetEvent.SCAN_RESULT_RAW.name -> Log.d(TAG, "emit $eventType data: $data")
+			BluenetEvent.SCAN_RESULT.name, BluenetEvent.SCAN_RESULT_RAW.name -> Log.v(TAG, "emit $eventType data: $data")
 			else -> Log.i(TAG, "emit $eventType data: $data")
 		}
 		if (!eventSubscriptions.containsKey(eventType)) {

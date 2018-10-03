@@ -29,6 +29,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	protected val TAG = "BleCore"
 	protected val eventBus = evtBus
 	protected val context = appContext
+	protected val promises = CorePromises()
 
 	protected lateinit var bleManager: BluetoothManager
 	protected lateinit var bleAdapter: BluetoothAdapter
