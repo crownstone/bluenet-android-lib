@@ -205,11 +205,25 @@ class Bluenet {
 	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
 		if (clearCache) {
-			return bleCore.disconnect()
-					.always { bleCore.close(true) }
+			val deferred = deferred<Unit, Exception>()
+			bleCore.disconnect()
+					.always {
+						bleCore.close(true)
+								.success {
+									deferred.resolve()
+								}
+								.fail {
+									deferred.reject(it)
+								}
+					}
+			return deferred.promise
+//
+//			return bleCore.disconnect()
+//					.then {
+//						bleCore.close(true)
+//					}.unwrap()
 		}
-		bleCore.close(false)
-		return Promise.ofSuccess(Unit)
+		return bleCore.close(false)
 	}
 
 	@Synchronized fun discoverServices(): Promise<Unit, Exception> {
