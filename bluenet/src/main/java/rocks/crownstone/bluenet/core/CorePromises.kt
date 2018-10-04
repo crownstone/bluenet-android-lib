@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet.core
 import android.util.Log
 import nl.komponents.kovenant.Deferred
 import nl.komponents.kovenant.resolve
+import rocks.crownstone.bluenet.Errors
 
 enum class Action {
 	NONE,
@@ -63,7 +64,7 @@ class CorePromises {
 			}
 			else -> {
 				Log.e(TAG, "wrong action or promise type")
-				deferred.reject(Exception("wrong action or promise type"))
+				deferred.reject(Errors.PromiseTypeWrong())
 				return false
 			}
 		}
@@ -112,12 +113,12 @@ class CorePromises {
 		if (action != this.action) {
 			// This shouldn't happen
 			Log.e(TAG, "wrong action resolved")
-			reject(Exception("wrong action resolved"))
+			reject(Errors.ActionTypeWrong())
 			return
 		}
 		if (promiseType != PromiseType.UNIT) {
 			// Reject, cause wrong resolve type
-			reject(Exception("wrong promise type"))
+			reject(Errors.PromiseTypeWrong())
 			return
 		}
 
@@ -130,12 +131,12 @@ class CorePromises {
 		if (action != this.action) {
 			// This shouldn't happen
 			Log.e(TAG, "wrong action resolved")
-			reject(Exception("wrong action resolved"))
+			reject(Errors.ActionTypeWrong())
 			return
 		}
 		if (promiseType != PromiseType.BYTE_ARRAY) {
 			// Reject, cause wrong resolve type
-			reject(Exception("wrong promise type"))
+			reject(Errors.PromiseTypeWrong())
 			return
 		}
 
