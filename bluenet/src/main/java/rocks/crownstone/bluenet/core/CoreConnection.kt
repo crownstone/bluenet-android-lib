@@ -50,7 +50,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 					if (promises.isBusy()) {
 						return Promise.ofFail(Errors.Busy())
 					}
-					promises.setBusy(Action.CONNECT, deferred) // Resolve later
+					promises.setBusy(Action.CONNECT, deferred) // Resolve later in onGattConnectionStateChange
 					Log.d(TAG, "gatt.connect")
 					gatt.connect()
 					// TODO: timeout
@@ -82,7 +82,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 					if (promises.isBusy()) {
 						return Promise.ofFail(Errors.Busy())
 					}
-					promises.setBusy(Action.CONNECT, deferred) // Resolve later
+					promises.setBusy(Action.CONNECT, deferred) // Resolve later in onGattConnectionStateChange
 					Log.d(TAG, "device.connectGatt")
 					if (android.os.Build.VERSION.SDK_INT >= 23) {
 						this.currentGatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
@@ -130,7 +130,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 				if (promises.isBusy()) {
 					return Promise.ofFail(Errors.Busy())
 				}
-				promises.setBusy(Action.DISCONNECT, deferred) // Resolve later
+				promises.setBusy(Action.DISCONNECT, deferred) // Resolve later in onGattConnectionStateChange
 				Log.d(TAG, "gatt.disconnect")
 				gatt.disconnect()
 			}
@@ -139,6 +139,42 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			}
 		}
 		return deferred.promise
+	}
+
+	@Synchronized private fun onGattConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+		val address = gatt?.device?.address
+		Log.i(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
+
+		if (status != BluetoothGatt.GATT_SUCCESS) {
+			Log.e(TAG, "onConnectionStateChange address=$address status=$status newState=$newState")
+			// TODO: handle error
+			// See https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
+			// 8   GATT_CONN_TIMEOUT
+			//     [11.01.17] (Bart @ oneplus 3) When I get this error, it continuously fails.
+			//     [04-10-18] Gatt seems unusable at this point.
+			// 19  GATT_CONN_TERMINATE_PEER_USER   Getting this status when device disconnected us.
+			// 22  GATT_CONN_TERMINATE_LOCAL_HOST  [10.10.17] Getting this error on a samsung s7 a lot, seems to happen when out of reach.
+			// 34  GATT_CONN_LMP_TIMEOUT
+			// 133 GATT_ERROR                      [11.01.17] This error seems rather common, retry usually helps.
+			// 135 GATT_ILLEGAL_PARAMETER          [04-10-18] Got this error after calling gatt.disconnect
+		}
+
+		if (gatt == null || gatt != currentGatt || address == null || address != currentGatt?.device?.address) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt address=${currentGatt?.device?.address}")
+			return
+		}
+
+		when (newState) {
+			BluetoothProfile.STATE_CONNECTED -> {
+				promises.resolve(Action.CONNECT)
+			}
+			BluetoothProfile.STATE_DISCONNECTED -> {
+				promises.resolve(Action.DISCONNECT)
+			}
+		}
+		if (status != BluetoothGatt.GATT_SUCCESS) {
+			close(true) // TODO: refresh?
+		}
 	}
 
 
@@ -268,6 +304,20 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		return deferred.promise
 	}
 
+	@Synchronized private fun onGattServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+		Log.i(TAG, "onServicesDiscovered status=$status")
+		if (gatt == null || gatt != currentGatt) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt")
+			return
+		}
+		if (status != BluetoothGatt.GATT_SUCCESS) {
+			Log.e(TAG, "onServicesDiscovered status=$status")
+			// TODO: handle error
+		}
+		services = gatt.services
+		promises.resolve(Action.DISCOVER)
+	}
+
 	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray): Promise<Unit, Exception> {
 		Log.i(TAG, "write serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid data=${Conversion.bytesToString(data)}")
 //		if (!isBleReady()) {
@@ -294,6 +344,20 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			promises.reject(Errors.WriteFailed())
 		}
 		return deferred.promise
+	}
+
+	@Synchronized private fun onGattCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+		Log.i(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
+		if (gatt == null || gatt != currentGatt || characteristic == null) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
+			return
+		}
+		if (status != BluetoothGatt.GATT_SUCCESS) {
+			Log.e(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
+			// TODO: handle error
+		}
+		// TODO: check if correct characteristic was written
+		promises.resolve(Action.WRITE)
 	}
 
 	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID): Promise<ByteArray, Exception> {
@@ -323,82 +387,35 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		return deferred.promise
 	}
 
+	@Synchronized private fun onGattCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+		Log.i(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
+		if (gatt == null || gatt != currentGatt || characteristic == null) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
+			return
+		}
+		if (status != BluetoothGatt.GATT_SUCCESS) {
+			Log.e(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
+			// TODO: handle error
+		}
+		// TODO: check if correct characteristic was read
+		promises.resolve(Action.READ, characteristic.value)
+	}
+
 	private val gattCallback = object: BluetoothGattCallback() {
 		override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-			val address = gatt?.device?.address
-			Log.i(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
-
-			if (status != BluetoothGatt.GATT_SUCCESS) {
-				Log.e(TAG, "onConnectionStateChange address=$address status=$status newState=$newState")
-				// TODO: handle error
-				// See https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
-				// 8   GATT_CONN_TIMEOUT
-				//     [11.01.17] (Bart @ oneplus 3) When I get this error, it continuously fails.
-				//     [04-10-18] Gatt seems unusable at this point.
-				// 19  GATT_CONN_TERMINATE_PEER_USER   Getting this status when device disconnected us.
-				// 22  GATT_CONN_TERMINATE_LOCAL_HOST  [10.10.17] Getting this error on a samsung s7 a lot, seems to happen when out of reach.
-				// 34  GATT_CONN_LMP_TIMEOUT
-				// 133 GATT_ERROR                      [11.01.17] This error seems rather common, retry usually helps.
-			}
-
-			if (gatt == null || gatt != currentGatt || address == null || address != currentGatt?.device?.address) {
-				Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt address=${currentGatt?.device?.address}")
-				return
-			}
-
-			when (newState) {
-				BluetoothProfile.STATE_CONNECTED -> {
-					promises.resolve(Action.CONNECT)
-				}
-				BluetoothProfile.STATE_DISCONNECTED -> {
-					promises.resolve(Action.DISCONNECT)
-				}
-			}
-			if (status != BluetoothGatt.GATT_SUCCESS) {
-				close(false) // TODO: refresh?
-			}
+			onGattConnectionStateChange(gatt, status, newState)
 		}
 
 		override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-			Log.i(TAG, "onServicesDiscovered status=$status")
-			if (gatt == null || gatt != currentGatt) {
-				Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt")
-				return
-			}
-			if (status != BluetoothGatt.GATT_SUCCESS) {
-				Log.e(TAG, "onServicesDiscovered status=$status")
-				// TODO: handle error
-			}
-			services = gatt.services
-			promises.resolve(Action.DISCOVER)
+			onGattServicesDiscovered(gatt, status)
 		}
 
 		override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-			Log.i(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
-			if (gatt == null || gatt != currentGatt || characteristic == null) {
-				Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
-				return
-			}
-			if (status != BluetoothGatt.GATT_SUCCESS) {
-				Log.e(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
-				// TODO: handle error
-			}
-			// TODO: check if correct characteristic was read
-			promises.resolve(Action.READ, characteristic.value)
+			onGattCharacteristicRead(gatt, characteristic, status)
 		}
 
 		override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-			Log.i(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
-			if (gatt == null || gatt != currentGatt || characteristic == null) {
-				Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
-				return
-			}
-			if (status != BluetoothGatt.GATT_SUCCESS) {
-				Log.e(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
-				// TODO: handle error
-			}
-			// TODO: check if correct characteristic was written
-			promises.resolve(Action.WRITE)
+			onGattCharacteristicWrite(gatt, characteristic, status)
 		}
 
 		override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
@@ -421,7 +438,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			return ConnectionState.CLOSED
 		}
 		val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
-		Log.i(TAG, "state=${getStateString(state)}")
+		Log.d(TAG, "state=${getStateString(state)}")
 		return when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> ConnectionState.DISCONNECTED
 			BluetoothProfile.STATE_CONNECTING-> ConnectionState.CONNECTING
