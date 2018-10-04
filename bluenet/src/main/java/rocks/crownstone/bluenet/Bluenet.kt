@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import nl.komponents.kovenant.*
-import nl.komponents.kovenant.ui.successUi
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.scanparsing.ScanHandler
 import java.util.*
@@ -24,6 +23,8 @@ class Bluenet {
 	private var initialized = false
 
 	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
+
+	private val nearestDevices = NearestDevices(eventBus)
 
 	/**
 	 * Init the library.
@@ -181,6 +182,10 @@ class Bluenet {
 	@Synchronized fun stopScanning() {
 		Log.i(TAG, "stopScanning")
 		bleScanner?.stopScan()
+	}
+
+	fun getNearestValidated(): NearestDeviceListEntry? {
+		return nearestDevices.nearestValidated.getNearest()
 	}
 
 	@Synchronized fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
