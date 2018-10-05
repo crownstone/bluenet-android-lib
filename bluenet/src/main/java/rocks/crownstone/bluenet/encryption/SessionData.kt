@@ -9,7 +9,7 @@ import rocks.crownstone.bluenet.util.Conversion
 data class SessionData(val sessionNonce: ByteArray, val validationKey: ByteArray)
 
 object SessionDataParser {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 
 	fun getSessionData(decryptedData: ByteArray, wasEncrypted: Boolean): SessionData? {
 		if (decryptedData == null) {

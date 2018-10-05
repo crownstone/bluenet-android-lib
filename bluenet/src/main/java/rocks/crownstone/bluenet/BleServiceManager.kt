@@ -12,7 +12,7 @@ import nl.komponents.kovenant.*
 
 
 class BleServiceManager(appContext: Context, evtBus: EventBus) {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val context = appContext
 

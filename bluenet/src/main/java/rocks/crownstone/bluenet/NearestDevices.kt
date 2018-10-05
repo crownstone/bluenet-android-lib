@@ -6,9 +6,7 @@ import rocks.crownstone.bluenet.scanparsing.ScannedDevice
  * Class that emits the nearest devices.
  */
 class NearestDevices(evtBus: EventBus) {
-	companion object {
-		const val TAG = "NearestDevices"
-	}
+	val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 
 	internal val nearestValidated = NearestDeviceList()

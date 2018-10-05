@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 
 class LocationServiceRequestActivity : AppCompatActivity() {
+	private val TAG = this.javaClass.simpleName
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		Log.i(TAG, "onCreate")
@@ -43,7 +44,6 @@ class LocationServiceRequestActivity : AppCompatActivity() {
 	}
 
 	companion object {
-		private val TAG = LocationServiceRequestActivity::class.java.canonicalName
 		private var dialogShown = false
 	}
 

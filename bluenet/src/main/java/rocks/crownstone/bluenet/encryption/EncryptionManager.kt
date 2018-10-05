@@ -11,7 +11,7 @@ import kotlin.collections.HashMap
 
 
 class EncryptionManager {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 
 	private lateinit var keys: Keys
 	private val sessionData: SessionData? = null

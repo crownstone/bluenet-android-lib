@@ -16,7 +16,7 @@ import java.util.*
 // - Parses the header, to determine device type, and mode
 // - Decrypts and parses the data
 class CrownstoneServiceData {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 
 	internal var headerParsedSuccess = false // Whether parsing of the header was successful (correct data format)
 	internal var headerParseFailed = false

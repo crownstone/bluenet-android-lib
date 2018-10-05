@@ -9,7 +9,7 @@ import android.util.Log
 
 
 class BleService: Service() {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 //	lateinit var instance: BleService
 	private val binder = ServiceBinder()
 

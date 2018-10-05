@@ -6,7 +6,7 @@ import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 
 class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val encryptionManager = encryptionMngr
 	private val validators = HashMap<DeviceAddress, Validator>() // TODO: this grows over time!

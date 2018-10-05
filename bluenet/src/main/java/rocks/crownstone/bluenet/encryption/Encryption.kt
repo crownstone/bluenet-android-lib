@@ -15,7 +15,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 object Encryption {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 
 	fun encryptCtr(payloadData: ByteArray, sessionNonce: ByteArray, validationKey: ByteArray, key: ByteArray, accessLevel: Int): ByteArray? {
 		if (payloadData == null || payloadData.isEmpty()) {

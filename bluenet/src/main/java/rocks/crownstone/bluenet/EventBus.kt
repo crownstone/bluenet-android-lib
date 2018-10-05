@@ -11,7 +11,7 @@ typealias EventType = String
 typealias EventCallback = (Any) -> Unit
 
 class EventBus {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 
 	private data class EventCallbackWithId(val id: SubscriptionId, val callback: EventCallback)
 	private data class PendingSubscription(val id: SubscriptionId, val callback: EventCallback, val eventType: EventType)

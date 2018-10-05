@@ -7,8 +7,8 @@ import java.util.*
 data class NearestDeviceListEntry(val deviceAddress: DeviceAddress, var rssi: Int, var lastSeenTime: Long)
 
 class NearestDeviceList {
+	val TAG = this.javaClass.simpleName
 	companion object {
-		const val TAG = "ScannedDevicesList"
 		const val TIMEOUT_MS = 20000
 		const val RSSI_LOWEST = -1000
 	}

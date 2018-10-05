@@ -11,7 +11,7 @@ import rocks.crownstone.bluenet.util.Conversion
 // - Parses advertisement data (ScanRecord)
 // - Keeps up address, name, rssi, iBeacon, service data, etc
 class ScannedDevice(result: ScanResult) {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 
 	val scanResult = result
 	var hasServiceData = false // True when there is service data (even if it's invalid data)

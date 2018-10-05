@@ -8,7 +8,7 @@ import java.util.*
 
 
 object Conversion {
-	private val TAG = Conversion::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 
 	const val BASE_UUID_START = "0000"
 	const val BASE_UUID_END = "-0000-1000-8000-00805f9b34fb"

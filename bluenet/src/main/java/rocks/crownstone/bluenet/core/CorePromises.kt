@@ -24,7 +24,7 @@ enum class PromiseType {
 }
 
 class CorePromises {
-	private val TAG = "CorePromises"
+	private val TAG = this.javaClass.simpleName
 
 	// Keeps up what action is expected to be performed
 	private var action = Action.NONE

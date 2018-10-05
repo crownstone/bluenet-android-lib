@@ -11,7 +11,7 @@ import rocks.crownstone.bluenet.scanparsing.ScanHandler
 import java.util.*
 
 class Bluenet {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 	private val eventBus = EventBus()
 	private lateinit var context: Context
 	private lateinit var bleCore: BleCore

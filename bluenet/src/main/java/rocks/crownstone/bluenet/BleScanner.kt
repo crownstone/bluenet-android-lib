@@ -17,7 +17,7 @@ Class that provides the following:
 
 
 class BleScanner(evtBus: EventBus, bleCore: BleCore) {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val core = bleCore
 

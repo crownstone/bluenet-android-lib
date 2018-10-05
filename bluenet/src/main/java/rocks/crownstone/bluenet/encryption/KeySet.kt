@@ -10,7 +10,7 @@ import java.nio.charset.Charset
  * Class that holds keys with different access levels
  */
 class KeySet() {
-	private val TAG = this::class.java.canonicalName
+	private val TAG = this.javaClass.simpleName
 //	private var adminKeyString: String? = null
 //	private var memberKeyString: String? = null
 //	private var guestKeyString: String? = null

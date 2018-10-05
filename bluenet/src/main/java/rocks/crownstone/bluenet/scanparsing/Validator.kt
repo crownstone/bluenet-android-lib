@@ -9,7 +9,7 @@ import rocks.crownstone.bluenet.OperationMode
  * It does this by comparing fields in the service data that should remain constant.
  */
 class Validator {
-	val TAG = this::class.java.canonicalName
+	val TAG = this.javaClass.simpleName
 	companion object {
 		const val THRESHOLD = 1 // Validated once 2 scans with different data have similar constant fields
 		const val CROWNSTONE_ID_INIT = -1 // Init with an invalid value
