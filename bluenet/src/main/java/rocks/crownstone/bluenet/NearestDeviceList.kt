@@ -24,7 +24,7 @@ class NearestDeviceList {
 		if (entry.rssi > nearest.rssi) {
 			nearest = entry
 		}
-		else if (nearest.lastSeenTime - now.time > TIMEOUT_MS) {
+		else if (now.time - nearest.lastSeenTime > TIMEOUT_MS) {
 			// Need to recalculate when the nearest is timed out
 			calcNearest(now)
 		}
@@ -54,7 +54,7 @@ class NearestDeviceList {
 		val it = map.entries.iterator()
 		while (it.hasNext()) {
 			val entry = it.next().value
-			if (entry.lastSeenTime - now.time > TIMEOUT_MS) {
+			if (now.time - entry.lastSeenTime > TIMEOUT_MS) {
 				Log.d(TAG, "remove $entry")
 				it.remove()
 			}
