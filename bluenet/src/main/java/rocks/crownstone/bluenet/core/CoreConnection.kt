@@ -6,6 +6,7 @@ import android.util.Log
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.resolve
+import rocks.crownstone.bluenet.BluenetEvent
 import rocks.crownstone.bluenet.DeviceAddress
 import rocks.crownstone.bluenet.Errors
 import rocks.crownstone.bluenet.EventBus
@@ -17,8 +18,11 @@ import java.util.*
  */
 open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appContext, evtBus) {
 	private var currentGatt: BluetoothGatt? = null
-
 	private var services: List<BluetoothGattService>? = null
+
+	init {
+		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, ::onBleTurnedOff)
+	}
 
 	/**
 	 * Connect to a device.
@@ -52,7 +56,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 					}
 					promises.setBusy(Action.CONNECT, deferred) // Resolve later in onGattConnectionStateChange
 					Log.d(TAG, "gatt.connect")
-					gatt.connect()
+					gatt.connect() // When doing this on a gatt that's invalid (due to bluetooth being turned off), this throws a android.os.DeadObjectException
 					// TODO: timeout
 				}
 				else -> {
@@ -410,6 +414,14 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		}
 		// TODO: check if correct characteristic was read
 		promises.resolve(Action.READ, characteristic.value)
+	}
+
+	@Synchronized private fun onBleTurnedOff(data: Any?) {
+		// //TODO: When bluetooth is turned off, we should close the gatt?
+		// Reject current action before closing.
+		promises.reject(Errors.BleNotReady())
+		close(true)
+		// Or just set gatt to null?
 	}
 
 	private val gattCallback = object: BluetoothGattCallback() {
