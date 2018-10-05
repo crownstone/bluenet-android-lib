@@ -22,4 +22,5 @@ object Errors {
 	class WriteFailed: Exception("write failed")
 	class ReadFailed: Exception("read failed")
 
+	open class Gatt(status: Int): Exception("gatt error $status") // Make a class per error?
 }

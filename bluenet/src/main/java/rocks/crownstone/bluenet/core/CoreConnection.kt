@@ -90,6 +90,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 					else {
 						this.currentGatt = device.connectGatt(context, false, gattCallback)
 					}
+					Log.d(TAG, "gatt=${this.currentGatt}")
 					// TODO: timeout
 				}
 				else -> {
@@ -146,20 +147,21 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		Log.i(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
 
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onConnectionStateChange address=$address status=$status newState=$newState")
+			Log.e(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
 			// TODO: handle error
 			// See https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
-			// 8   GATT_CONN_TIMEOUT
-			//     [11.01.17] (Bart @ oneplus 3) When I get this error, it continuously fails.
-			//     [04-10-18] Gatt seems unusable at this point.
+			// 8   GATT_CONN_TIMEOUT / GATT_INSUF_AUTHORIZATION
+			//     [05-10-2018] (oneplus 3) When I get this error (during discovery), every next discovery fails too, until i turn bluetooth off and on.
+			//                              Maybe try to increase the "connection supervision timeout" on the crownstone.
 			// 19  GATT_CONN_TERMINATE_PEER_USER   Getting this status when device disconnected us.
-			// 22  GATT_CONN_TERMINATE_LOCAL_HOST  [10.10.17] Getting this error on a samsung s7 a lot, seems to happen when out of reach.
+			// 22  GATT_CONN_TERMINATE_LOCAL_HOST  [10-10-2017] Getting this error on a samsung s7 a lot, seems to happen when out of reach.
 			// 34  GATT_CONN_LMP_TIMEOUT
-			// 133 GATT_ERROR                      [11.01.17] This error seems rather common, retry usually helps.
-			// 135 GATT_ILLEGAL_PARAMETER          [04-10-18] Got this error after calling gatt.disconnect
+			// 133 GATT_ERROR                      [11-01-2017] This error seems rather common, retry usually helps.
+			// 135 GATT_ILLEGAL_PARAMETER          [04-10-2018] Got this error after calling gatt.disconnect
 		}
 
 		if (gatt == null || gatt != currentGatt || address == null || address != currentGatt?.device?.address) {
+			// [05-10-2018] Got this event after a gatt.close().
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt address=${currentGatt?.device?.address}")
 			return
 		}
@@ -295,7 +297,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			// Use cached results
 			return Promise.ofSuccess(Unit)
 		}
-		promises.setBusy(Action.DISCOVER, deferred) // Resolve later in gattCallback
+		promises.setBusy(Action.DISCOVER, deferred) // Resolve later in onGattServicesDiscovered
 		Log.d(TAG, "gatt.discoverServices")
 		val result = gatt.discoverServices()
 		if (!result) {
@@ -313,6 +315,9 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		if (status != BluetoothGatt.GATT_SUCCESS) {
 			Log.e(TAG, "onServicesDiscovered status=$status")
 			// TODO: handle error
+			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
+			promises.reject(Errors.Gatt(status))
+			return
 		}
 		services = gatt.services
 		promises.resolve(Action.DISCOVER)
@@ -336,7 +341,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		if (char == null) {
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
-		promises.setBusy(Action.WRITE, deferred) // Resolve later in gattCallback
+		promises.setBusy(Action.WRITE, deferred) // Resolve later in onGattCharacteristicWrite
 		char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 		Log.d(TAG, "gatt.writeCharacteristic")
 		val result = char.setValue(data) && gatt.writeCharacteristic(char)
@@ -349,12 +354,15 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	@Synchronized private fun onGattCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
 		Log.i(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
 		if (gatt == null || gatt != currentGatt || characteristic == null) {
-			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=${characteristic?.uuid}")
 			return
 		}
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
+			Log.e(TAG, "onCharacteristicWrite characteristic=${characteristic.uuid} status=$status")
 			// TODO: handle error
+			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
+			promises.reject(Errors.Gatt(status))
+			return
 		}
 		// TODO: check if correct characteristic was written
 		promises.resolve(Action.WRITE)
@@ -378,7 +386,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		if (char == null) {
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
-		promises.setBusy(Action.READ, deferred) // Resolve later in gattCallback
+		promises.setBusy(Action.READ, deferred) // Resolve later in onGattCharacteristicRead
 		Log.d(TAG, "gatt.readCharacteristic")
 		val result = gatt.readCharacteristic(char)
 		if (!result) {
@@ -390,12 +398,15 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	@Synchronized private fun onGattCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
 		Log.i(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
 		if (gatt == null || gatt != currentGatt || characteristic == null) {
-			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=${characteristic?.uuid}")
 			return
 		}
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
+			Log.e(TAG, "onCharacteristicRead characteristic=${characteristic.uuid} status=$status")
 			// TODO: handle error
+			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
+			promises.reject(Errors.Gatt(status))
+			return
 		}
 		// TODO: check if correct characteristic was read
 		promises.resolve(Action.READ, characteristic.value)
