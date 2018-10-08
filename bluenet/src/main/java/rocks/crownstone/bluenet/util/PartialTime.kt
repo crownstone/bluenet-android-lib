@@ -29,7 +29,7 @@ object PartialTime {
 	 * Works as long as the source of the partial timestamp is not more than 9 hours off.
 	 *
 	 * @param unixTimestamp  Seconds since epoch (gmt).
-	 * @param lsbTimestamp   Partial timestamp.
+	 * @param lsbTimestamp   Partial timestamp (uint16).
 	 * @return               The reconstructed timestamp.
 	 */
 	fun reconstructTimestamp(unixTimestamp: Long, lsbTimestamp: Int): Long {
@@ -56,12 +56,12 @@ object PartialTime {
 	 * Replaces the least significant bytes of a timestamp by the partial timestamp.
 	 *
 	 * @param timestamp      Timestamp in seconds.
-	 * @param lsbTimestamp   Partial timestamp.
+	 * @param lsbTimestamp   Partial timestamp (uint16).
 	 * @return               Timestamp with the least significant bytes replaced by the partial timestamp.
 	 */
 	private fun combineTimestamp(timestamp: Long, lsbTimestamp: Int): Long {
 		val arr = Conversion.uint32ToByteArray(timestamp)
-		val arrLsb = Conversion.shortToByteArray(lsbTimestamp)
+		val arrLsb = Conversion.uint16ToByteArray(lsbTimestamp)
 		arr[0] = arrLsb[0]
 		arr[1] = arrLsb[1]
 		return Conversion.toUint32(Conversion.byteArrayToInt(arr))

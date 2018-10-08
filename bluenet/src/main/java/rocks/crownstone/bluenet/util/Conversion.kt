@@ -93,18 +93,52 @@ object Conversion {
 		return bb.getFloat(offset)
 	}
 
-	fun intToByteArray(value: Int): ByteArray {
+	fun int32ToByteArray(value: Int): ByteArray {
 		val bb = ByteBuffer.allocate(4)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.putInt(value)
 		return bb.array()
 	}
 
-	fun shortToByteArray(value: Int): ByteArray {
+	fun uint32ToByteArray(value: Long): ByteArray {
+		val bb = ByteBuffer.allocate(4)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
+		bb.putInt(value.toInt())
+		return bb.array()
+	}
+//	fun uint32ToByteArray(num: Long): ByteArray {
+//		val bytes = ByteArray(4)
+//		bytes[0] = (num shr 0 and 0xFF).toByte()
+//		bytes[1] = (num shr 8 and 0xFF).toByte()
+//		bytes[2] = (num shr 16 and 0xFF).toByte()
+//		bytes[3] = (num shr 24 and 0xFF).toByte()
+//		return bytes
+//	}
+
+	fun int16ToByteArray(value: Short): ByteArray {
+		val bb = ByteBuffer.allocate(2)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
+		bb.putShort(value)
+		return bb.array()
+	}
+
+	fun uint16ToByteArray(value: Int): ByteArray {
 		val bb = ByteBuffer.allocate(2)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.putShort(value.toShort())
 		return bb.array()
+	}
+
+	fun int8ToByteArray(value: Byte): ByteArray {
+		return byteArrayOf(value)
+	}
+
+	fun uint8ToByteArray(value: Short): ByteArray {
+		return byteArrayOf(value.toByte())
+	}
+
+	fun uint8ToByteArray(value: Int): ByteArray {
+		return byteArrayOf(value.toByte())
 	}
 
 	fun floatToByteArray(value: Float): ByteArray {
@@ -113,6 +147,8 @@ object Conversion {
 		bb.putFloat(value)
 		return bb.array()
 	}
+
+
 
 	fun toUint8(b: Byte): Int {
 		return b.toInt() and 0xFF
@@ -128,15 +164,6 @@ object Conversion {
 
 	fun toUint32(num: Int): Long {
 		return num.toLong() and 0xFFFFFFFFL
-	}
-
-	fun uint32ToByteArray(num: Long): ByteArray {
-		val bytes = ByteArray(4)
-		bytes[0] = (num shr 0 and 0xFF).toByte()
-		bytes[1] = (num shr 8 and 0xFF).toByte()
-		bytes[2] = (num shr 16 and 0xFF).toByte()
-		bytes[3] = (num shr 24 and 0xFF).toByte()
-		return bytes
 	}
 
 	fun hexStringToBytes(hex: String): ByteArray {
