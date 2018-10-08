@@ -1,16 +1,15 @@
 package rocks.crownstone.bluenet
 
 import android.app.Service
-import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 
 
-class BleService: Service() {
+class BackgroundService: Service() {
 	private val TAG = this.javaClass.simpleName
-//	lateinit var instance: BleService
+//	lateinit var instance: BackgroundService
 	private val binder = ServiceBinder()
 
 	private lateinit var eventBus: EventBus
@@ -18,9 +17,9 @@ class BleService: Service() {
 //	private lateinit var advertiser:
 
 	inner class ServiceBinder : Binder() {
-		fun getService(): BleService {
+		fun getService(): BackgroundService {
 //			return instance
-			return this@BleService
+			return this@BackgroundService
 		}
 	}
 

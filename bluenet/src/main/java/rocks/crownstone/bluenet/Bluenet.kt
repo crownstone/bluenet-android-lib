@@ -17,7 +17,7 @@ class Bluenet {
 	private lateinit var bleCore: BleCore
 	private var bleScanner: BleScanner? = null
 	private var scanHandler: ScanHandler? = null
-	private lateinit var service: BleServiceManager
+	private lateinit var service: BackgroundServiceManager
 	private val encryptionManager = EncryptionManager()
 
 	private var initialized = false
@@ -53,7 +53,7 @@ class Bluenet {
 
 		bleCore = BleCore(context, eventBus)
 		bleCore.initBle()
-		service = BleServiceManager(appContext, eventBus)
+		service = BackgroundServiceManager(appContext, eventBus)
 		return service.runInBackground()
 				.then {
 					initialized = true
@@ -205,6 +205,7 @@ class Bluenet {
 	@Synchronized fun connect(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		return bleCore.connect(address, 0)
+		// TODO: discover service, and read session nonce: check ios code
 	}
 
 	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {

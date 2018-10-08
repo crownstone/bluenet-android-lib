@@ -11,7 +11,7 @@ import android.util.Log
 import nl.komponents.kovenant.*
 
 
-class BleServiceManager(appContext: Context, evtBus: EventBus) {
+class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val context = appContext
@@ -19,11 +19,11 @@ class BleServiceManager(appContext: Context, evtBus: EventBus) {
 	private var foreground = false
 	private var startServiceDeferred: Deferred<Unit, Exception>? = null
 
-	private var service: BleService? = null
+	private var service: BackgroundService? = null
 	private var serviceConnection: ServiceConnection = object : ServiceConnection {
 		override fun onServiceConnected(name: ComponentName, binder: IBinder) {
 			Log.i(TAG, "service connected")
-			service = (binder as BleService.ServiceBinder).getService()
+			service = (binder as BackgroundService.ServiceBinder).getService()
 			service?.setEventBus(eventBus)
 			val deferred = startServiceDeferred
 			startServiceDeferred = null
@@ -66,7 +66,7 @@ class BleServiceManager(appContext: Context, evtBus: EventBus) {
 		}
 
 		// Start service, regardless whether it was started, to make sure startForegroundService() is called.
-		val intent = Intent(context, BleService::class.java)
+		val intent = Intent(context, BackgroundService::class.java)
 		if (foreground && Build.VERSION.SDK_INT >= 26) {
 			context.startForegroundService(intent)
 		}
@@ -81,7 +81,7 @@ class BleServiceManager(appContext: Context, evtBus: EventBus) {
 			return deferred.promise
 		}
 
-		val bindIntent = Intent(context, BleService::class.java)
+		val bindIntent = Intent(context, BackgroundService::class.java)
 		val success = context.bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 		Log.i(TAG, "bind to service: $success")
 		if (!success) {
