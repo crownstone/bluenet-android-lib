@@ -14,7 +14,7 @@ class EncryptionManager {
 	private val TAG = this.javaClass.simpleName
 
 	private lateinit var keys: Keys
-	private val sessionData: SessionData? = null
+	internal var sessionData: SessionData? = null
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
 
@@ -65,5 +65,29 @@ class EncryptionManager {
 		}
 		// Fall back to cached result
 		return getKeySetFromAddress(device.address)
+	}
+
+	@Synchronized fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Boolean {
+		val sessionData = when (isEncrypted) {
+			true -> {
+				val key = getKeySetFromAddress(address)?.getGuestKey()
+				if (key == null) {
+					return false
+				}
+				val decryptedData = Encryption.decryptEcb(data, key)
+				if (decryptedData == null) {
+					return false
+				}
+				SessionDataParser.getSessionData(decryptedData, isEncrypted)
+			}
+			false -> {
+				SessionDataParser.getSessionData(data, isEncrypted)
+			}
+		}
+		if (sessionData == null) {
+			return false
+		}
+		this.sessionData = sessionData
+		return true
 	}
 }

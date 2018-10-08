@@ -27,7 +27,8 @@ object SessionDataParser {
 				return null
 			}
 			return getSessionData(decryptedData, VALIDATION_KEY_LENGTH)
-		} else {
+		}
+		else {
 			if (decryptedData.size < SESSION_NONCE_LENGTH) {
 				Log.e(TAG, "invalid session data length: " + Conversion.bytesToString(decryptedData))
 				return null
