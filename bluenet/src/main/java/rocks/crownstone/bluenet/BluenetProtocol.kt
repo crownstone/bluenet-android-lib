@@ -38,6 +38,10 @@ object BluenetProtocol {
 	const val SESSION_NONCE_LENGTH = 5
 	const val PACKET_NONCE_LENGTH = 3
 	const val ACCESS_LEVEL_LENGTH = 1
+
+	const val OPCODE_READ: Byte = 0
+	const val OPCODE_WRITE: Byte = 1
+	const val OPCODE_NOTIFY: Byte = 2
 }
 
 enum class DeviceType(val num: Int) {
