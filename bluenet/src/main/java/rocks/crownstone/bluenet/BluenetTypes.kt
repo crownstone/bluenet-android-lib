@@ -31,6 +31,13 @@ enum class BluenetEvent {
 	NEAREST_SETUP,            // Validated device in setup operation mode was scanned. NearestDeviceListEntry as data.
 }
 
+typealias Int8 = Byte
+typealias Uint8 = Short
+typealias Int16 = Short
+typealias Uint16 = Int
+typealias Int32 = Int
+typealias Uint32 = Long
+
 typealias DeviceAddress = String
 typealias SphereId = String
 typealias Keys = HashMap<SphereId, KeyData>
@@ -39,7 +46,7 @@ data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)
 /**
  * Class that holds a key with its access level
  */
-data class KeyAccessLevelPair(val key: ByteArray?, val accessLevel: AccessLevel) {
+data class KeyAccessLevelPair(val key: ByteArray, val accessLevel: AccessLevel) {
 	override fun toString(): String {
 		return "key: " + Conversion.bytesToString(key) + " access level: " + accessLevel
 	}

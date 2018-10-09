@@ -12,6 +12,10 @@ object Util {
 		return value and (1 shl bit) != 0
 	}
 
+	fun isBitSet(value: Short, bit: Int): Boolean {
+		return isBitSet(value.toInt(), bit)
+	}
+
 	fun isBitSet(value: Byte, bit: Int): Boolean {
 		return isBitSet(value.toInt(), bit)
 	}

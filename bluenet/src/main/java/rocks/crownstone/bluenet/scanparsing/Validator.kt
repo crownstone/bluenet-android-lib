@@ -2,6 +2,7 @@ package rocks.crownstone.bluenet.scanparsing
 
 import android.util.Log
 import rocks.crownstone.bluenet.OperationMode
+import rocks.crownstone.bluenet.Uint8
 
 /**
  * Class to validate a ble device.
@@ -12,7 +13,7 @@ class Validator {
 	val TAG = this.javaClass.simpleName
 	companion object {
 		const val THRESHOLD = 1 // Validated once 2 scans with different data have similar constant fields
-		const val CROWNSTONE_ID_INIT = -1 // Init with an invalid value
+		const val CROWNSTONE_ID_INIT: Uint8 = -1 // Init with an invalid value
 		const val CHANGING_DATA_INIT = -1 // Init with an invalid value
 	}
 

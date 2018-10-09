@@ -1,10 +1,8 @@
 package rocks.crownstone.bluenet.scanparsing
 
 import android.util.Log
-import rocks.crownstone.bluenet.BluenetProtocol
+import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.DeviceType
-import rocks.crownstone.bluenet.OperationMode
 import rocks.crownstone.bluenet.scanparsing.servicedata.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -33,14 +31,14 @@ class CrownstoneServiceData {
 	internal var operationMode = OperationMode.UNKNOWN
 
 	// State
-	internal var crownstoneId = 0
-	internal var switchState = 0
+	internal var crownstoneId: Uint8 = 0
+	internal var switchState: Uint8 = 0
 	internal var temperature : Byte = 0
 	internal var powerUsageReal = 0.0
 	internal var powerUsageApparent = 0.0
 	internal var powerFactor = 1.0
 	internal var energyUsed = 0L
-	internal var externalRssi = 0
+	internal var externalRssi: Int8 = 0
 	internal var timestamp = 0L
 	internal var validation = false
 	internal var changingData = 0
@@ -120,7 +118,7 @@ class CrownstoneServiceData {
 		byteBuffer = ByteBuffer.wrap(bytes)
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
-		version = Conversion.toUint8(byteBuffer.get())
+		version = Conversion.toUint8(byteBuffer.get()).toInt()
 		when (version) {
 			1 -> return V1.parseHeader(byteBuffer, this)
 			3 -> return V3.parseHeader(byteBuffer, this)

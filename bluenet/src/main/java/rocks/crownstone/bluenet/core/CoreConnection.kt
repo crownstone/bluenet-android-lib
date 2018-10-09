@@ -146,6 +146,44 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		return deferred.promise
 	}
 
+	/**
+	 * Get the device we're connected to.
+	 *
+	 * @return Device, or null when not connected.
+	 */
+	@Synchronized fun getConnectedDevice(): BluetoothDevice? {
+		if (getConnectionState() == ConnectionState.CONNECTED) {
+			return currentGatt?.device
+		}
+		return null
+	}
+
+	/**
+	 * @return Whether the service is available.
+	 */
+	@Synchronized fun hasService(serviceUuid: UUID): Boolean {
+		return currentGatt?.getService(serviceUuid) != null
+	}
+
+	/**
+	 * @return Whether the characteristic is available.
+	 */
+	@Synchronized fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
+		return currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid) != null
+	}
+
+	/**
+	 * Get the address of the device we're connected to.
+	 *
+	 * @return Address of the device, or null when not connected.
+	 */
+	@Synchronized fun getConnectedAddress(): DeviceAddress? {
+		if (getConnectionState() == ConnectionState.CONNECTED) {
+			return currentGatt?.device?.address
+		}
+		return null
+	}
+
 	@Synchronized private fun onGattConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
 		val address = gatt?.device?.address
 		Log.i(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")

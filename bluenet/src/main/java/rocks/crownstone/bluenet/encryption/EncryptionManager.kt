@@ -14,7 +14,7 @@ class EncryptionManager {
 	private val TAG = this.javaClass.simpleName
 
 	private lateinit var keys: Keys
-	internal var sessionData: SessionData? = null
+	private var sessionData: SessionData? = null
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
 
@@ -72,6 +72,7 @@ class EncryptionManager {
 			true -> {
 				val key = getKeySetFromAddress(address)?.getGuestKey()
 				if (key == null) {
+					Log.w(TAG, "No key")
 					return false
 				}
 				val decryptedData = Encryption.decryptEcb(data, key)
@@ -89,5 +90,26 @@ class EncryptionManager {
 		}
 		this.sessionData = sessionData
 		return true
+	}
+
+	@Synchronized fun encrypt(address: DeviceAddress, data: ByteArray, accessLevel: AccessLevel): ByteArray? {
+		when(accessLevel) {
+			AccessLevel.ENCRYPTION_DISABLED -> return data
+			AccessLevel.UNKNOWN -> return null
+			else -> {
+				val sessionData = this.sessionData
+				if (sessionData == null) {
+					Log.w(TAG, "No session data")
+					return null
+				}
+				// Just use highest available key
+				val keyAccessLevel = getKeySetFromAddress(address)?.getHighestKey()
+				if (keyAccessLevel == null) {
+					Log.w(TAG, "No key")
+					return null
+				}
+				return Encryption.encryptCtr(data, sessionData.sessionNonce, sessionData.validationKey, keyAccessLevel.key, keyAccessLevel.accessLevel.num)
+			}
+		}
 	}
 }

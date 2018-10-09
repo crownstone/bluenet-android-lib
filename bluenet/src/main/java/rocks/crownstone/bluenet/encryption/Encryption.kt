@@ -6,6 +6,7 @@ import rocks.crownstone.bluenet.BluenetProtocol.PACKET_NONCE_LENGTH
 import rocks.crownstone.bluenet.BluenetProtocol.SESSION_NONCE_LENGTH
 import rocks.crownstone.bluenet.BluenetProtocol.VALIDATION_KEY_LENGTH
 import rocks.crownstone.bluenet.BluenetProtocol.ACCESS_LEVEL_LENGTH
+import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteBuffer
 import java.security.GeneralSecurityException
@@ -17,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec
 object Encryption {
 	private val TAG = this.javaClass.simpleName
 
-	fun encryptCtr(payloadData: ByteArray, sessionNonce: ByteArray, validationKey: ByteArray, key: ByteArray, accessLevel: Int): ByteArray? {
+	fun encryptCtr(payloadData: ByteArray, sessionNonce: ByteArray, validationKey: ByteArray, key: ByteArray, accessLevel: Uint8): ByteArray? {
 		if (payloadData == null || payloadData.isEmpty()) {
 			Log.w(TAG, "wrong data length")
 			return null

@@ -1,6 +1,8 @@
 package rocks.crownstone.bluenet.encryption
 
-enum class AccessLevel(val num: Int) {
+import rocks.crownstone.bluenet.Uint8
+
+enum class AccessLevel(val num: Uint8) {
 	ADMIN(0),
 	MEMBER(1),
 	GUEST(2),
@@ -13,7 +15,7 @@ enum class AccessLevel(val num: Int) {
 		private val map = AccessLevel.values().associateBy(AccessLevel::num)
 		//		fun fromInt(type: Int) = map.getOrDefault(type, UNKNOWN)
 		//@JvmStatic
-		fun fromInt(type: Int): AccessLevel {
+		fun fromNum(type: Uint8): AccessLevel {
 			return map[type] ?: return UNKNOWN
 		}
 	}

@@ -19,8 +19,8 @@ internal object V1 {
 		parseServiceData(bb, servicedata)
 		// Check if it's in setup mode
 		if (servicedata.flagSetup &&
-				servicedata.crownstoneId == 0 &&
-				servicedata.switchState == 0 &&
+				servicedata.crownstoneId == 0.toShort() &&
+				servicedata.switchState == 0.toShort() &&
 				servicedata.powerUsageReal == 0.0 &&
 				servicedata.energyUsed == 0L) {
 			servicedata.operationMode = OperationMode.SETUP
@@ -51,7 +51,7 @@ internal object V1 {
 	}
 
 	private fun parseServiceData(bb: ByteBuffer, servicedata: CrownstoneServiceData) {
-		servicedata.crownstoneId = Conversion.toUint16(bb.getShort().toInt())
+		servicedata.crownstoneId = Conversion.toUint16(bb.getShort()).toShort()
 		servicedata.switchState = Conversion.toUint8(bb.get())
 		val flags = bb.get()
 		servicedata.flagExternalData = (Util.isBitSet(flags, 1))

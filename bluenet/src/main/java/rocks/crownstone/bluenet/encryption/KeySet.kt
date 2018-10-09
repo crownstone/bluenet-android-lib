@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet.encryption
 import android.util.Log
 import rocks.crownstone.bluenet.BluenetProtocol.AES_BLOCK_SIZE
 import rocks.crownstone.bluenet.KeyAccessLevelPair
+import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.charset.Charset
 
@@ -76,8 +77,12 @@ class KeySet() {
 		return guestKeyBytes
 	}
 
-	fun getKey(accessLevel: Int): ByteArray? {
-		when (AccessLevel.fromInt(accessLevel)) {
+	fun getKey(accessLevel: Uint8): ByteArray? {
+		return getKey(AccessLevel.fromNum(accessLevel))
+	}
+
+	fun getKey(accessLevel: AccessLevel): ByteArray? {
+		when (accessLevel) {
 			AccessLevel.ADMIN -> return getAdminKey()
 			AccessLevel.MEMBER -> return getMemberKey()
 			AccessLevel.GUEST -> return getGuestKey()
@@ -86,14 +91,17 @@ class KeySet() {
 	}
 
 	fun getHighestKey(): KeyAccessLevelPair? {
-		if (getAdminKey() != null) {
-			return KeyAccessLevelPair(getAdminKey(), AccessLevel.ADMIN)
+		val adminKey = getAdminKey()
+		if (adminKey != null) {
+			return KeyAccessLevelPair(adminKey, AccessLevel.ADMIN)
 		}
-		if (getMemberKey() != null) {
-			return KeyAccessLevelPair(getMemberKey(), AccessLevel.MEMBER)
+		val memberKey = getMemberKey()
+		if (memberKey != null) {
+			return KeyAccessLevelPair(memberKey, AccessLevel.MEMBER)
 		}
-		if (getGuestKey() != null) {
-			KeyAccessLevelPair(getGuestKey(), AccessLevel.GUEST)
+		val guestKey = getGuestKey()
+		if (guestKey != null) {
+			KeyAccessLevelPair(guestKey, AccessLevel.GUEST)
 		}
 		return null
 	}

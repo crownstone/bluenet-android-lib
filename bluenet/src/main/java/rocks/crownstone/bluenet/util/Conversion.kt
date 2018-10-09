@@ -2,6 +2,7 @@ package rocks.crownstone.bluenet.util
 
 import android.bluetooth.BluetoothAdapter
 import android.util.Base64
+import rocks.crownstone.bluenet.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -93,14 +94,14 @@ object Conversion {
 		return bb.getFloat(offset)
 	}
 
-	fun int32ToByteArray(value: Int): ByteArray {
+	fun int32ToByteArray(value: Int32): ByteArray {
 		val bb = ByteBuffer.allocate(4)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.putInt(value)
 		return bb.array()
 	}
 
-	fun uint32ToByteArray(value: Long): ByteArray {
+	fun uint32ToByteArray(value: Uint32): ByteArray {
 		val bb = ByteBuffer.allocate(4)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.putInt(value.toInt())
@@ -115,31 +116,31 @@ object Conversion {
 //		return bytes
 //	}
 
-	fun int16ToByteArray(value: Short): ByteArray {
+	fun int16ToByteArray(value: Int16): ByteArray {
 		val bb = ByteBuffer.allocate(2)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.putShort(value)
 		return bb.array()
 	}
 
-	fun uint16ToByteArray(value: Int): ByteArray {
+	fun uint16ToByteArray(value: Uint16): ByteArray {
 		val bb = ByteBuffer.allocate(2)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.putShort(value.toShort())
 		return bb.array()
 	}
 
-	fun int8ToByteArray(value: Byte): ByteArray {
+	fun int8ToByteArray(value: Int8): ByteArray {
 		return byteArrayOf(value)
 	}
 
-	fun uint8ToByteArray(value: Short): ByteArray {
+	fun uint8ToByteArray(value: Uint8): ByteArray {
 		return byteArrayOf(value.toByte())
 	}
 
-	fun uint8ToByteArray(value: Int): ByteArray {
-		return byteArrayOf(value.toByte())
-	}
+//	fun uint8ToByteArray(value: Int): ByteArray {
+//		return byteArrayOf(value.toByte())
+//	}
 
 	fun floatToByteArray(value: Float): ByteArray {
 		val bb = ByteBuffer.allocate(4)
@@ -150,19 +151,22 @@ object Conversion {
 
 
 
-	fun toUint8(b: Byte): Int {
-		return b.toInt() and 0xFF
+//	fun toUint8(b: Byte): Int {
+//		return b.toInt() and 0xFF
+//	}
+	fun toUint8(b: Byte): Uint8 {
+		return (b.toInt() and 0xFF).toShort()
 	}
 
-	fun toUint16(num: Short): Int {
+	fun toUint16(num: Short): Uint16 {
 		return num.toInt() and 0xFFFF
 	}
 
-	fun toUint16(num: Int): Int {
+	fun toUint16(num: Int): Uint16 {
 		return num and 0xFFFF
 	}
 
-	fun toUint32(num: Int): Long {
+	fun toUint32(num: Int): Uint32 {
 		return num.toLong() and 0xFFFFFFFFL
 	}
 

@@ -1,5 +1,7 @@
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
+import rocks.crownstone.bluenet.Uint32
+import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.PartialTime
@@ -21,7 +23,7 @@ internal object Shared {
 		servicedata.energyUsed = bb.getInt() * 64L
 		parsePartialTimestamp(bb, servicedata)
 		if (external && withRssi) {
-			servicedata.externalRssi = bb.get().toInt()
+			servicedata.externalRssi = bb.get()
 		}
 		else {
 			bb.get() // reserved
@@ -40,7 +42,7 @@ internal object Shared {
 		parsePartialTimestamp(bb, servicedata)
 		if (external) {
 			if (withRssi) {
-				servicedata.externalRssi = bb.get().toInt()
+				servicedata.externalRssi = bb.get()
 			}
 			else {
 				bb.get() // reserved
@@ -68,7 +70,7 @@ internal object Shared {
 		return true
 	}
 
-	private fun parseFlags(flags: Int, servicedata: CrownstoneServiceData) {
+	private fun parseFlags(flags: Uint8, servicedata: CrownstoneServiceData) {
 		servicedata.flagDimmingAvailable = Util.isBitSet(flags, 0)
 		servicedata.flagDimmable         = Util.isBitSet(flags, 1)
 		servicedata.flagError            = Util.isBitSet(flags, 2)
@@ -77,7 +79,7 @@ internal object Shared {
 		servicedata.flagSwitchCraft      = Util.isBitSet(flags, 5)
 	}
 
-	private fun parseErrorBitmask(bitmask: Long, servicedata: CrownstoneServiceData) {
+	private fun parseErrorBitmask(bitmask: Uint32, servicedata: CrownstoneServiceData) {
 		servicedata.errorOverCurrent       = Util.isBitSet(bitmask,0)
 		servicedata.errorOverCurrentDimmer = Util.isBitSet(bitmask,1)
 		servicedata.errorChipTemperature   = Util.isBitSet(bitmask,2)
