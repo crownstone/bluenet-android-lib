@@ -1,11 +1,11 @@
 package rocks.crownstone.bluenet.encryption
 
 import android.util.Log
-import rocks.crownstone.bluenet.DeviceAddress
-import rocks.crownstone.bluenet.IbeaconData
-import rocks.crownstone.bluenet.Keys
-import rocks.crownstone.bluenet.SphereId
+import nl.komponents.kovenant.Promise
+import nl.komponents.kovenant.deferred
+import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
+import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -67,17 +67,17 @@ class EncryptionManager {
 		return getKeySetFromAddress(device.address)
 	}
 
-	@Synchronized fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Boolean {
+	@Synchronized fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Promise<Unit, Exception> {
 		val sessionData = when (isEncrypted) {
 			true -> {
 				val key = getKeySetFromAddress(address)?.getGuestKey()
 				if (key == null) {
 					Log.w(TAG, "No key")
-					return false
+					return Promise.ofFail(Errors.EncryptionKeyMissing())
 				}
 				val decryptedData = Encryption.decryptEcb(data, key)
 				if (decryptedData == null) {
-					return false
+					return Promise.ofFail(Errors.Encryption())
 				}
 				SessionDataParser.getSessionData(decryptedData, isEncrypted)
 			}
@@ -86,10 +86,10 @@ class EncryptionManager {
 			}
 		}
 		if (sessionData == null) {
-			return false
+			return Promise.ofFail(Errors.Parse())
 		}
 		this.sessionData = sessionData
-		return true
+		return Promise.ofSuccess(Unit)
 	}
 
 	@Synchronized fun encrypt(address: DeviceAddress, data: ByteArray, accessLevel: AccessLevel): ByteArray? {

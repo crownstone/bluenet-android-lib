@@ -22,7 +22,10 @@ object Errors {
 	class WriteFailed: Exception("write failed")
 	class ReadFailed: Exception("read failed")
 
-	class Encryption: Exception("encryption failed")
+	class Parse: Exception("parse failed")
+
+	open class Encryption(msg: String="encryption failed"): Exception(msg)
+	class EncryptionKeyMissing: Encryption("missing key")
 
 	open class Gatt(status: Int): Exception("gatt error $status") // Make a class per error?
 }

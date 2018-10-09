@@ -1,9 +1,6 @@
 package rocks.crownstone.bluenet
 
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
-import nl.komponents.kovenant.then
-import nl.komponents.kovenant.unwrap
+import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import java.util.*
@@ -19,7 +16,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	var isSetupMode = false
 		private set
 
-	fun connect(address: DeviceAddress): Promise<Unit, Exception> {
+	@Synchronized fun connect(address: DeviceAddress): Promise<Unit, Exception> {
 		return bleCore.connect(address, 9999)
 				.then {
 					isSetupMode = false
@@ -31,7 +28,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}.unwrap()
 	}
 
-	fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel): Promise<Unit, Exception> {
+	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel): Promise<Unit, Exception> {
 		val encryptedData = when (accessLevel) {
 			AccessLevel.UNKNOWN, AccessLevel.SETUP -> data
 			else -> {
@@ -51,32 +48,40 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	/**
 	 * @return Whether the service is available.
 	 */
-	fun hasService(serviceUuid: UUID): Boolean {
+	@Synchronized fun hasService(serviceUuid: UUID): Boolean {
 		return bleCore.hasService(serviceUuid)
 	}
 
 	/**
 	 * @return Whether the characteristic is available.
 	 */
-	fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
+	@Synchronized fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
 		return bleCore.hasCharacteristic(serviceUuid, characteristicUuid)
 	}
 
-	private fun getSessionData(address: DeviceAddress): Promise<Unit, Exception> {
-		val deferred = deferred<Unit, Exception>()
-		// TODO: different in setup mode
-		bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_NONCE_UUID)
-				.success {
-					encryptionManager.parseSessionData(address, it, true)
-				}
-				.fail {
-					deferred.reject(it)
-				}
-		return deferred.promise
+	@Synchronized private fun getSessionData(address: DeviceAddress): Promise<Unit, Exception> {
+		if (isSetupMode) {
+			return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID)
+					.then {
+						encryptionManager.parseSessionData(address, it, false)
+					}.unwrap()
+					.then {
+						bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
+					}.unwrap()
+					.then {
+						// TODO: parse
+					}
+		}
+		else {
+			return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_NONCE_UUID)
+					.then {
+						encryptionManager.parseSessionData(address, it, true)
+					}.unwrap()
+		}
 	}
 
 
-	private fun checkSetupMode() {
+	@Synchronized private fun checkSetupMode() {
 		if (bleCore.hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
 			isSetupMode = true
 		}
