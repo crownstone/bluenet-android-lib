@@ -52,7 +52,7 @@ class CorePromises {
 		}
 		Log.d(TAG, "setBusy action=${action.name}")
 		when (action) {
-			Action.CONNECT, Action.DISCONNECT, Action.REFRESH, Action.DISCOVER, Action.WRITE -> {
+			Action.CONNECT, Action.DISCONNECT, Action.REFRESH, Action.DISCOVER, Action.WRITE, Action.SUBSCRIBE, Action.UNSUBSCRIBE -> {
 				promiseType = PromiseType.UNIT
 				unitPromise = deferred as Deferred<Unit, Exception> // Can't check :(
 				this.action = action
@@ -149,7 +149,9 @@ class CorePromises {
 		when (promiseType) {
 			PromiseType.UNIT -> {
 				unitPromise?.reject(error)
-				unitPromise = null
+			}
+			PromiseType.BYTE_ARRAY -> {
+				byteArrayPromise?.reject(error)
 			}
 			else -> Log.w(TAG, "no promise set")
 		}
