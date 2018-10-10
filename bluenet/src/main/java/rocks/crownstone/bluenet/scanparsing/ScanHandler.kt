@@ -31,7 +31,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		// But only if the scan has service data at all..
 		when (device.operationMode) {
 				OperationMode.NORMAL -> {
-					val key = encryptionManager.getKeySet(device)?.getGuestKey()
+					val key = encryptionManager.getKeySet(device)?.guestKeyBytes
 					if (key != null) {
 						device.parseServiceData(key)
 					}

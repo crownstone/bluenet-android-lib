@@ -16,6 +16,9 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	var isSetupMode = false
 		private set
 
+	/**
+	 * Connect, discover service and get session data
+	 */
 	@Synchronized fun connect(address: DeviceAddress): Promise<Unit, Exception> {
 		return bleCore.connect(address, 9999)
 				.then {
@@ -28,14 +31,19 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}.unwrap()
 	}
 
-	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel): Promise<Unit, Exception> {
+	/**
+	 * Encrypt and write data.
+	 */
+	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel=AccessLevel.HIGHEST_AVAILABLE): Promise<Unit, Exception> {
+		val address = bleCore.getConnectedAddress()
+		if (address == null) {
+			return Promise.ofFail(Errors.NotConnected())
+		}
 		val encryptedData = when (accessLevel) {
-			AccessLevel.UNKNOWN, AccessLevel.SETUP -> data
+			AccessLevel.UNKNOWN, AccessLevel.ENCRYPTION_DISABLED -> {
+				data
+			}
 			else -> {
-				val address = bleCore.getConnectedAddress()
-				if (address == null) {
-					return Promise.ofFail(Errors.NotConnected())
-				}
 				encryptionManager.encrypt(address, data, accessLevel)
 			}
 		}
@@ -43,6 +51,20 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 			return Promise.ofFail(Errors.Encryption())
 		}
 		return bleCore.write(serviceUuid, characteristicUuid, encryptedData)
+	}
+
+	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID, decrypt: Boolean=true): Promise<ByteArray, Exception> {
+		val address = bleCore.getConnectedAddress()
+		if (address == null) {
+			return Promise.ofFail(Errors.NotConnected())
+		}
+		if (!decrypt) {
+			return bleCore.read(serviceUuid, characteristicUuid)
+		}
+		return bleCore.read(serviceUuid, characteristicUuid)
+				.then {
+					encryptionManager.decrypt(address, it)
+				}.unwrap()
 	}
 
 	/**
@@ -69,8 +91,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 						bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
 					}.unwrap()
 					.then {
-						// TODO: parse
-					}
+						encryptionManager.parseSessionKey(address, it)
+					}.unwrap()
 		}
 		else {
 			return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_NONCE_UUID)

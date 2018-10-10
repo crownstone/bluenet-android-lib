@@ -6,15 +6,15 @@ import rocks.crownstone.bluenet.BluenetProtocol.SESSION_NONCE_LENGTH
 import rocks.crownstone.bluenet.BluenetProtocol.VALIDATION_KEY_LENGTH
 import rocks.crownstone.bluenet.util.Conversion
 
-data class SessionData(val sessionNonce: ByteArray, val validationKey: ByteArray)
+data class SessionData(val sessionNonce: ByteArray, val validationKey: ByteArray, var tempKey: ByteArray? = null)
 
 object SessionDataParser {
 	private val TAG = this.javaClass.simpleName
 
 	fun getSessionData(decryptedData: ByteArray, wasEncrypted: Boolean): SessionData? {
-		if (decryptedData == null) {
-			return null
-		}
+//		if (decryptedData == null) {
+//			return null
+//		}
 		// When the data was encrypted, the first 4 bytes should be CAFEBABE, to check if encryption succeeded.
 		if (wasEncrypted) {
 			if (decryptedData.size < VALIDATION_KEY_LENGTH + SESSION_NONCE_LENGTH) {
@@ -41,7 +41,7 @@ object SessionDataParser {
 		val sessionNonce = ByteArray(SESSION_NONCE_LENGTH)
 		val validationKey = ByteArray(VALIDATION_KEY_LENGTH)
 
-		// Copy bytes 4-8 to sessionNonce, copy bytes 4-7 to validationKey
+		// Copy bytes 0-4 to sessionNonce, copy bytes 0-3 to validationKey
 		System.arraycopy(data, offset, sessionNonce, 0, SESSION_NONCE_LENGTH)
 		System.arraycopy(data, offset, validationKey, 0, VALIDATION_KEY_LENGTH)
 

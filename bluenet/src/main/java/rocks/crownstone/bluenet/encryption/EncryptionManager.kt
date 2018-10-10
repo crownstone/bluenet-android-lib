@@ -2,7 +2,6 @@ package rocks.crownstone.bluenet.encryption
 
 import android.util.Log
 import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import java.lang.Exception
@@ -68,27 +67,36 @@ class EncryptionManager {
 	}
 
 	@Synchronized fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Promise<Unit, Exception> {
-		val sessionData = when (isEncrypted) {
-			true -> {
-				val key = getKeySetFromAddress(address)?.getGuestKey()
-				if (key == null) {
-					Log.w(TAG, "No key")
-					return Promise.ofFail(Errors.EncryptionKeyMissing())
-				}
-				val decryptedData = Encryption.decryptEcb(data, key)
-				if (decryptedData == null) {
-					return Promise.ofFail(Errors.Encryption())
-				}
-				SessionDataParser.getSessionData(decryptedData, isEncrypted)
+		val sessionData = if (isEncrypted) {
+			val key = getKeySetFromAddress(address)?.guestKeyBytes
+			if (key == null) {
+				Log.w(TAG, "No key")
+				return Promise.ofFail(Errors.EncryptionKeyMissing())
 			}
-			false -> {
-				SessionDataParser.getSessionData(data, isEncrypted)
+			val decryptedData = Encryption.decryptEcb(data, key)
+			if (decryptedData == null) {
+				return Promise.ofFail(Errors.Encryption())
 			}
+			SessionDataParser.getSessionData(decryptedData, isEncrypted)
 		}
+		else {
+			SessionDataParser.getSessionData(data, isEncrypted)
+		}
+
+
 		if (sessionData == null) {
 			return Promise.ofFail(Errors.Parse())
 		}
 		this.sessionData = sessionData
+		return Promise.ofSuccess(Unit)
+	}
+
+	@Synchronized fun parseSessionKey(address: DeviceAddress, data: ByteArray): Promise<Unit, Exception> {
+		val sessionData = this.sessionData
+		if (sessionData == null) {
+			return Promise.ofFail(Errors.SessionDataMissing())
+		}
+		sessionData.tempKey = data
 		return Promise.ofSuccess(Unit)
 	}
 
@@ -102,8 +110,15 @@ class EncryptionManager {
 					Log.w(TAG, "No session data")
 					return null
 				}
-				// Just use highest available key
-				val keyAccessLevel = getKeySetFromAddress(address)?.getHighestKey()
+				val setupKey = sessionData.tempKey
+				val keyAccessLevel = if (accessLevel == AccessLevel.SETUP && setupKey != null) {
+					// Use setup key
+					KeyAccessLevelPair(setupKey, accessLevel)
+				}
+				else {
+					// Just use highest available key
+					getKeySetFromAddress(address)?.getHighestKey()
+				}
 				if (keyAccessLevel == null) {
 					Log.w(TAG, "No key")
 					return null
@@ -111,5 +126,31 @@ class EncryptionManager {
 				return Encryption.encryptCtr(data, sessionData.sessionNonce, sessionData.validationKey, keyAccessLevel.key, keyAccessLevel.accessLevel.num)
 			}
 		}
+	}
+
+	// TODO: use throw instead of promise?
+	@Synchronized fun decrypt(address: DeviceAddress, data: ByteArray): Promise<ByteArray, Exception> {
+		val sessionData = this.sessionData
+		if (sessionData == null) {
+			return Promise.ofFail(Errors.SessionDataMissing())
+		}
+		val setupKey = sessionData.tempKey
+
+		val keys = if (setupKey != null) {
+			Log.i(TAG, "Use setup key")
+//			KeyAccessLevelPair(setupKey, AccessLevel.SETUP)
+			KeySet(setupKey, setupKey, setupKey, setupKey)
+		}
+		else {
+			getKeySetFromAddress(address)
+		}
+		if (keys == null) {
+			return Promise.ofFail(Errors.EncryptionKeyMissing())
+		}
+		val decryptedData = Encryption.decryptCtr(data, sessionData.sessionNonce, sessionData.validationKey, keys)
+		if (decryptedData == null) {
+			return Promise.ofFail(Errors.Encryption())
+		}
+		return Promise.ofSuccess(decryptedData)
 	}
 }

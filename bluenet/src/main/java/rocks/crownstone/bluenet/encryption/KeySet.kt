@@ -15,10 +15,16 @@ class KeySet() {
 //	private var adminKeyString: String? = null
 //	private var memberKeyString: String? = null
 //	private var guestKeyString: String? = null
-	private var adminKeyBytes: ByteArray? = null
-	private var memberKeyBytes: ByteArray? = null
-	private var guestKeyBytes: ByteArray? = null
-	private var initialized = false
+	var adminKeyBytes: ByteArray? = null
+		private set
+	var memberKeyBytes: ByteArray? = null
+		private set
+	var guestKeyBytes: ByteArray? = null
+		private set
+	var setupKeyBytes: ByteArray? = null
+		internal set
+	var initialized = false
+		private set
 
 	constructor(adminKey: String?, memberKey: String?, guestKey: String?): this() {
 		val adminKeyString = getKeyFromString(adminKey)
@@ -27,6 +33,7 @@ class KeySet() {
 		adminKeyBytes = null
 		memberKeyBytes = null
 		guestKeyBytes = null
+		setupKeyBytes = null
 		try {
 			if (adminKeyString != null) {
 				adminKeyBytes = Conversion.hexStringToBytes(adminKeyString)
@@ -52,29 +59,18 @@ class KeySet() {
 		initialized = true
 	}
 
-	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?): this() {
+	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, setupKey: ByteArray?=null): this() {
 		if ((adminKey != null && adminKey.size != AES_BLOCK_SIZE) ||
 			(memberKey != null && memberKey.size != AES_BLOCK_SIZE) ||
 			(guestKey != null && guestKey.size != AES_BLOCK_SIZE)) {
 			Log.e(TAG, "Invalid key size")
 			return
 		}
+		setupKeyBytes = setupKey
 		adminKeyBytes = adminKey
 		memberKeyBytes = memberKey
 		guestKeyBytes = guestKey
 		initialized = true
-	}
-
-	fun getAdminKey(): ByteArray? {
-		return adminKeyBytes
-	}
-
-	fun getMemberKey(): ByteArray? {
-		return memberKeyBytes
-	}
-
-	fun getGuestKey(): ByteArray? {
-		return guestKeyBytes
 	}
 
 	fun getKey(accessLevel: Uint8): ByteArray? {
@@ -83,23 +79,24 @@ class KeySet() {
 
 	fun getKey(accessLevel: AccessLevel): ByteArray? {
 		when (accessLevel) {
-			AccessLevel.ADMIN -> return getAdminKey()
-			AccessLevel.MEMBER -> return getMemberKey()
-			AccessLevel.GUEST -> return getGuestKey()
+			AccessLevel.ADMIN -> return adminKeyBytes
+			AccessLevel.MEMBER -> return memberKeyBytes
+			AccessLevel.GUEST -> return guestKeyBytes
+			AccessLevel.SETUP -> return setupKeyBytes
 			else -> return null
 		}
 	}
 
 	fun getHighestKey(): KeyAccessLevelPair? {
-		val adminKey = getAdminKey()
+		val adminKey = this.adminKeyBytes
 		if (adminKey != null) {
 			return KeyAccessLevelPair(adminKey, AccessLevel.ADMIN)
 		}
-		val memberKey = getMemberKey()
+		val memberKey = this.memberKeyBytes
 		if (memberKey != null) {
 			return KeyAccessLevelPair(memberKey, AccessLevel.MEMBER)
 		}
-		val guestKey = getGuestKey()
+		val guestKey = this.guestKeyBytes
 		if (guestKey != null) {
 			KeyAccessLevelPair(guestKey, AccessLevel.GUEST)
 		}
@@ -108,7 +105,7 @@ class KeySet() {
 
 	override fun toString(): String {
 //		return "Keys: [$adminKeyString, $memberKeyString, $guestKeyString]"
-		return "Keys: [${Conversion.bytesToHexString(adminKeyBytes)}, ${Conversion.bytesToHexString(memberKeyBytes)}, ${Conversion.bytesToHexString(guestKeyBytes)}]"
+		return "Keys: [${Conversion.bytesToHexString(adminKeyBytes)}, ${Conversion.bytesToHexString(memberKeyBytes)}, ${Conversion.bytesToHexString(guestKeyBytes)}, ${Conversion.bytesToHexString(setupKeyBytes)}]"
 	}
 
 	private fun getKeyFromString(key: String?): String? {

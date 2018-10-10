@@ -23,6 +23,7 @@ object Errors {
 	class ReadFailed: Exception("read failed")
 
 	class Parse: Exception("parse failed")
+	class SessionDataMissing: Exception("no session data")
 
 	open class Encryption(msg: String="encryption failed"): Exception(msg)
 	class EncryptionKeyMissing: Encryption("missing key")
