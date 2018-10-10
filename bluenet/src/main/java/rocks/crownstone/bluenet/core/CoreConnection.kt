@@ -6,10 +6,7 @@ import android.util.Log
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.resolve
-import rocks.crownstone.bluenet.BluenetEvent
-import rocks.crownstone.bluenet.DeviceAddress
-import rocks.crownstone.bluenet.Errors
-import rocks.crownstone.bluenet.EventBus
+import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.util.Conversion
 import java.util.*
 
@@ -454,6 +451,134 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		promises.resolve(Action.READ, characteristic.value)
 	}
 
+	/**
+	 * Subscribe to a characteristic.
+	 *
+	 * Notifications will be sent via the event bus.
+	 *
+	 * @return Promise that resolves when subscription succeeded.
+	 */
+	@Synchronized fun subscribe(serviceUuid: UUID, characteristicUuid: UUID): Promise<Unit, Exception> {
+		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
+//		if (!isBleReady()) {
+//			return Promise.ofFail(Errors.BleNotReady())
+//		}
+		if (promises.isBusy()) {
+			return Promise.ofFail(Errors.Busy())
+		}
+		val state = getConnectionState()
+		if (state != ConnectionState.CONNECTED) {
+			return Promise.ofFail(getNotConnectedError(state))
+		}
+		val deferred = deferred<Unit, Exception>()
+		val gatt = this.currentGatt!! // Already checked in getConnectionState()
+		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
+		if (char == null) {
+			return Promise.ofFail(Errors.CharacteristicNotFound())
+		}
+		promises.setBusy(Action.SUBSCRIBE, deferred) // Resolve later in onGattDescriptorWrite
+		Log.d(TAG, "gatt.setCharacteristicNotification")
+		var result = gatt.setCharacteristicNotification(char, true)
+		if (!result) {
+			promises.reject(Errors.SubscribeFailed())
+		}
+		val descriptor = char.getDescriptor(BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID)
+		result = (descriptor != null) && descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+		if (!result) {
+			promises.reject(Errors.SubscribeFailed())
+		}
+		Log.d(TAG, "gatt.writeDescriptor")
+		result = gatt.writeDescriptor(descriptor)
+		if (!result) {
+			promises.reject(Errors.SubscribeFailed())
+		}
+		return deferred.promise
+	}
+
+	/**
+	 * Unsubscribe from a characteristic.
+	 *
+	 * @return Promise that resolves when unsubscribe was successful.
+	 */
+	@Synchronized fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID): Promise<Unit, Exception> {
+		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
+//		if (!isBleReady()) {
+//			return Promise.ofFail(Errors.BleNotReady())
+//		}
+		if (promises.isBusy()) {
+			return Promise.ofFail(Errors.Busy())
+		}
+		val state = getConnectionState()
+		if (state != ConnectionState.CONNECTED) {
+			return Promise.ofFail(getNotConnectedError(state))
+		}
+		val deferred = deferred<Unit, Exception>()
+		val gatt = this.currentGatt!! // Already checked in getConnectionState()
+		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
+		if (char == null) {
+			return Promise.ofFail(Errors.CharacteristicNotFound())
+		}
+		promises.setBusy(Action.UNSUBSCRIBE, deferred) // Resolve later in onGattDescriptorWrite
+		Log.d(TAG, "gatt.setCharacteristicNotification")
+		var result = gatt.setCharacteristicNotification(char, false)
+		if (!result) {
+			promises.reject(Errors.UnsubscribeFailed())
+		}
+		val descriptor = char.getDescriptor(BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID)
+		result = (descriptor != null) && descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
+		if (!result) {
+			promises.reject(Errors.UnsubscribeFailed())
+		}
+		Log.d(TAG, "gatt.writeDescriptor")
+		result = gatt.writeDescriptor(descriptor)
+		if (!result) {
+			promises.reject(Errors.UnsubscribeFailed())
+		}
+		return deferred.promise
+	}
+
+
+	@Synchronized private fun onGattDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
+		Log.i(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
+		if (gatt == null || gatt != currentGatt || descriptor == null || descriptor.uuid != BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt descriptor=$descriptor")
+			return
+		}
+		if (status != BluetoothGatt.GATT_SUCCESS) {
+			Log.e(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
+			// TODO: handle error
+			promises.reject(Errors.Gatt(status))
+		}
+		Log.i(TAG, "value=${Conversion.bytesToString(descriptor.value)}")
+		when (descriptor.value) {
+			BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE -> {
+				// Subscribed
+				promises.resolve(Action.SUBSCRIBE)
+			}
+			BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE -> {
+				// Unsubscribed
+				promises.resolve(Action.UNSUBSCRIBE)
+			}
+			else -> {
+				Log.e(TAG, "value=${Conversion.bytesToString(descriptor.value)}")
+				promises.reject(Errors.UnexpectedValue())
+			}
+		}
+	}
+
+	@Synchronized private fun onGattCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+		Log.i(TAG, "onCharacteristicChanged characteristic=$characteristic")
+		if (gatt == null || gatt != currentGatt || characteristic == null || characteristic.value == null) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
+			return
+		}
+//		eventBus.emit(BluenetEvent.NOTIFICATION_RAW, BleNotification(characteristic.uuid, characteristic.value))
+		eventBus.emit("${BluenetEvent.NOTIFICATION_RAW_}${characteristic.uuid}", characteristic.value)
+	}
+
+
+
+
 	@Synchronized private fun onBleTurnedOff(data: Any?) {
 		// //TODO: When bluetooth is turned off, we should close the gatt?
 		// Reject current action before closing.
@@ -480,11 +605,11 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		}
 
 		override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-			Log.i(TAG, "onCharacteristicChanged characteristic=$characteristic")
+			onGattCharacteristicChanged(gatt, characteristic)
 		}
 
 		override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
-			Log.i(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
+			onGattDescriptorWrite(gatt, descriptor, status)
 		}
 
 		override fun onDescriptorRead(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {

@@ -25,6 +25,7 @@ enum class BluenetEvent {
 	SCAN_RESULT_RAW, // Device was scanned. ScanResult as data.
 	SCAN_FAILURE,    // Scanning failed.
 	SCAN_RESULT,     // Device was scanned. ScannedDevice as data.
+	NOTIFICATION_RAW_,  // Notification is received. Characteristic UUID will be appended to the event type. ByteArray as data.
 	NEAREST_VALIDATED,        // Validated device (regardless of operation mode) was scanned. NearestDeviceListEntry as data.
 	NEAREST_VALIDATED_NORMAL, // Validated device in normal operation mode was scanned. NearestDeviceListEntry as data.
 	NEAREST_DFU,              // Validated device in dfu operation mode was scanned. NearestDeviceListEntry as data.
@@ -42,6 +43,8 @@ typealias DeviceAddress = String
 typealias SphereId = String
 typealias Keys = HashMap<SphereId, KeyData>
 data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)
+
+//data class BleNotification(val characteristicUuid: UUID, val data: ByteArray)
 
 /**
  * Class that holds a key with its access level

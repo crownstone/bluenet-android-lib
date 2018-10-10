@@ -21,8 +21,11 @@ object Errors {
 
 	class WriteFailed: Exception("write failed")
 	class ReadFailed: Exception("read failed")
+	class SubscribeFailed: Exception("subscribe failed")
+	class UnsubscribeFailed: Exception("unsubscribe failed")
 
 	class Parse: Exception("parse failed")
+	class UnexpectedValue: Exception("unexpected value")
 	class SessionDataMissing: Exception("no session data")
 
 	open class Encryption(msg: String="encryption failed"): Exception(msg)

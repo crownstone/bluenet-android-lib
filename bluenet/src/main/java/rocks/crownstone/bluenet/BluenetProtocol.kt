@@ -38,6 +38,7 @@ object BluenetProtocol {
 	val CHAR_HARDWARE_REVISION_UUID = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
 	val CHAR_FIRMWARE_REVISION_UUID = UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb")
 
+	val DESCRIPTOR_CHAR_CONFIG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 	// Verification code for ECB encryption
 //	const val CAFEBABE = 0xCAFEBABE // Kotlin made this -0x35014542
