@@ -11,15 +11,25 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	private val connection = connection
 
 	fun setSwitch(value: Uint8): Promise<Unit, Exception> {
-		return writePacket(ControlPacket(ControlType.CMD_SWITCH, value))
+		return writePacket(ControlPacket(ControlType.SWITCH, value))
 	}
 
+	fun setRelay(value: Boolean): Promise<Unit, Exception> {
+		return writePacket(ControlPacket(ControlType.RELAY, if (value) 0 else 1))
+	}
+
+	fun setPwm(value: Uint8): Promise<Unit, Exception> {
+		return writePacket(ControlPacket(ControlType.PWM, value))
+	}
+
+//	fun toggleSwitch(): Promise<Unit, Exception> {
+//		// Read state
+//	}
 
 	private fun writePacket(packet: ControlPacket): Promise<Unit, Exception> {
 		if (connection.isSetupMode) {
 			return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID, packet.getArray(), AccessLevel.SETUP)
 		}
-		// TODO: use different char in setup mode
 		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID, packet.getArray(), AccessLevel.HIGHEST_AVAILABLE)
 	}
 }
