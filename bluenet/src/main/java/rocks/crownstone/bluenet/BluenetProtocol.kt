@@ -51,6 +51,9 @@ object BluenetProtocol {
 	const val PACKET_NONCE_LENGTH = 3
 	const val ACCESS_LEVEL_LENGTH = 1
 
+	const val MULTIPART_NOTIFICATION_MAX_SIZE = 512
+	const val MULTIPART_NOTIFICATION_LAST_NR = 255
+
 	const val OPCODE_READ: Byte = 0
 	const val OPCODE_WRITE: Byte = 1
 	const val OPCODE_NOTIFY: Byte = 2
