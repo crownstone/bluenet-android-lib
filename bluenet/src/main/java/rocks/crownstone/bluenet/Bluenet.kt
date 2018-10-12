@@ -55,7 +55,7 @@ class Bluenet {
 		bleCore.initBle()
 		service = BackgroundServiceManager(appContext, eventBus)
 		return service.runInBackground()
-				.then {
+				.success {
 					initialized = true
 					eventBus.emit(BluenetEvent.INITIALIZED)
 				}
@@ -73,7 +73,7 @@ class Bluenet {
 	@Synchronized fun initScanner(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "initScanner")
 		return bleCore.getLocationPermission(activity)
-				.then {
+				.success {
 					initScanner()
 				}
 	}
