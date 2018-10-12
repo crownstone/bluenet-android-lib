@@ -18,6 +18,7 @@ object Errors {
 	class DiscoveryStart: Exception("failed to start discovery")
 
 	class CharacteristicNotFound: Exception("characteristic not found")
+	class NotInSetupMode: Exception("not in setup mode")
 
 	class WriteFailed: Exception("write failed")
 	class ReadFailed: Exception("read failed")

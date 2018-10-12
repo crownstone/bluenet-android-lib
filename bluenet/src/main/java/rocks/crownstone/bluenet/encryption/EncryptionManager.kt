@@ -129,7 +129,7 @@ class EncryptionManager {
 	}
 
 	// TODO: use throw instead of promise?
-	@Synchronized fun decrypt(address: DeviceAddress, data: ByteArray): Promise<ByteArray, Exception> {
+	@Synchronized fun decryptPromise(address: DeviceAddress, data: ByteArray): Promise<ByteArray, Exception> {
 		val sessionData = this.sessionData
 		if (sessionData == null) {
 			return Promise.ofFail(Errors.SessionDataMissing())
@@ -152,5 +152,34 @@ class EncryptionManager {
 			return Promise.ofFail(Errors.Encryption())
 		}
 		return Promise.ofSuccess(decryptedData)
+	}
+
+	// TODO: use throw instead
+	@Synchronized fun decrypt(address: DeviceAddress, data: ByteArray): ByteArray? {
+		val sessionData = this.sessionData
+		if (sessionData == null) {
+			Log.e(TAG, Errors.SessionDataMissing().message)
+			return null
+		}
+		val setupKey = sessionData.tempKey
+
+		val keys = if (setupKey != null) {
+			Log.i(TAG, "Use setup key")
+//			KeyAccessLevelPair(setupKey, AccessLevel.SETUP)
+			KeySet(setupKey, setupKey, setupKey, setupKey)
+		}
+		else {
+			getKeySetFromAddress(address)
+		}
+		if (keys == null) {
+			Log.e(TAG, Errors.EncryptionKeyMissing().message)
+			return null
+		}
+		val decryptedData = Encryption.decryptCtr(data, sessionData.sessionNonce, sessionData.validationKey, keys)
+		if (decryptedData == null) {
+			Log.e(TAG, Errors.Encryption().message)
+			return null
+		}
+		return decryptedData
 	}
 }
