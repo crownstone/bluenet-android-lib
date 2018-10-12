@@ -22,9 +22,6 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writePacket(ControlPacket(ControlType.PWM, value))
 	}
 
-//	fun toggleSwitch(): Promise<Unit, Exception> {
-//		// Read state
-//	}
 
 	private fun writePacket(packet: ControlPacket): Promise<Unit, Exception> {
 		if (connection.isSetupMode) {
