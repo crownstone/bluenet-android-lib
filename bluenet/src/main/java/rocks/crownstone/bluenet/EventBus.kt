@@ -10,6 +10,14 @@ typealias SubscriptionId = UUID
 typealias EventType = String
 typealias EventCallback = (Any) -> Unit
 
+/**
+ * Class that is used to emit and receive events with data.
+ *
+ * You can subscribe to a certain eventType (topic), this will give you a subscription ID to unsubscribe again.
+ *
+ * Instead of returning an ID, you could also return a function that can be called to unsubscribe.
+ * The advantage would be that the subscriber doesn't have to have access to the event bus at all.
+ */
 class EventBus {
 	private val TAG = this.javaClass.simpleName
 
@@ -84,15 +92,6 @@ class EventBus {
 		return id
 	}
 
-	@Synchronized private fun subscribe(eventType: EventType, callback: EventCallback, id: SubscriptionId) {
-		Log.i(TAG, "subscribe $eventType $id")
-		if (!eventSubscriptions.containsKey(eventType)) {
-			eventSubscriptions[eventType] = ArrayList()
-		}
-		subscribers[id] = eventType
-		eventSubscriptions[eventType]?.add(EventCallbackWithId(id, callback))
-	}
-
 	@Synchronized fun unsubscribe(id: SubscriptionId) {
 		if (emitting) {
 			Log.i(TAG, "add pending unsubscription $id")
@@ -101,8 +100,30 @@ class EventBus {
 		else {
 			_unsubscribe(id)
 		}
+	}
 
+	@Synchronized fun hasListeners(eventType: BluenetEvent): Boolean {
+		return hasListeners(eventType.name)
+	}
 
+	@Synchronized fun hasListeners(eventType: EventType): Boolean {
+		return eventSubscriptions.containsKey(eventType)
+	}
+
+	@Synchronized fun reset() {
+		subscribers.clear()
+		eventSubscriptions.clear()
+		pendingSubscriptions.clear()
+		pendingUnsubscriptions.clear()
+	}
+
+	@Synchronized private fun subscribe(eventType: EventType, callback: EventCallback, id: SubscriptionId) {
+		Log.i(TAG, "subscribe $eventType $id")
+		if (!eventSubscriptions.containsKey(eventType)) {
+			eventSubscriptions[eventType] = ArrayList()
+		}
+		subscribers[id] = eventType
+		eventSubscriptions[eventType]?.add(EventCallbackWithId(id, callback))
 	}
 
 	@Synchronized private fun _unsubscribe(id: SubscriptionId) {
