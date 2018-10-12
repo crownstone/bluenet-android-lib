@@ -594,7 +594,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	 */
 	@Synchronized fun subscribeMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
 		Log.i(TAG, "subscribeMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
-		val notificationMerger = MultipartNotification(callback)
+		val notificationMerger = MultipartNotificationMerger(callback)
 		val notificationCallback = fun(data: ByteArray) {
 			// Called on each notification
 			notificationMerger.onData(data)
@@ -613,7 +613,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		var unsubId = UUID(0,0)
 		// TODO: timeout
 
-		val notificationMerger = MultipartNotification({ mergedNotification: ByteArray ->
+		val notificationMerger = MultipartNotificationMerger({ mergedNotification: ByteArray ->
 			// Called when notifications are merged
 			unsubscribe(serviceUuid, characteristicUuid, unsubId)
 					.success {

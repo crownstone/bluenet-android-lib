@@ -12,7 +12,7 @@ import java.nio.ByteBuffer
  *
  * A callback is used for the result, so that this class can be used in anonymous functions.
  */
-class MultipartNotification(callback: (ByteArray) -> Unit) {
+class MultipartNotificationMerger(callback: (ByteArray) -> Unit) {
 	private val TAG = this.javaClass.simpleName
 	private val callback = callback
 	private var nextMsgNr = 0
