@@ -227,7 +227,11 @@ object Conversion {
 		return result
 	}
 
-	// Handy for logging, does not turn byte values into the corresponding ascii values!
+	/**
+	 * Convert byte array to readable string of numbers.
+	 *
+	 * Does not convert byte values into corresponding ascii values.
+	 */
 	fun bytesToString(bytes: ByteArray?): String {
 		if (bytes == null) {
 			return ""
