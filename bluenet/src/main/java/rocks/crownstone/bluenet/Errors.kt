@@ -21,9 +21,12 @@ object Errors {
 
 	class WriteFailed: Exception("write failed")
 	class ReadFailed: Exception("read failed")
-	class SubscribeFailed: Exception("subscribe failed")
+
+	open class SubscribeFailed(msg: String=""): Exception("subscribe failed: $msg")
+	class SubscribeAlreadySubscribed : SubscribeFailed("already subscribed")
 	class UnsubscribeFailed: Exception("unsubscribe failed")
 
+	class ProcessCallback: Exception("process callback error")
 	class Parse: Exception("parse failed")
 	class UnexpectedValue: Exception("unexpected value")
 	class SessionDataMissing: Exception("no session data")

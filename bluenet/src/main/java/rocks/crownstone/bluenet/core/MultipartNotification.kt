@@ -2,12 +2,19 @@ package rocks.crownstone.bluenet.core
 
 import android.util.Log
 import rocks.crownstone.bluenet.BluenetProtocol
+import rocks.crownstone.bluenet.EventCallback
 import rocks.crownstone.bluenet.util.Conversion
+import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 
-class MultipartNotification() {
+/**
+ * Class that merges multipart notifications.
+ *
+ * A callback is used for the result, so that this class can be used in anonymous functions.
+ */
+class MultipartNotification(callback: (ByteArray) -> Unit) {
 	private val TAG = this.javaClass.simpleName
-
+	private val callback = callback
 	private var nextMsgNr = 0
 	private var buffer = ByteBuffer.allocate(BluenetProtocol.MULTIPART_NOTIFICATION_MAX_SIZE)
 
@@ -17,7 +24,7 @@ class MultipartNotification() {
 			return
 		}
 		val msgNr = Conversion.toUint8(data[0]).toInt()
-		if (msgNr != 255 && nextMsgNr != msgNr) {
+		if (msgNr != BluenetProtocol.MULTIPART_NOTIFICATION_LAST_NR && nextMsgNr != msgNr) {
 			Log.e(TAG, "unexpected msg nr $msgNr, expected $nextMsgNr")
 			reset()
 			return
@@ -32,9 +39,8 @@ class MultipartNotification() {
 			val mergedData = ByteArray(buffer.position())
 			buffer.rewind()
 			buffer.get(mergedData)
-
-			// TODO: emit or use callback for merged data
 			reset()
+			callback(mergedData)
 		}
 	}
 

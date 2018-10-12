@@ -3,9 +3,7 @@ package rocks.crownstone.bluenet.core
 import android.bluetooth.*
 import android.content.Context
 import android.util.Log
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
-import nl.komponents.kovenant.resolve
+import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.util.Conversion
 import java.util.*
@@ -16,6 +14,11 @@ import java.util.*
 open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appContext, evtBus) {
 	private var currentGatt: BluetoothGatt? = null
 	private var services: List<BluetoothGattService>? = null
+
+	// The notification callbacks are stored in a dedicated eventbus.
+	// An eventbus is used so that we can later subscribe to notifications multiple times, and so it can be cleaned up easily.
+	// TODO: cleanup on close or on connect.
+	private val notificationEventBus = EventBus()
 
 	init {
 		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, ::onBleTurnedOff)
@@ -454,12 +457,12 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	/**
 	 * Subscribe to a characteristic.
 	 *
-	 * Notifications will be sent via the event bus.
+	 * Notifications will be sent to the callback.
 	 *
-	 * @return Promise that resolves when subscription succeeded.
+	 * @return Promise that resolves when subscription succeeded. Value should be used to unsubscribe.
 	 */
-	@Synchronized fun subscribe(serviceUuid: UUID, characteristicUuid: UUID): Promise<Unit, Exception> {
-		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
+	@Synchronized fun subscribe(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
+		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid callback=$callback")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
 //		}
@@ -476,6 +479,11 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		if (char == null) {
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
+		if (notificationEventBus.hasListeners("$characteristicUuid")) {
+			// TODO: support multiple subscriptions to same characteristic
+			return Promise.ofFail(Errors.SubscribeAlreadySubscribed())
+		}
+
 		promises.setBusy(Action.SUBSCRIBE, deferred) // Resolve later in onGattDescriptorWrite
 		Log.d(TAG, "gatt.setCharacteristicNotification")
 		var result = gatt.setCharacteristicNotification(char, true)
@@ -493,6 +501,10 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			promises.reject(Errors.SubscribeFailed())
 		}
 		return deferred.promise
+				.then {
+					// Store the callback in the event bus, return unsub id
+					return@then notificationEventBus.subscribe("${descriptor.characteristic.uuid}", { data: Any -> callback(data as ByteArray) })
+				}
 	}
 
 	/**
@@ -500,8 +512,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	 *
 	 * @return Promise that resolves when unsubscribe was successful.
 	 */
-	@Synchronized fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID): Promise<Unit, Exception> {
-		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
+	@Synchronized fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID, subscriptionId: SubscriptionId): Promise<Unit, Exception> {
+		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid subscriptionId=$subscriptionId")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
 //		}
@@ -518,6 +530,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		if (char == null) {
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
+		notificationEventBus.unsubscribe(subscriptionId)
 		promises.setBusy(Action.UNSUBSCRIBE, deferred) // Resolve later in onGattDescriptorWrite
 		Log.d(TAG, "gatt.setCharacteristicNotification")
 		var result = gatt.setCharacteristicNotification(char, false)
@@ -536,7 +549,6 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		}
 		return deferred.promise
 	}
-
 
 	@Synchronized private fun onGattDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
 		Log.i(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
@@ -572,10 +584,103 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
 			return
 		}
-//		eventBus.emit(BluenetEvent.NOTIFICATION_RAW, BleNotification(characteristic.uuid, characteristic.value))
-		eventBus.emit("${BluenetEvent.NOTIFICATION_RAW_}${characteristic.uuid}", characteristic.value)
+		notificationEventBus.emit("${characteristic.uuid}", characteristic.value)
 	}
 
+	/**
+	 * Subscribes for notifications, calls the callback with merged multipart notifications.
+	 *
+	 * @return Promise that resolves when subscription succeeded. Value should be used to unsubscribe.
+	 */
+	@Synchronized fun subscribeMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
+		Log.i(TAG, "subscribeMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
+		val notificationMerger = MultipartNotification(callback)
+		val notificationCallback = fun(data: ByteArray) {
+			// Called on each notification
+			notificationMerger.onData(data)
+		}
+		return subscribe(serviceUuid, characteristicUuid, notificationCallback)
+	}
+
+	/**
+	 * Subscribes for notifications, executes write command, waits for a complete multipart notification to be received, and unsubscribes.
+	 *
+	 * @return Promise with multipart notification when resolved.
+	 */
+	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>): Promise<ByteArray, Exception> {
+		Log.i(TAG, "getSingleMergedNotification serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
+		val deferred = deferred<ByteArray, Exception>()
+		var unsubId = UUID(0,0)
+		// TODO: timeout
+
+		val notificationMerger = MultipartNotification({ mergedNotification: ByteArray ->
+			// Called when notifications are merged
+			unsubscribe(serviceUuid, characteristicUuid, unsubId)
+					.success {
+						deferred.resolve(mergedNotification)
+					}
+					.fail {
+						deferred.reject(it)
+					}
+		})
+
+		val notificationCallback = fun (data: ByteArray) {
+			// Called on each notification
+			notificationMerger.onData(data)
+		}
+
+		subscribe(serviceUuid, characteristicUuid, notificationCallback)
+				.then {
+					unsubId = it
+					writeCommand()
+				}.unwrap()
+				.fail {
+					deferred.reject(it)
+				}
+
+		return deferred.promise
+	}
+
+	/**
+	 * Subscribes for notifications, calls the callback with merged multipart notifications. Resolves when callback returns done.
+	 *
+	 * @callback Function that returns
+	 *
+	 * @return Promise that resolves when the caller is done receiving merged notifications.
+	 */
+	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback): Promise<Unit, Exception> {
+		Log.i(TAG, "getMultipleMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
+		val deferred = deferred<Unit, Exception>()
+		var unsubId = UUID(0,0)
+		// TODO: timeout
+
+		val notificationCallback = fun (mergedNotification: ByteArray) {
+			when (callback(mergedNotification)) {
+				ProcessResult.NOT_DONE -> {
+					// Continue waiting for notifications
+				}
+				ProcessResult.DONE -> {
+					unsubscribe(serviceUuid, characteristicUuid, unsubId)
+							.success { deferred.resolve() }
+							.fail { deferred.reject(it) }
+				}
+				ProcessResult.ERROR -> {
+					unsubscribe(serviceUuid, characteristicUuid, unsubId)
+							.success { deferred.reject(Errors.ProcessCallback()) }
+							.fail { deferred.reject(it)	}
+				}
+			}
+		}
+		subscribeMergedNotifications(serviceUuid, characteristicUuid, notificationCallback)
+				.then {
+					unsubId = it
+					writeCommand()
+				}.unwrap()
+				.fail {
+					deferred.reject(it)
+				}
+		return deferred.promise
+	}
 
 
 
