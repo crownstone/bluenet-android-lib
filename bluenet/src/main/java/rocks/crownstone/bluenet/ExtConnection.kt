@@ -13,6 +13,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	private val eventBus = evtBus
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
+	var isConnected = false
+		private set
 	var isSetupMode = false
 		private set
 
@@ -29,6 +31,16 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 					checkSetupMode()
 					getSessionData(address)
 				}.unwrap()
+				.success {
+					isConnected = true
+				}
+	}
+
+	@Synchronized fun disconnect(): Promise<Unit, Exception> {
+		return bleCore.disconnect()
+				.success {
+					isConnected = false
+				}
 	}
 
 	/**
@@ -63,9 +75,36 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		}
 		return bleCore.read(serviceUuid, characteristicUuid)
 				.then {
-					encryptionManager.decrypt(address, it)
+					encryptionManager.decryptPromise(address, it)
 				}.unwrap()
 	}
+
+	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>): Promise<ByteArray, Exception> {
+		val address = bleCore.getConnectedAddress()
+		if (address == null) {
+			return Promise.ofFail(Errors.NotConnected())
+		}
+		return bleCore.getSingleMergedNotification(serviceUuid, characteristicUuid, writeCommand)
+				.then {
+					encryptionManager.decryptPromise(address, it)
+				}.unwrap()
+	}
+
+	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback): Promise<Unit, Exception> {
+		val address = bleCore.getConnectedAddress()
+		if (address == null) {
+			return Promise.ofFail(Errors.NotConnected())
+		}
+		val processCallBack = fun (mergedNotification: ByteArray): ProcessResult {
+			val decryptedData = encryptionManager.decrypt(address, mergedNotification)
+			if (decryptedData == null) {
+				return ProcessResult.ERROR
+			}
+			return callback(decryptedData)
+		}
+		return bleCore.getMultipleMergedNotifications(serviceUuid, characteristicUuid, writeCommand, processCallBack)
+	}
+
 
 	/**
 	 * @return Whether the service is available.
