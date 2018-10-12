@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
 
-data class IbeaconData(val uuid: UUID, val major: Int, val minor: Int, val rssiAtOneMeter: Int) {
+data class IbeaconData(val uuid: UUID, val major: Uint16, val minor: Uint16, val rssiAtOneMeter: Int8) {
 	override fun toString(): String {
 		return "uuid=$uuid, major=$major, minor=$minor, rssiAtOneMeter=$rssiAtOneMeter"
 	}
@@ -50,9 +50,9 @@ class Ibeacon {
 			val advertisementId = Conversion.toUint16(bb.getShort().toInt()) // Actually 2 separate fields: type and length
 			if (advertisementId == BluenetProtocol.IBEACON_ADVERTISEMENT_ID && bb.remaining() >= 16 + 2 + 2 + 1) {
 				val uuid = UUID(bb.getLong(), bb.getLong())
-				val major = Conversion.toUint16(bb.getShort().toInt())
-				val minor = Conversion.toUint16(bb.getShort().toInt())
-				val rssiAtOneMeter = bb.get().toInt()
+				val major = Conversion.toUint16(bb.getShort())
+				val minor = Conversion.toUint16(bb.getShort())
+				val rssiAtOneMeter = bb.get()
 //				data = IbeaconData(uuid, major, minor, rssiAtOneMeter)
 				return IbeaconData(uuid, major, minor, rssiAtOneMeter)
 //				return true
