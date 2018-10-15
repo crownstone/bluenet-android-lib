@@ -21,8 +21,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	/**
 	 * Connect, discover service and get session data
 	 */
-	@Synchronized fun connect(address: DeviceAddress): Promise<Unit, Exception> {
-		return bleCore.connect(address, 9999)
+	@Synchronized fun connect(address: DeviceAddress, timeout: Int=100000): Promise<Unit, Exception> {
+		return bleCore.connect(address, timeout)
 				.then {
 					isSetupMode = false
 					bleCore.discoverServices(false)
