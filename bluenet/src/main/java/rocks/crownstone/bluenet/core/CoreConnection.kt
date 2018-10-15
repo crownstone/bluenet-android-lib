@@ -488,17 +488,17 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		Log.d(TAG, "gatt.setCharacteristicNotification")
 		var result = gatt.setCharacteristicNotification(char, true)
 		if (!result) {
-			promises.reject(Errors.SubscribeFailed())
+			promises.reject(Errors.SubscribeFailed("set notifications"))
 		}
 		val descriptor = char.getDescriptor(BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID)
 		result = (descriptor != null) && descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
 		if (!result) {
-			promises.reject(Errors.SubscribeFailed())
+			promises.reject(Errors.SubscribeFailed("set descriptor value"))
 		}
 		Log.d(TAG, "gatt.writeDescriptor")
 		result = gatt.writeDescriptor(descriptor)
 		if (!result) {
-			promises.reject(Errors.SubscribeFailed())
+			promises.reject(Errors.SubscribeFailed("write descriptor"))
 		}
 		return deferred.promise
 				.then {
@@ -535,17 +535,17 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		Log.d(TAG, "gatt.setCharacteristicNotification")
 		var result = gatt.setCharacteristicNotification(char, false)
 		if (!result) {
-			promises.reject(Errors.UnsubscribeFailed())
+			promises.reject(Errors.UnsubscribeFailed("set notificaions"))
 		}
 		val descriptor = char.getDescriptor(BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID)
 		result = (descriptor != null) && descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)
 		if (!result) {
-			promises.reject(Errors.UnsubscribeFailed())
+			promises.reject(Errors.UnsubscribeFailed("set descriptor value"))
 		}
 		Log.d(TAG, "gatt.writeDescriptor")
 		result = gatt.writeDescriptor(descriptor)
 		if (!result) {
-			promises.reject(Errors.UnsubscribeFailed())
+			promises.reject(Errors.UnsubscribeFailed("write descriptor"))
 		}
 		return deferred.promise
 	}
@@ -573,7 +573,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			}
 			else -> {
 				Log.e(TAG, "value=${Conversion.bytesToString(descriptor.value)}")
-				promises.reject(Errors.UnexpectedValue())
+				promises.reject(Errors.Parse())
 			}
 		}
 	}

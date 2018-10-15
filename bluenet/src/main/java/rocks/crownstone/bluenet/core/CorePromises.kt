@@ -64,7 +64,7 @@ class CorePromises {
 			}
 			else -> {
 				Log.e(TAG, "wrong action or promise type")
-				deferred.reject(Errors.PromiseTypeWrong())
+				deferred.reject(Errors.PromisesWrongType())
 				return false
 			}
 		}
@@ -113,12 +113,12 @@ class CorePromises {
 		if (action != this.action) {
 			// This shouldn't happen
 			Log.e(TAG, "wrong action resolved")
-			reject(Errors.ActionTypeWrong())
+			reject(Errors.PromisesWrongActionType())
 			return
 		}
 		if (promiseType != PromiseType.UNIT) {
 			// Reject, cause wrong resolve type
-			reject(Errors.PromiseTypeWrong())
+			reject(Errors.PromisesWrongType())
 			return
 		}
 
@@ -131,12 +131,12 @@ class CorePromises {
 		if (action != this.action) {
 			// This shouldn't happen
 			Log.e(TAG, "wrong action resolved")
-			reject(Errors.ActionTypeWrong())
+			reject(Errors.PromisesWrongActionType())
 			return
 		}
 		if (promiseType != PromiseType.BYTE_ARRAY) {
 			// Reject, cause wrong resolve type
-			reject(Errors.PromiseTypeWrong())
+			reject(Errors.PromisesWrongType())
 			return
 		}
 
