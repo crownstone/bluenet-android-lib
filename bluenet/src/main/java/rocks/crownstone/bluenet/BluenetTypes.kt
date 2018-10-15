@@ -39,6 +39,15 @@ typealias Uint16 = Int
 typealias Int32 = Int
 typealias Uint32 = Long
 
+
+//class Int8: Byte
+//class Uint8: Short
+//class Int16: Short
+//class Uint16: Int
+//class Int32: Int
+//class Uint32: Long
+
+
 typealias DeviceAddress = String
 typealias SphereId = String
 typealias Keys = HashMap<SphereId, KeyData>

@@ -6,7 +6,7 @@ import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.KeySet
 import java.lang.Exception
 
-class Setup(evtBus: EventBus, connection: ExtConnection) {
+class SetupService(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection

@@ -54,9 +54,9 @@ object BluenetProtocol {
 	const val MULTIPART_NOTIFICATION_MAX_SIZE = 512
 	const val MULTIPART_NOTIFICATION_LAST_NR = 255
 
-	const val OPCODE_READ: Byte = 0
-	const val OPCODE_WRITE: Byte = 1
-	const val OPCODE_NOTIFY: Byte = 2
+	const val OPCODE_READ: Uint8 = 0
+	const val OPCODE_WRITE: Uint8 = 1
+	const val OPCODE_NOTIFY: Uint8 = 2
 }
 
 enum class ControlType(val num: Uint8) {
@@ -97,6 +97,96 @@ enum class ControlType(val num: Uint8) {
 	companion object {
 		private val map = ControlType.values().associateBy(ControlType::num)
 		fun fromNum(type: Uint8): ControlType {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class StateType(val num: Uint8) {
+	RESET_COUNTER(128),
+	SWITCH_STATE(129),
+	ACCUMULATED_ENERGY(130),
+	POWER_USAGE(131),
+	TRACKED_DEVICES(132),
+	SCHEDULE(133),
+	OPERATION_MODE(134),
+	TEMPERATURE(135),
+	TIME(136),
+	ERRORS(139),
+	UNKNOWN(255);
+	companion object {
+		private val map = StateType.values().associateBy(StateType::num)
+		fun fromNum(type: Uint8): StateType {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class ConfigType(val num: Uint8) {
+	NAME(0),
+	DEVICE_TYPE(1),
+	ROOM(2),
+	FLOOR(3),
+	NEARBY_TIMEOUT(4),
+	PWM_PERIOD(5),
+	IBEACON_MAJOR(6),
+	IBEACON_MINOR(7),
+	IBEACON_PROXIMITY_UUID(8),
+	IBEACON_TXPOWER(9),
+	WIFI_SETTINGS(10),
+	TX_POWER(11),
+	ADV_INTERVAL(12),
+	PASSKEY(13),
+	MIN_ENV_TEMP(14),
+	MAX_ENV_TEMP(15),
+	SCAN_DURATION(16),
+	SCAN_SEND_DELAY(17),
+	SCAN_BREAK_DURATION(18),
+	BOOT_DELAY(19),
+	MAX_CHIP_TEMP(20),
+	SCAN_FILTER(21),
+	SCAN_FILTER_SEND_FRACTION(22),
+	CURRENT_LIMIT(23),
+	MESH_ENABLED(24),
+	ENCRYPTION_ENABLED(25),
+	IBEACON_ENABLED(26),
+	SCANNER_ENABLED(27),
+	CONT_POWER_SAMPLER_ENABLED(28),
+	TRACKER_ENABLED(29),
+	ADC_SAMPLE_RATE(30),
+	POWER_SAMPLE_BURST_INTERVAL(31),
+	POWER_SAMPLE_CONT_INTERVAL(32),
+	POWER_SAMPLE_CONT_NUM_SAMPLES(33),
+	CROWNSTONE_ID(34),
+	KEY_ADMIN(35),
+	KEY_MEMBER(36),
+	KEY_GUEST(37),
+	DEFAULT_ON(38),
+	SCAN_INTERVAL(39),
+	SCAN_WINDOW(40),
+	RELAY_HIGH_DURATION(41),
+	LOW_TX_POWER(42),
+	VOLTAGE_MULTIPLIER(43),
+	CURRENT_MULTIPLIER(44),
+	VOLTAGE_ZERO(45),
+	CURRENT_ZERO(46),
+	POWER_ZERO(47),
+	POWER_AVG_WINDOW(48),
+	MESH_ACCESS_ADDRESS(49),
+	CURRENT_THRESHOLD(50),
+	CURRENT_THRESHOLD_DIMMER(51),
+	DIMMER_TEMP_UP(52),
+	DIMMER_TEMP_DOWN(53),
+	PWM_ALLOWED(54),
+	SWITCH_LOCKED(55),
+	SWITCHCRAFT_ENABLED(56),
+	SWITCHCRAFT_THRESHOLD(57),
+	MESH_CHANNEL(58),
+	UART_ENABLED(59),
+	UNKNOWN(255);
+	companion object {
+		private val map = ConfigType.values().associateBy(ConfigType::num)
+		fun fromNum(type: Uint8): ConfigType {
 			return map[type] ?: return UNKNOWN
 		}
 	}

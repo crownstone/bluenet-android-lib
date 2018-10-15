@@ -253,4 +253,49 @@ object Conversion {
 		return BluetoothAdapter.checkBluetoothAddress(address)
 	}
 
+
+	@Throws
+	inline fun <reified T> byteArrayToSigned(array: ByteArray): T {
+		when (T::class) {
+			Byte::class, Int8::class, Uint8::class -> {
+				if (array.size != 1) {
+					throw Errors.Parse()
+				}
+			}
+			Short::class, Int16::class, Uint16::class -> {
+				if (array.size != 2) {
+					throw Errors.Parse()
+				}
+			}
+			Int::class, Int32::class, Uint32::class, Float::class -> {
+				if (array.size != 4) {
+					throw Errors.Parse()
+				}
+			}
+			else -> {
+				throw Errors.Parse()
+			}
+		}
+
+
+		when (T::class) {
+			Byte::class, Int8::class ->
+				return array[0] as T
+			Uint8::class ->
+				return toUint8(array[0]) as T
+			Short::class, Int16::class ->
+				return byteArrayToShort(array) as T
+			Uint16::class ->
+				return toUint16(byteArrayToShort(array)) as T
+			Int::class, Int32::class ->
+				return byteArrayToInt(array) as T
+			Uint32::class ->
+				return toUint32(byteArrayToInt(array)) as T
+			Float::class ->
+				return byteArrayToFloat(array) as T
+			else ->
+				throw Errors.Parse()
+		}
+	}
+
 }

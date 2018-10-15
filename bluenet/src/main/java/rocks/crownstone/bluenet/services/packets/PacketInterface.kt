@@ -1,6 +1,7 @@
 package rocks.crownstone.bluenet.services.packets
 
 import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 interface PacketInterface {
 	fun getSize(): Int
@@ -15,5 +16,10 @@ interface PacketInterface {
 			// Or just return null?
 		}
 		return bb.array()
+	}
+	fun fromArray(array: ByteArray): Boolean {
+		val bb = ByteBuffer.wrap(array)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
+		return fromBuffer(bb)
 	}
 }
