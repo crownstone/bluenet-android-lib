@@ -8,7 +8,7 @@ import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.services.packets.StatePacket
 import rocks.crownstone.bluenet.util.Conversion
 
-class StateService(evtBus: EventBus, connection: ExtConnection) {
+class State(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
