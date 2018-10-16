@@ -33,6 +33,9 @@ object Errors {
 	// parsing
 	class ProcessCallback: Exception("process callback error")
 	class Parse: Exception("parse failed")
+	class OpcodeWrong: Exception("wrong opcode")
+	class SizeWrong: Exception("wrong size")
+	class ValueWrong: Exception("wrong value")
 
 	// encryption errors
 	open class Encryption(msg: String="encryption failed"): Exception(msg)

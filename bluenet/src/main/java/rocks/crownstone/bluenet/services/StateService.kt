@@ -5,7 +5,6 @@ import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
 import nl.komponents.kovenant.unwrap
 import rocks.crownstone.bluenet.*
-import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.services.packets.StatePacket
 import rocks.crownstone.bluenet.util.Conversion
 
@@ -19,9 +18,11 @@ class StateService(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	fun getSwitchState(): Promise<Uint8, Exception> {
+		// TODO: class for switchstate
 		return getStateValue(StateType.SWITCH_STATE)
 	}
 
+	// TODO: schedules
 //	fun getScheduleList(): Promise<, Exception> {
 //		return getState(StateType.SCHEDULE)
 //	}
@@ -31,10 +32,12 @@ class StateService(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	fun getTime(): Promise<Uint32, Exception> {
+		// TODO: time conversion
 		return getStateValue(StateType.TIME)
 	}
 
 	fun getErrors(): Promise<Uint32, Exception> {
+		// TODO: class for errors
 		return getStateValue(StateType.ERRORS)
 	}
 
@@ -47,7 +50,7 @@ class StateService(evtBus: EventBus, connection: ExtConnection) {
 						return@then Promise.ofFail<T, Exception>(Errors.Parse())
 					}
 					try {
-						val value = Conversion.byteArrayToSigned<T>(arr)
+						val value = Conversion.byteArrayTo<T>(arr)
 						return@then Promise.ofSuccess<T, Exception>(value)
 					}
 					catch (ex: Exception) {

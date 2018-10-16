@@ -255,7 +255,7 @@ object Conversion {
 
 
 	@Throws
-	inline fun <reified T> byteArrayToSigned(array: ByteArray): T {
+	inline fun <reified T> byteArrayTo(array: ByteArray): T {
 		when (T::class) {
 			Byte::class, Int8::class, Uint8::class -> {
 				if (array.size != 1) {
@@ -293,6 +293,31 @@ object Conversion {
 				return toUint32(byteArrayToInt(array)) as T
 			Float::class ->
 				return byteArrayToFloat(array) as T
+			else ->
+				throw Errors.Parse()
+		}
+	}
+
+	inline fun <reified T> toByteArray(value: T): ByteArray {
+		when (T::class) {
+			Boolean::class -> {
+				val uint8: Uint8 = if (value as Boolean) 1 else 0
+				return uint8ToByteArray(uint8)
+			}
+			Byte::class, Int8::class ->
+				return int8ToByteArray(value as Int8)
+			Uint8::class ->
+				return uint8ToByteArray(value as Uint8)
+			Short::class, Int16::class ->
+				return int16ToByteArray(value as Int16)
+			Uint16::class ->
+				return uint16ToByteArray(value as Uint16)
+			Int::class, Int32::class ->
+				return int32ToByteArray(value as Int32)
+			Uint32::class ->
+				return uint32ToByteArray(value as Uint32)
+			Float::class ->
+				return floatToByteArray(value as Float)
 			else ->
 				throw Errors.Parse()
 		}
