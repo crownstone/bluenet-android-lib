@@ -1,7 +1,6 @@
 package rocks.crownstone.bluenet.services.packets
 
 import rocks.crownstone.bluenet.*
-import rocks.crownstone.bluenet.util.Conversion
 
 open class ConfigPacket(type: ConfigType, data: ByteArray?, payload: PacketInterface?, opCode: Uint8 = BluenetProtocol.OPCODE_READ): StreamPacket(type.num, data, payload, opCode) {
 	constructor(): this(ConfigType.UNKNOWN, null, null)

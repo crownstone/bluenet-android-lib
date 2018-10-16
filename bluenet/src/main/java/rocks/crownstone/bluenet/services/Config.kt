@@ -158,7 +158,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	fun getMaxChipTemp(): Promise<Int8, Exception> {
 		return getConfigValue(ConfigType.MAX_CHIP_TEMP)
 	}
-	
+
 
 	fun setDimmerTempUpThreshold(value: Float): Promise<Unit, Exception> {
 		return setConfigValue(ConfigType.DIMMER_TEMP_UP, value)
@@ -230,11 +230,11 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		val deferred = deferred<ConfigPacket, Exception>()
 		connection.getSingleMergedNotification(getServiceUuid(), getCharacteristicReadUuid(), writeCommand)
 				.success {
-					val statePacket = ConfigPacket()
-					if (!statePacket.fromArray(it) || statePacket.type != type.num) {
+					val configPacket = ConfigPacket()
+					if (!configPacket.fromArray(it) || configPacket.type != type.num) {
 						deferred.reject(Errors.Parse())
 					}
-					deferred.resolve(statePacket)
+					deferred.resolve(configPacket)
 				}
 				.fail {
 					deferred.reject(it)

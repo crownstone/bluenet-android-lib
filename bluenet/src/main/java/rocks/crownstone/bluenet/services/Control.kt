@@ -22,6 +22,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writePacket(ControlPacket(ControlType.PWM, value))
 	}
 
+	fun validateSetup(): Promise<Unit, Exception> {
+		return writePacket(ControlPacket(ControlType.VALIDATE_SETUP))
+	}
+
 
 	private fun writePacket(packet: ControlPacket): Promise<Unit, Exception> {
 		if (connection.isSetupMode) {
