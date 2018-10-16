@@ -9,7 +9,7 @@ import rocks.crownstone.bluenet.services.packets.ConfigPacket
 import rocks.crownstone.bluenet.util.Conversion
 import java.util.*
 
-class ConfigService(evtBus: EventBus, connection: ExtConnection) {
+class Config(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
