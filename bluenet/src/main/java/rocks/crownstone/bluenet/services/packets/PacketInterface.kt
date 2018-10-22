@@ -18,6 +18,9 @@ interface PacketInterface {
 		return bb.array()
 	}
 	fun fromArray(array: ByteArray): Boolean {
+		if (array.size < getSize()) {
+			return false
+		}
 		val bb = ByteBuffer.wrap(array)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		return fromBuffer(bb)
