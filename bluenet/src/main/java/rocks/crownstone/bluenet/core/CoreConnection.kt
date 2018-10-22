@@ -644,15 +644,48 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	/**
 	 * Subscribes for notifications, calls the callback with merged multipart notifications. Resolves when callback returns done.
 	 *
-	 * @callback Function that returns
+	 * @writeCommand Function that is executed after subscribing to notifications.
+	 * @callback     Function that processes the notifications and returns the result.
+	 * @timeoutMs    Timeout in ms after which the promise is rejected. Set to 0 for no timeout at all.
 	 *
 	 * @return Promise that resolves when the caller is done receiving merged notifications.
 	 */
-	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback): Promise<Unit, Exception> {
+	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
 		Log.i(TAG, "getMultipleMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val deferred = deferred<Unit, Exception>()
 		var unsubId = UUID(0,0)
-		// TODO: timeout
+		var done = false
+
+		val timeoutRunnable = Runnable {
+			Log.i(TAG, "getMultipleMergedNotifications timeout")
+			if (!done) {
+				done = true
+				unsubscribe(serviceUuid, characteristicUuid, unsubId)
+						.always {
+							deferred.reject(Errors.Timeout())
+						}
+			}
+		}
+
+		if (timeoutMs > 0) {
+			handler.postDelayed(timeoutRunnable, timeoutMs)
+		}
+
+		fun onDone() {
+			if (!done) {
+				handler.removeCallbacks(timeoutRunnable)
+				done = true
+				deferred.resolve()
+			}
+		}
+
+		fun onError(error: Exception) {
+			if (!done) {
+				handler.removeCallbacks(timeoutRunnable)
+				done = true
+				deferred.reject(error)
+			}
+		}
 
 		val notificationCallback = fun (mergedNotification: ByteArray) {
 			when (callback(mergedNotification)) {
@@ -661,24 +694,25 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 				}
 				ProcessResult.DONE -> {
 					unsubscribe(serviceUuid, characteristicUuid, unsubId)
-							.success { deferred.resolve() }
-							.fail { deferred.reject(it) }
+							.success { onDone() }
+							.fail { onError(it) }
 				}
 				ProcessResult.ERROR -> {
 					unsubscribe(serviceUuid, characteristicUuid, unsubId)
-							.success { deferred.reject(Errors.ProcessCallback()) }
-							.fail { deferred.reject(it)	}
+							.always { onError(Errors.ProcessCallback()) }
 				}
 			}
 		}
+
 		subscribeMergedNotifications(serviceUuid, characteristicUuid, notificationCallback)
 				.then {
 					unsubId = it
 					writeCommand()
 				}.unwrap()
 				.fail {
-					deferred.reject(it)
+					onError(it)
 				}
+
 		return deferred.promise
 	}
 

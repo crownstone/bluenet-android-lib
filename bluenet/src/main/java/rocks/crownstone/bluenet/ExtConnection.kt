@@ -90,7 +90,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}.unwrap()
 	}
 
-	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback): Promise<Unit, Exception> {
+	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long=0): Promise<Unit, Exception> {
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
@@ -102,7 +102,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 			}
 			return callback(decryptedData)
 		}
-		return bleCore.getMultipleMergedNotifications(serviceUuid, characteristicUuid, writeCommand, processCallBack)
+		return bleCore.getMultipleMergedNotifications(serviceUuid, characteristicUuid, writeCommand, processCallBack, timeoutMs)
 	}
 
 
