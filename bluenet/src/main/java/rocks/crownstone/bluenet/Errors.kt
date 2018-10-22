@@ -37,6 +37,8 @@ object Errors {
 	class SizeWrong: Exception("wrong size")
 	class ValueWrong: Exception("wrong value")
 
+	class Timeout: Exception("timed out")
+
 	// encryption errors
 	open class Encryption(msg: String="encryption failed"): Exception(msg)
 	class EncryptionKeyMissing: Encryption("missing key")
