@@ -2,7 +2,7 @@ package rocks.crownstone.bluenet.services.packets
 
 import rocks.crownstone.bluenet.*
 
-open class StatePacket(type: StateType, data: ByteArray?, payload: PacketInterface?, opCode: Uint8 = BluenetProtocol.OPCODE_READ): StreamPacket(type.num, data, payload, opCode) {
+open class StatePacket(type: StateType, data: ByteArray?, payload: PacketInterface?): StreamPacket(type.num, data, payload, OpcodeType.READ) {
 	constructor(): this(StateType.UNKNOWN, null, null)
 	constructor(type: StateType):                           this(type, null, null)
 	constructor(type: StateType, data: ByteArray):          this(type, data, null)

@@ -1,19 +1,19 @@
 package rocks.crownstone.bluenet.services.packets
 
-import rocks.crownstone.bluenet.BluenetProtocol
+import rocks.crownstone.bluenet.OpcodeType
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?, opCode: Uint8 = BluenetProtocol.OPCODE_WRITE): PacketInterface {
+open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?, opCode: OpcodeType = OpcodeType.WRITE): PacketInterface {
 	val TAG = this.javaClass.simpleName
 	companion object {
 		const val SIZE = 1+1+2
 	}
 	var type: Uint8 = type
 		protected set
-	var opCode: Uint8  = opCode // Not always used
+	var opCode: OpcodeType = opCode // Not always used
 		protected set
 	protected var dataSize: Int = 0
 	protected var data: ByteArray? = data
@@ -25,12 +25,12 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 	}
 
 	constructor(): this(-1, null, null)
-	constructor(type: Uint8, data: ByteArray, opCode: Uint8 = BluenetProtocol.OPCODE_WRITE): this(type, data, null, opCode)
-	constructor(type: Uint8, payload: PacketInterface, opCode: Uint8 = BluenetProtocol.OPCODE_WRITE): this(type, null, payload, opCode)
-	constructor(type: Uint8, byte: Byte,   opCode: Uint8 = BluenetProtocol.OPCODE_WRITE): this(type, byteArrayOf(byte), null, opCode)
-	constructor(type: Uint8, short: Short, opCode: Uint8 = BluenetProtocol.OPCODE_WRITE): this(type, Conversion.int16ToByteArray(short), null, opCode)
-	constructor(type: Uint8, int: Int,     opCode: Uint8 = BluenetProtocol.OPCODE_WRITE): this(type, Conversion.int32ToByteArray(int), null, opCode)
-	constructor(type: Uint8, float: Float, opCode: Uint8 = BluenetProtocol.OPCODE_WRITE): this(type, Conversion.floatToByteArray(float), null, opCode)
+	constructor(type: Uint8, data: ByteArray, opCode: OpcodeType = OpcodeType.WRITE): this(type, data, null, opCode)
+	constructor(type: Uint8, payload: PacketInterface, opCode: OpcodeType = OpcodeType.WRITE): this(type, null, payload, opCode)
+	constructor(type: Uint8, byte: Byte,   opCode: OpcodeType = OpcodeType.WRITE): this(type, byteArrayOf(byte), null, opCode)
+	constructor(type: Uint8, short: Short, opCode: OpcodeType = OpcodeType.WRITE): this(type, Conversion.int16ToByteArray(short), null, opCode)
+	constructor(type: Uint8, int: Int,     opCode: OpcodeType = OpcodeType.WRITE): this(type, Conversion.int32ToByteArray(int), null, opCode)
+	constructor(type: Uint8, float: Float, opCode: OpcodeType = OpcodeType.WRITE): this(type, Conversion.floatToByteArray(float), null, opCode)
 
 	override fun getSize(): Int {
 		return SIZE + dataSize
@@ -42,7 +42,7 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.put(type.toByte())
-		bb.put(opCode.toByte())
+		bb.put(opCode.num.toByte())
 		bb.putShort(dataSize.toShort())
 		val payload = this.payload
 		if (payload != null) {
@@ -59,15 +59,15 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 			return false
 		}
 		type = Conversion.toUint8(bb.get())
-		opCode = Conversion.toUint8(bb.get())
+		opCode = OpcodeType.fromNum(Conversion.toUint8(bb.get()))
 		dataSize = Conversion.toUint16(bb.getShort())
 		// TODO: also fill up and parse the payload
 		return true
 	}
 
-	fun setOpcode(opCode: Uint8) {
-		this.opCode = opCode
-	}
+//	fun setOpcode(opCode: OpcodeType) {
+//		this.opCode = opCode
+//	}
 
 	fun getPayload(): ByteArray? {
 		if (data != null) {

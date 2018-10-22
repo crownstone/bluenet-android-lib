@@ -242,7 +242,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	private inline fun <reified  T>setConfigValue(type: ConfigType, value: T): Promise<Unit, Exception> {
+	private inline fun <reified T>setConfigValue(type: ConfigType, value: T): Promise<Unit, Exception> {
 		val config = ConfigPacket(type, Conversion.toByteArray(value))
 		return setConfig(config)
 	}

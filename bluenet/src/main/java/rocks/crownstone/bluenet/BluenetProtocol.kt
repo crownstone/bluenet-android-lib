@@ -59,6 +59,46 @@ object BluenetProtocol {
 	const val OPCODE_NOTIFY: Uint8 = 2
 }
 
+enum class OpcodeType(val num: Uint8) {
+	READ(0),
+	WRITE(1),
+	NOTIFY(2),
+	RESULT(3),
+	UNKNOWN(255);
+	companion object {
+		private val map = OpcodeType.values().associateBy(OpcodeType::num)
+		fun fromNum(type: Uint8): OpcodeType {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class ResultType(val num: Uint16) {
+	SUCCESS(0),
+	WAIT_FOR_SUCCESS(1),
+	BUFFER_UNASSIGNED(16),
+	BUFFER_LOCKED(17),
+	WRONG_PAYLOAD_LENGTH(32),
+	WRONG_PARAMETER(33),
+	INVALID_MESSAGE(34),
+	UNKNOWN_OP_CODE(35),
+	UNKNOWN_TYPE(36),
+	NOT_FOUND(37),
+	NO_ACCESS(48),
+	NOT_AVAILABLE(64),
+	NOT_IMPLEMENTED(65),
+	WRITE_DISABLED(80),
+	ERR_WRITE_NOT_ALLOWED(81),
+	ADC_INVALID_CHANNEL(96),
+	UNKNOWN(65535);
+	companion object {
+		private val map = ResultType.values().associateBy(ResultType::num)
+		fun fromNum(type: Uint16): ResultType {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
 enum class ControlType(val num: Uint8) {
 	SWITCH(0),
 	PWM(1),
@@ -318,136 +358,6 @@ object BluenetConfigOld {
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// ControlMsg types
-	val CMD_SWITCH: Char = 0.toChar()    // 0x00
-	val CMD_PWM: Char = 1.toChar()    // 0x01
-	val CMD_SET_TIME: Char = 2.toChar()    // 0x02
-	val CMD_GOTO_DFU: Char = 3.toChar()    // 0x03
-	val CMD_RESET: Char = 4.toChar()    // 0x04
-	val CMD_FACTORY_RESET: Char = 5.toChar()    // 0x05
-	val CMD_KEEP_ALIVE_STATE: Char = 6.toChar()    // 0x06
-	val CMD_KEEP_ALIVE: Char = 7.toChar()    // 0x07
-	val CMD_ENABLE_MESH: Char = 8.toChar()    // 0x08
-	val CMD_ENABLE_ENCRYPTION: Char = 9.toChar()    // 0x09
-	val CMD_ENABLE_IBEACON: Char = 10.toChar()   // 0x0A
-	val CMD_ENABLE_CONT_POWER_MEASURE: Char = 11.toChar()   // 0x0B
-	val CMD_ENABLE_SCANNER: Char = 12.toChar()   // 0x0C
-	val CMD_SCAN_DEVICES: Char = 13.toChar()   // 0x0D
-	val CMD_USER_FEEDBACK: Char = 14.toChar()   // 0x0E
-	val CMD_SCHEDULE_ENTRY_SET: Char = 15.toChar()   // 0x0F
-	val CMD_RELAY: Char = 16.toChar()   // 0x10
-	val CMD_VALIDATE_SETUP: Char = 17.toChar()   // 0x11
-	val CMD_REQUEST_SERVICE_DATA: Char = 18.toChar()   // 0x12
-	val CMD_DISCONNECT: Char = 19.toChar()   // 0x13
-	val CMD_SET_LED: Char = 20.toChar()   // 0x14
-	val CMD_NOP: Char = 21.toChar()   // 0x15
-	val CMD_INCREASE_TX: Char = 22.toChar()   // 0x16
-	val CMD_RESET_STATE_ERRORS: Char = 23.toChar()   // 0x17
-	val CMD_KEEP_ALIVE_REPEAT_LAST: Char = 24.toChar()   // 0x18
-	val CMD_MULTI_SWITCH: Char = 25.toChar()   // 0x19
-	val CMD_SCHEDULE_ENTRY_CLEAR: Char = 26.toChar()   // 0x1A
-	val CMD_KEEP_ALIVE_MESH: Char = 27.toChar()   // 0x1B
-	val CMD_MESH_COMMAND: Char = 28.toChar()   // 0x1C
-	val CMD_ALLOW_DIMMING: Char = 29.toChar()
-	val CMD_LOCK_SWITCH: Char = 30.toChar()
-	val CMD_SETUP: Char = 31.toChar()
-	val CMD_ENABLE_SWITCHCRAFT: Char = 32.toChar()
-	val CMD_UART_MSG: Char = 33.toChar()
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Configuration types
-	val CONFIG_NAME: Char = 0.toChar()    // 0x00
-	val CONFIG_DEVICE_TYPE: Char = 1.toChar()    // 0x01
-	val CONFIG_ROOM: Char = 2.toChar()    // 0x02
-	val CONFIG_FLOOR: Char = 3.toChar()    // 0x03
-	val CONFIG_NEARBY_TIMEOUT: Char = 4.toChar()    // 0x04
-	val CONFIG_PWM_PERIOD: Char = 5.toChar()    // 0x05
-	val CONFIG_IBEACON_MAJOR: Char = 6.toChar()    // 0x06
-	val CONFIG_IBEACON_MINOR: Char = 7.toChar()    // 0x07
-	val CONFIG_IBEACON_PROXIMITY_UUID: Char = 8.toChar()    // 0x08
-	val CONFIG_IBEACON_TXPOWER: Char = 9.toChar()    // 0x09
-	val CONFIG_WIFI_SETTINGS: Char = 10.toChar()   // 0x0A
-	val CONFIG_TX_POWER: Char = 11.toChar()   // 0x0B
-	val CONFIG_ADV_INTERVAL: Char = 12.toChar()   // 0x0C
-	val CONFIG_PASSKEY: Char = 13.toChar()   // 0x0D
-	val CONFIG_MIN_ENV_TEMP: Char = 14.toChar()   // 0x0E
-	val CONFIG_MAX_ENV_TEMP: Char = 15.toChar()   // 0x0F
-	val CONFIG_SCAN_DURATION: Char = 16.toChar()   // 0x10
-	val CONFIG_SCAN_SEND_DELAY: Char = 17.toChar()   // 0x11
-	val CONFIG_SCAN_BREAK_DURATION: Char = 18.toChar()   // 0x12
-	val CONFIG_BOOT_DELAY: Char = 19.toChar()   // 0x13
-	val CONFIG_MAX_CHIP_TEMP: Char = 20.toChar()   // 0x14
-	val CONFIG_SCAN_FILTER: Char = 21.toChar()   // 0x15
-	val CONFIG_SCAN_FILTER_SEND_FRACTION: Char = 22.toChar()   // 0x16
-	val CONFIG_CURRENT_LIMIT: Char = 23.toChar()   // 0x17
-	val CONFIG_MESH_ENABLED: Char = 24.toChar()   // 0x18
-	val CONFIG_ENCRYPTION_ENABLED: Char = 25.toChar()   // 0x19
-	val CONFIG_IBEACON_ENABLED: Char = 26.toChar()   // 0x1A
-	val CONFIG_SCANNER_ENABLED: Char = 27.toChar()   // 0x1B
-	val CONFIG_CONT_POWER_SAMPLER_ENABLED: Char = 28.toChar()   // 0x1C
-	val CONFIG_TRACKER_ENABLED: Char = 29.toChar()   // 0x1D
-	val CONFIG_ADC_SAMPLE_RATE: Char = 30.toChar()   // 0x1E
-	val CONFIG_POWER_SAMPLE_BURST_INTERVAL: Char = 31.toChar()   // 0x1F
-	val CONFIG_POWER_SAMPLE_CONT_INTERVAL: Char = 32.toChar()   // 0x20
-	val CONFIG_POWER_SAMPLE_CONT_NUM_SAMPLES: Char = 33.toChar()   // 0x21
-	val CONFIG_CROWNSTONE_ID: Char = 34.toChar()   // 0x22
-	val CONFIG_KEY_ADMIN: Char = 35.toChar()   //! 0x23
-	val CONFIG_KEY_MEMBER: Char = 36.toChar()   //! 0x24
-	val CONFIG_KEY_GUEST: Char = 37.toChar()   //! 0x25
-	val CONFIG_DEFAULT_ON: Char = 38.toChar()   //! 0x26
-	val CONFIG_SCAN_INTERVAL: Char = 39.toChar()   //! 0x27
-	val CONFIG_SCAN_WINDOW: Char = 40.toChar()   //! 0x28
-	val CONFIG_RELAY_HIGH_DURATION: Char = 41.toChar()   //! 0x29
-	val CONFIG_LOW_TX_POWER: Char = 42.toChar()   //! 0x2A
-	val CONFIG_VOLTAGE_MULTIPLIER: Char = 43.toChar()   //! 0x2B
-	val CONFIG_CURRENT_MULTIPLIER: Char = 44.toChar()   //! 0x2C
-	val CONFIG_VOLTAGE_ZERO: Char = 45.toChar()   //! 0x2D
-	val CONFIG_CURRENT_ZERO: Char = 46.toChar()   //! 0x2E
-	val CONFIG_POWER_ZERO: Char = 47.toChar()   //! 0x2F
-	val CONFIG_POWER_AVG_WINDOW: Char = 48.toChar()   //! 0x30
-	val CONFIG_MESH_ACCESS_ADDRESS: Char = 49.toChar()   //! 0x31
-	val CONFIG_CURRENT_THRESHOLD: Char = 50.toChar()   //! 0x32
-	val CONFIG_CURRENT_THRESHOLD_DIMMER: Char = 51.toChar()   //! 0x33
-	val CONFIG_DIMMER_TEMP_UP: Char = 52.toChar()   //! 0x34
-	val CONFIG_DIMMER_TEMP_DOWN: Char = 53.toChar()   //! 0x35
-	val CONFIG_PWM_ALLOWED: Char = 54.toChar()   //! 0x36
-	val CONFIG_SWITCH_LOCKED: Char = 55.toChar()   //! 0x37
-	val CONFIG_SWITCHCRAFT_ENABLED: Char = 56.toChar()   //! 0x38
-	val CONFIG_SWITCHCRAFT_THRESHOLD: Char = 57.toChar()   //! 0x39
-	val CONFIG_MESH_CHANNEL: Char = 58.toChar()   //! 0x3A
-	val CONFIG_UART_ENABLED: Char = 59.toChar()   //! 0x3B
-
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// State types
-	val STATE_RESET_COUNTER: Char = 128.toChar()  // 0x80
-	val STATE_SWITCH_STATE: Char = 129.toChar()  // 0x81
-	val STATE_ACCUMULATED_ENERGY: Char = 130.toChar()  // 0x82
-	val STATE_POWER_USAGE: Char = 131.toChar()  // 0x83
-	val STATE_TRACKED_DEVICES: Char = 132.toChar()  // 0x84
-	val STATE_SCHEDULE: Char = 133.toChar()  // 0x85
-	val STATE_OPERATION_MODE: Char = 134.toChar()  // 0x86
-	val STATE_TEMPERATURE: Char = 135.toChar()  // 0x87
-	val STATE_TIME: Char = 136.toChar()  // 0x88
-	val STATE_ERRORS: Char = 139.toChar()  // 0x8B
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Value Op Code
-	val READ_VALUE: Char = 0.toChar()    // 0x00
-	val WRITE_VALUE: Char = 1.toChar()    // 0x01
-	val NOTIFY_VALUE: Char = 2.toChar()    // 0x02
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Value set at reserved bytes for alignment
-	val RESERVED: Char = 0x00.toChar()
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Mesh handles (channel)
