@@ -37,6 +37,8 @@ object Errors {
 	class SizeWrong: Exception("wrong size")
 	class ValueWrong: Exception("wrong value")
 
+	class Result(result: ResultType): Exception("result: ${result.name}")
+
 	class Timeout: Exception("timed out")
 
 	// encryption errors

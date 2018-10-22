@@ -30,6 +30,7 @@ enum class BluenetEvent {
 	NEAREST_VALIDATED_NORMAL, // Validated device in normal operation mode was scanned. NearestDeviceListEntry as data.
 	NEAREST_DFU,              // Validated device in dfu operation mode was scanned. NearestDeviceListEntry as data.
 	NEAREST_SETUP,            // Validated device in setup operation mode was scanned. NearestDeviceListEntry as data.
+	SETUP_PROGRESS,  // Setup is in progress, Double (progress, where 1.0 is done) as data.
 }
 
 typealias Int8 = Byte

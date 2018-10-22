@@ -4,6 +4,8 @@ import nl.komponents.kovenant.Promise
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.services.packets.ControlPacket
+import rocks.crownstone.bluenet.services.packets.SetupPacket
+import rocks.crownstone.bluenet.util.Conversion
 
 class Control(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
@@ -11,23 +13,38 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	private val connection = connection
 
 	fun setSwitch(value: Uint8): Promise<Unit, Exception> {
-		return writePacket(ControlPacket(ControlType.SWITCH, value))
+		return writeCommand(ControlType.SWITCH, value)
 	}
 
 	fun setRelay(value: Boolean): Promise<Unit, Exception> {
-		return writePacket(ControlPacket(ControlType.RELAY, if (value) 0 else 1))
+		return writeCommand(ControlType.RELAY, value)
 	}
 
 	fun setPwm(value: Uint8): Promise<Unit, Exception> {
-		return writePacket(ControlPacket(ControlType.PWM, value))
+		return writeCommand(ControlType.PWM, value)
 	}
 
-	fun validateSetup(): Promise<Unit, Exception> {
-		return writePacket(ControlPacket(ControlType.VALIDATE_SETUP))
+	internal fun validateSetup(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.VALIDATE_SETUP)
+	}
+
+	internal fun setup(packet: SetupPacket): Promise<Unit, Exception> {
+		return writeCommand(ControlType.SETUP, packet)
 	}
 
 
-	private fun writePacket(packet: ControlPacket): Promise<Unit, Exception> {
+	// Commands without payload
+	private fun writeCommand(type: ControlType): Promise<Unit, Exception> {
+		return writeCommand(ControlPacket(type))
+	}
+
+	// Commands with simple value
+	private inline fun <reified T> writeCommand(type: ControlType, value: T): Promise<Unit, Exception> {
+		val packet = ControlPacket(type, Conversion.toByteArray(value))
+		return writeCommand(packet)
+	}
+
+	private fun writeCommand(packet: ControlPacket): Promise<Unit, Exception> {
 		if (connection.isSetupMode) {
 			return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID, packet.getArray(), AccessLevel.SETUP)
 		}
