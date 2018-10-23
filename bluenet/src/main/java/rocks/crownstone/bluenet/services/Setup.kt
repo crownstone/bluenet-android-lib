@@ -1,17 +1,42 @@
 package rocks.crownstone.bluenet.services
 
+import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.services.packets.CommandResultPacket
 import rocks.crownstone.bluenet.services.packets.SetupPacket
-import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Util
 import kotlin.Exception
 
 class Setup(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
+
+	private enum class OldSetupStep {
+		START,
+		ID,
+		ADMIN_KEY,
+		MEMBER_KEY,
+		GUEST_KEY,
+		MESH_ADDRESS,
+		IBEACON_UUID,
+		IBEACON_MAJOR,
+		IBEACON_MINOR,
+		FINALIZE,
+		SUCCESS,
+		DISCONNECTED
+	}
+
+	private enum class FastSetupStep {
+		START,
+		SUBSCRIBED,
+		COMMAND_WRITTEN,
+		WAIT_FOR_SUCCESS,
+		SUCCESS,
+		DISCONNECTED
+	}
 
 	fun setup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		if (!connection.isSetupMode) {
@@ -38,6 +63,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	private fun oldSetup(id: Uint8, adminKey: ByteArray, memberKey: ByteArray, guestKey: ByteArray, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val config = Config(eventBus, connection)
 		val control = Control(eventBus, connection)
+		// TODO: increase TX?
 		return config.setCrownstoneId(id)
 				.then {
 					config.setAdminKey(adminKey)
@@ -65,6 +91,12 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 				}.unwrap()
 	}
 
+	/**
+	 * Perform the fast setup
+	 *
+	 * Subscribes, then writes the setup command, then waits for notifications, then disconnects.
+	 * If notifications time out, we assume a success, because the crownstone probably rebooted before sending the notifications.
+	 */
 	private fun fastSetup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 
@@ -72,8 +104,17 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		val packet = SetupPacket(0, id, keySet, meshAccessAddress, ibeaconData)
 		val control = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> { return control.setup(packet) }
+		var step = FastSetupStep.START
 
-		//
+		fun sendProgress(progress: FastSetupStep, isDone: Boolean) {
+			Log.i(TAG, "progress ${progress.name}")
+			if (!isDone) {
+				step = progress
+				eventBus.emit(BluenetEvent.SETUP_PROGRESS, progress)
+			}
+		}
+
+		// Process notifications
 		val processCallback = fun (data: ByteArray): ProcessResult {
 			val resultPacket = CommandResultPacket()
 			if (!resultPacket.fromArray(data)) {
@@ -82,11 +123,11 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 			val result = resultPacket.resultCode
 			when (result) {
 				ResultType.WAIT_FOR_SUCCESS -> {
-					sendProgress(10.0/13, deferred.promise.isDone())
+					sendProgress(FastSetupStep.WAIT_FOR_SUCCESS, deferred.promise.isDone())
 					return ProcessResult.NOT_DONE
 				}
 				ResultType.SUCCESS -> {
-					sendProgress(11.0/13, deferred.promise.isDone())
+					sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
 					return ProcessResult.DONE
 				}
 				else -> {
@@ -99,21 +140,23 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		}
 
 		// Subscribe for notifications
-
-		connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, writeCommand, processCallback, 3000)
-				.fail {
-					if (it is Errors.Timeout) {
-						// Assume success.
-						sendProgress(13.0/13, deferred.promise.isDone())
-						deferred.resolve()
+		Util.recoverablePromise(
+				connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, writeCommand, processCallback, 3000),
+				fun (error: Exception): Boolean {
+					// If the promise failed with a timeout error, assume it was a success (because we assume the crownstone rebooted before sending the notification).
+					if (error is Errors.Timeout) {
+//						if (step) ...
+						sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
+						return true
 					}
+					return false
 				}
+		)
 				.then {
-					// TODO
-					// disconnect
-				}
+					connection.disconnect()
+				}.unwrap()
 				.then {
-					sendProgress(13.0/13, deferred.promise.isDone())
+					sendProgress(FastSetupStep.DISCONNECTED, deferred.promise.isDone())
 					deferred.resolve()
 				}
 				.fail {
@@ -122,11 +165,5 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 					}
 				}
 		return deferred.promise
-	}
-
-	private fun sendProgress(progress: Double, isDone: Boolean) {
-		if (!isDone) {
-			eventBus.emit(BluenetEvent.SETUP_PROGRESS, progress)
-		}
 	}
 }
