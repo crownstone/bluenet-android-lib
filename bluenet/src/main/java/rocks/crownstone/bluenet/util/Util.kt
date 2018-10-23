@@ -1,6 +1,9 @@
 package rocks.crownstone.bluenet.util
 
-import kotlin.experimental.and
+import android.os.Handler
+import nl.komponents.kovenant.Promise
+import nl.komponents.kovenant.deferred
+import nl.komponents.kovenant.resolve
 
 object Util {
 	// Check if Nth bit in a value is set
@@ -23,5 +26,28 @@ object Util {
 	// Clear the Nth bit in a value
 	fun clearBit(value: Int, bit: Int): Int {
 		return value and (1 shl bit).inv()
+	}
+
+	fun waitPromise(timeMs: Long, handler: Handler): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		handler.postDelayed({deferred.resolve()}, timeMs)
+		return deferred.promise
+	}
+
+	fun recoverablePromise(promise: Promise<Unit, Exception>, recoverError: (error: Exception) -> Boolean): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		promise
+				.success {
+					deferred.resolve(it)
+				}
+				.fail {
+					if (recoverError(it)) {
+						deferred.resolve()
+					}
+					else {
+						deferred.reject(it)
+					}
+				}
+		return deferred.promise
 	}
 }
