@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet
 
+import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
@@ -36,11 +37,23 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}
 	}
 
-	@Synchronized fun disconnect(): Promise<Unit, Exception> {
-		return bleCore.disconnect()
-				.success {
-					isConnected = false
-				}
+	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
+		Log.i(TAG, "disconnect clearCache=$clearCache")
+		if (clearCache) {
+			val deferred = deferred<Unit, Exception>()
+			bleCore.disconnect()
+					.always {
+						bleCore.close(true)
+								.success {
+									deferred.resolve()
+								}
+								.fail {
+									deferred.reject(it)
+								}
+					}
+			return deferred.promise
+		}
+		return bleCore.close(false)
 	}
 
 	/**

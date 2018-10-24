@@ -8,6 +8,10 @@ import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.scanparsing.ScanHandler
+import rocks.crownstone.bluenet.services.Config
+import rocks.crownstone.bluenet.services.Control
+import rocks.crownstone.bluenet.services.Setup
+import rocks.crownstone.bluenet.services.State
 import java.util.*
 
 class Bluenet {
@@ -15,6 +19,7 @@ class Bluenet {
 	private val eventBus = EventBus()
 	private lateinit var context: Context
 	private lateinit var bleCore: BleCore
+	private lateinit var connection: ExtConnection
 	private var bleScanner: BleScanner? = null
 	private var scanHandler: ScanHandler? = null
 	private lateinit var service: BackgroundServiceManager
@@ -25,6 +30,13 @@ class Bluenet {
 	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
 
 	private val nearestDevices = NearestDevices(eventBus)
+
+	// Public variables, used to write and read services.
+	lateinit var setup: Setup
+	lateinit var control: Control
+	lateinit var config: Config
+	lateinit var state: State
+
 
 	/**
 	 * Init the library.
@@ -53,6 +65,13 @@ class Bluenet {
 
 		bleCore = BleCore(context, eventBus)
 		bleCore.initBle()
+		connection = ExtConnection(eventBus, bleCore, encryptionManager)
+		setup = Setup(eventBus, connection)
+		control = Control(eventBus, connection)
+		config = Config(eventBus, connection)
+		state = State(eventBus, connection)
+
+
 		service = BackgroundServiceManager(appContext, eventBus)
 		return service.runInBackground()
 				.success {
@@ -141,7 +160,7 @@ class Bluenet {
 	/**
 	 * Set the keys.
 	 */
-	fun loadSphereData(keys: Keys) {
+	@Synchronized fun loadSphereData(keys: Keys) {
 		encryptionManager.setKeys(keys)
 	}
 
@@ -165,11 +184,11 @@ class Bluenet {
 
 
 
-	fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
+	@Synchronized fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
 	}
 
-	fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
+	@Synchronized fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
 	}
 
@@ -184,7 +203,7 @@ class Bluenet {
 		bleScanner?.stopScan()
 	}
 
-	fun getNearestValidated(): NearestDeviceListEntry? {
+	@Synchronized fun getNearestValidated(): NearestDeviceListEntry? {
 		return nearestDevices.nearestValidated.getNearest()
 	}
 
@@ -204,45 +223,25 @@ class Bluenet {
 
 	@Synchronized fun connect(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return bleCore.connect(address, 0)
-		// TODO: discover service, and read session nonce: check ios code
+		return connection.connect(address, 100000)
 	}
 
 	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
-		if (clearCache) {
-			val deferred = deferred<Unit, Exception>()
-			bleCore.disconnect()
-					.always {
-						bleCore.close(true)
-								.success {
-									deferred.resolve()
-								}
-								.fail {
-									deferred.reject(it)
-								}
-					}
-			return deferred.promise
-//
-//			return bleCore.disconnect()
-//					.then {
-//						bleCore.close(true)
-//					}.unwrap()
-		}
-		return bleCore.close(false)
+		return connection.disconnect(clearCache)
 	}
 
-	@Synchronized fun discoverServices(): Promise<Unit, Exception> {
-		return bleCore.discoverServices(true)
-	}
+//	@Synchronized fun discoverServices(): Promise<Unit, Exception> {
+//		return bleCore.discoverServices(true)
+//	}
 
-	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID): Promise<ByteArray, Exception> {
-		return bleCore.read(serviceUuid, characteristicUuid)
-	}
+//	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID): Promise<ByteArray, Exception> {
+//		return bleCore.read(serviceUuid, characteristicUuid)
+//	}
 
-	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray): Promise<Unit, Exception> {
-		return bleCore.write(serviceUuid, characteristicUuid, data)
-	}
+//	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray): Promise<Unit, Exception> {
+//		return bleCore.write(serviceUuid, characteristicUuid, data)
+//	}
 
 	@Synchronized private fun onCoreScannerReady(data: Any) {
 		initScanner()
