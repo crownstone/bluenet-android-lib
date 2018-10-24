@@ -14,28 +14,28 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	private val eventBus = evtBus
 	private val connection = connection
 
-	private enum class OldSetupStep {
-		START,
-		ID,
-		ADMIN_KEY,
-		MEMBER_KEY,
-		GUEST_KEY,
-		MESH_ADDRESS,
-		IBEACON_UUID,
-		IBEACON_MAJOR,
-		IBEACON_MINOR,
-		FINALIZE,
-		SUCCESS,
-		DISCONNECTED
+	private enum class OldSetupStep(val num: Int) {
+		START(1),
+		INCREASED_TX(2),
+		ID_WRITTEN(3),
+		ADMIN_KEY_WRITTEN(4),
+		MEMBER_KEY_WRITTEN(5),
+		GUEST_KEY_WRITTEN(6),
+		MESH_ADDRESS_WRITTEN(7),
+		IBEACON_UUID_WRITTEN(8),
+		IBEACON_MAJOR_WRITTEN(9),
+		IBEACON_MINOR_WRITTEN(10),
+		FINALIZE_WRITTEN(11),
+		DISCONNECTED(12)
 	}
 
-	private enum class FastSetupStep {
-		START,
-		SUBSCRIBED,
-		COMMAND_WRITTEN,
-		WAIT_FOR_SUCCESS,
-		SUCCESS,
-		DISCONNECTED
+	private enum class FastSetupStep(val num: Int) {
+		START(1),
+		SUBSCRIBED(3),
+		COMMAND_WRITTEN(5),
+		WAIT_FOR_SUCCESS(7),
+		SUCCESS(10),
+		DISCONNECTED(12)
 	}
 
 	fun setup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
@@ -63,32 +63,55 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	private fun oldSetup(id: Uint8, adminKey: ByteArray, memberKey: ByteArray, guestKey: ByteArray, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val config = Config(eventBus, connection)
 		val control = Control(eventBus, connection)
+
+		fun sendProgress(progress: OldSetupStep) {
+			Log.i(TAG, "progress ${progress.name}")
+			val progressDouble = progress.num / 13.0
+			eventBus.emit(BluenetEvent.SETUP_PROGRESS, progressDouble)
+		}
+
+		sendProgress(OldSetupStep.START)
 		// TODO: increase TX?
 		return config.setCrownstoneId(id)
 				.then {
+					sendProgress(OldSetupStep.ID_WRITTEN)
 					config.setAdminKey(adminKey)
 				}.unwrap()
 				.then {
+					sendProgress(OldSetupStep.ADMIN_KEY_WRITTEN)
 					config.setMemberKey(memberKey)
 				}.unwrap()
 				.then {
+					sendProgress(OldSetupStep.MEMBER_KEY_WRITTEN)
 					config.setGuestKey(guestKey)
 				}.unwrap()
 				.then {
+					sendProgress(OldSetupStep.GUEST_KEY_WRITTEN)
 					config.setMeshAccessAddress(meshAccessAddress)
 				}.unwrap()
 				.then {
+					sendProgress(OldSetupStep.MESH_ADDRESS_WRITTEN)
 					config.setIbeaconUuid(ibeaconData.uuid)
 				}.unwrap()
 				.then {
+					sendProgress(OldSetupStep.IBEACON_UUID_WRITTEN)
 					config.setIbeaconMajor(ibeaconData.major)
 				}.unwrap()
 				.then {
+					sendProgress(OldSetupStep.IBEACON_MAJOR_WRITTEN)
 					config.setIbeaconMinor(ibeaconData.minor)
 				}.unwrap()
 				.then {
+					sendProgress(OldSetupStep.IBEACON_MINOR_WRITTEN)
 					control.validateSetup()
 				}.unwrap()
+				.then {
+					sendProgress(OldSetupStep.FINALIZE_WRITTEN)
+					connection.disconnect()
+				}.unwrap()
+				.success {
+					sendProgress(OldSetupStep.DISCONNECTED)
+				}
 	}
 
 	/**
@@ -110,7 +133,8 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 			Log.i(TAG, "progress ${progress.name}")
 			if (!isDone) {
 				step = progress
-				eventBus.emit(BluenetEvent.SETUP_PROGRESS, progress)
+				val progressDouble = progress.num / 13.0
+				eventBus.emit(BluenetEvent.SETUP_PROGRESS, progressDouble)
 			}
 		}
 
