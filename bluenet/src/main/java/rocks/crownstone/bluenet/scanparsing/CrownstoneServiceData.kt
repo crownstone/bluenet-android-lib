@@ -25,42 +25,42 @@ class CrownstoneServiceData {
 
 	// Header
 	internal var version = 0
-	internal var type = 0
+	var type = 0; internal set
 	internal var serviceUuid: UUID? = null
-	internal var deviceType = DeviceType.UNKNOWN
+	var deviceType = DeviceType.UNKNOWN; internal set
 	internal var operationMode = OperationMode.UNKNOWN
 
 	// State
-	internal var crownstoneId: Uint8 = 0
-	internal var switchState: Uint8 = 0
-	internal var temperature : Byte = 0
-	internal var powerUsageReal = 0.0
-	internal var powerUsageApparent = 0.0
-	internal var powerFactor = 1.0
-	internal var energyUsed = 0L
-	internal var externalRssi: Int8 = 0
-	internal var timestamp = 0L
+	var crownstoneId: Uint8 = 0; internal set
+	var switchState: Uint8 = 0; internal set
+	var temperature : Byte = 0; internal set
+	var powerUsageReal = 0.0; internal set
+	var powerUsageApparent = 0.0; internal set
+	var powerFactor = 1.0; internal set
+	var energyUsed = 0L; internal set
+	var externalRssi: Int8 = 0; internal set
+	var timestamp = 0L; internal set
 	internal var validation = false
 	internal var changingData = 0
 
 	// Flags
-	internal var flagExternalData = false
-	internal var flagSetup = false
-	internal var flagDimmingAvailable = false
-	internal var flagDimmable = false
-	internal var flagError = false
-	internal var flagSwitchLocked = false
-	internal var flagTimeSet = false
-	internal var flagSwitchCraft = false
+	var flagExternalData = false;     internal set
+	var flagSetup = false;            internal set
+	var flagDimmingAvailable = false; internal set
+	var flagDimmable = false;         internal set
+	var flagError = false;            internal set
+	var flagSwitchLocked = false;     internal set
+	var flagTimeSet = false;          internal set
+	var flagSwitchCraft = false;      internal set
 
 	// Errors
-	internal var errorOverCurrent = false
-	internal var errorOverCurrentDimmer = false
-	internal var errorChipTemperature = false
-	internal var errorDimmerTemperature = false
-	internal var errorDimmerFailureOn = false
-	internal var errorDimmerFailureOff = false
-	internal var errorTimestamp = 0L
+	var errorOverCurrent = false;       internal set
+	var errorOverCurrentDimmer = false; internal set
+	var errorChipTemperature = false;   internal set
+	var errorDimmerTemperature = false; internal set
+	var errorDimmerFailureOn = false;   internal set
+	var errorDimmerFailureOff = false;  internal set
+	var errorTimestamp = 0L;            internal set
 
 	/**
 	 * Parses first bytes to determine the advertisement type, device type, and operation mode, without decrypting the data.
@@ -68,7 +68,7 @@ class CrownstoneServiceData {
 	 *
 	 * @return true when header data format is correct
 	 */
-	fun parseHeader(uuid: UUID, data: ByteArray): Boolean {
+	internal fun parseHeader(uuid: UUID, data: ByteArray): Boolean {
 		if (headerParsedSuccess) {
 			return true
 		}
@@ -92,7 +92,7 @@ class CrownstoneServiceData {
 	 *
 	 * @return true when data format and size is correct
 	 */
-	fun parse(key: ByteArray?): Boolean {
+	internal fun parse(key: ByteArray?): Boolean {
 		if (parsedSuccess) {
 			return true
 		}
@@ -107,7 +107,7 @@ class CrownstoneServiceData {
 		return false
 	}
 
-	fun isStone(): Boolean {
+	internal fun isStone(): Boolean {
 		return deviceType != DeviceType.UNKNOWN
 	}
 

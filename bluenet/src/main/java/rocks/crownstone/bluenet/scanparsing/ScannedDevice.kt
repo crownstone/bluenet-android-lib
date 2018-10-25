@@ -13,23 +13,23 @@ import rocks.crownstone.bluenet.util.Conversion
 class ScannedDevice(result: ScanResult) {
 	private val TAG = this.javaClass.simpleName
 
-	val scanResult = result
-	var hasServiceData = false // True when there is service data (even if it's invalid data)
+	internal val scanResult = result
+	internal var hasServiceData = false // True when there is service data (even if it's invalid data)
 //	val serviceData = CrownstoneServiceData()
-	var serviceData: CrownstoneServiceData? = null
-	var ibeaconData: IbeaconData? = null
+	var serviceData: CrownstoneServiceData? = null; internal set
+	var ibeaconData: IbeaconData? = null; internal set
 	val address: DeviceAddress = result.device?.address!! // Can be null?
 	val name = result.device?.name // Can be null
 	val rssi = result.rssi
-	var operationMode = OperationMode.UNKNOWN
-	var validated = false
+	var operationMode = OperationMode.UNKNOWN; internal set
+	var validated = false; internal set
 
 
 
 	/**
 	 * Parses the crownstone service data header.
 	 */
-	fun parseServiceDataHeader() {
+	internal fun parseServiceDataHeader() {
 		val scanRecord = scanResult.scanRecord
 		val rawServiceData = scanRecord?.serviceData
 		if (rawServiceData != null) {
@@ -55,7 +55,7 @@ class ScannedDevice(result: ScanResult) {
 	/**
 	 * Parses the crownstone service data.
 	 */
-	fun parseServiceData(key: ByteArray?) {
+	internal fun parseServiceData(key: ByteArray?) {
 		Log.v(TAG, "parseServiceData")
 		if (!_getServiceData().headerParsedSuccess && !_getServiceData().headerParseFailed) {
 			parseServiceDataHeader()
@@ -67,7 +67,7 @@ class ScannedDevice(result: ScanResult) {
 	 * Parses iBeacon data.
 	 * Should be called only once.
 	 */
-	fun parseIbeacon() {
+	internal fun parseIbeacon() {
 		val scanRecord = scanResult.scanRecord
 		val manufacturerData = scanRecord?.manufacturerSpecificData
 		if (manufacturerData != null) {
@@ -87,7 +87,7 @@ class ScannedDevice(result: ScanResult) {
 	/**
 	 * Parses dfu data.
 	 */
-	fun parseDfu() {
+	internal fun parseDfu() {
 		val scanRecord = scanResult.scanRecord
 		val serviceUuids = scanRecord?.serviceUuids
 		if (serviceUuids != null) {
