@@ -46,7 +46,12 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 
 	private fun writeCommand(packet: ControlPacket): Promise<Unit, Exception> {
 		if (connection.isSetupMode) {
-			return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID, packet.getArray(), AccessLevel.SETUP)
+			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, packet.getArray(), AccessLevel.SETUP)
+			}
+			else {
+				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID, packet.getArray(), AccessLevel.SETUP)
+			}
 		}
 		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID, packet.getArray(), AccessLevel.HIGHEST_AVAILABLE)
 	}
