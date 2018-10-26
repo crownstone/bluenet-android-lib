@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet.services.packets
 
+import android.util.Log
 import rocks.crownstone.bluenet.IbeaconData
 import rocks.crownstone.bluenet.Uint32
 import rocks.crownstone.bluenet.Uint8
@@ -16,6 +17,7 @@ class SetupPacket(val type: Uint8,
 	companion object {
 		const val SIZE = 1+1+16+16+16+4+16+2+2
 	}
+	private val TAG = this.javaClass.simpleName
 
 	override fun getSize(): Int {
 		return SIZE
@@ -23,9 +25,11 @@ class SetupPacket(val type: Uint8,
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < SIZE) {
+			Log.w(TAG, "buffer too small: ${bb.remaining()} < $SIZE")
 			return false
 		}
 		if (keySet.adminKeyBytes == null || keySet.memberKeyBytes == null || keySet.guestKeyBytes == null) {
+			Log.w(TAG, "missing key: admin=${keySet.adminKeyBytes} member=${keySet.memberKeyBytes} guest=${keySet.guestKeyBytes}")
 			return false
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)

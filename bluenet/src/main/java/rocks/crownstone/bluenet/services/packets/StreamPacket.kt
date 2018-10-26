@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet.services.packets
 
+import android.util.Log
 import rocks.crownstone.bluenet.OpcodeType
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.util.Conversion
@@ -22,6 +23,9 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 		if (data != null) {
 			dataSize = data.size
 		}
+		if (payload != null) {
+			dataSize = payload.getSize()
+		}
 	}
 
 	constructor(): this(-1, null, null)
@@ -38,12 +42,14 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < getSize()) {
+			Log.w(TAG, "buffer too small: ${bb.remaining()} < ${getSize()}")
 			return false
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.put(type.toByte())
 		bb.put(opCode.num.toByte())
 		bb.putShort(dataSize.toShort())
+		// TODO check payload size with dataSize?
 		val payload = this.payload
 		if (payload != null) {
 			return payload.toBuffer(bb)
@@ -56,12 +62,18 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < SIZE) {
+			Log.w(TAG, "buffer too small for header: ${bb.remaining()} < $SIZE")
 			return false
 		}
 		type = Conversion.toUint8(bb.get())
 		opCode = OpcodeType.fromNum(Conversion.toUint8(bb.get()))
 		dataSize = Conversion.toUint16(bb.getShort())
-		// TODO: also fill up and parse the payload
+		if (bb.remaining() < dataSize) {
+			Log.w(TAG, "buffer too small for payload: ${bb.remaining()} < $dataSize")
+			return false
+		}
+		data = ByteArray(dataSize)
+		bb.get(data)
 		return true
 	}
 
