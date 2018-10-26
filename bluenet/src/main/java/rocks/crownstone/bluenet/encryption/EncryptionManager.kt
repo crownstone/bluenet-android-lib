@@ -83,9 +83,8 @@ class EncryptionManager {
 			SessionDataParser.getSessionData(data, isEncrypted)
 		}
 
-
 		if (sessionData == null) {
-			return Promise.ofFail(Errors.Parse())
+			return Promise.ofFail(Errors.Parse("failed to parse session data"))
 		}
 		this.sessionData = sessionData
 		return Promise.ofSuccess(Unit)

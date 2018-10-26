@@ -32,7 +32,7 @@ object Errors {
 
 	// parsing
 	class ProcessCallback: Exception("process callback error")
-	class Parse: Exception("parse failed")
+	class Parse(msg: String): Exception("parse failed: $msg")
 	class OpcodeWrong: Exception("wrong opcode")
 	class SizeWrong: Exception("wrong size")
 	class ValueWrong: Exception("wrong value")

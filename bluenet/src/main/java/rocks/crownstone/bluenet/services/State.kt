@@ -47,7 +47,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 				.then {
 					val arr = it.getPayload()
 					if (arr == null) {
-						return@then Promise.ofFail<T, Exception>(Errors.Parse())
+						return@then Promise.ofFail<T, Exception>(Errors.Parse("state payload expected"))
 					}
 					try {
 						val value = Conversion.byteArrayTo<T>(arr)
@@ -69,7 +69,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 				.success {
 					val statePacket = StatePacket()
 					if (!statePacket.fromArray(it) || statePacket.type != type.num) {
-						deferred.reject(Errors.Parse())
+						deferred.reject(Errors.Parse("can't make a StatePacket from ${Conversion.bytesToString(it)}"))
 					}
 					deferred.resolve(statePacket)
 				}

@@ -211,7 +211,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 				.then {
 					val arr = it.getPayload()
 					if (arr == null) {
-						return@then Promise.ofFail<T, Exception>(Errors.Parse())
+						return@then Promise.ofFail<T, Exception>(Errors.Parse("config payload expected"))
 					}
 					try {
 						val value = Conversion.byteArrayTo<T>(arr)
@@ -232,7 +232,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 				.success {
 					val configPacket = ConfigPacket()
 					if (!configPacket.fromArray(it) || configPacket.type != type.num) {
-						deferred.reject(Errors.Parse())
+						deferred.reject(Errors.Parse("can't make a ConfigPacket from ${Conversion.bytesToString(it)}"))
 					}
 					deferred.resolve(configPacket)
 				}

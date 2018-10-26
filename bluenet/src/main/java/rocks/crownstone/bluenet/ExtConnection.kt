@@ -60,6 +60,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	 * Encrypt and write data.
 	 */
 	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel=AccessLevel.HIGHEST_AVAILABLE): Promise<Unit, Exception> {
+		Log.i(TAG, "write to $characteristicUuid accessLevel=${accessLevel.name}")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
@@ -156,6 +157,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 
 
 	@Synchronized private fun checkSetupMode() {
+		Log.i(TAG, "checkSetupMode: ${bleCore.hasService(BluenetProtocol.SETUP_SERVICE_UUID)}")
 		if (bleCore.hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
 			isSetupMode = true
 		}

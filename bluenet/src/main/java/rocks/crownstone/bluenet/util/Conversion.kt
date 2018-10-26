@@ -259,21 +259,21 @@ object Conversion {
 		when (T::class) {
 			Byte::class, Int8::class, Uint8::class -> {
 				if (array.size != 1) {
-					throw Errors.Parse()
+					throw Errors.Parse("Expected size of 1")
 				}
 			}
 			Short::class, Int16::class, Uint16::class -> {
 				if (array.size != 2) {
-					throw Errors.Parse()
+					throw Errors.Parse("Expected size of 2")
 				}
 			}
 			Int::class, Int32::class, Uint32::class, Float::class -> {
 				if (array.size != 4) {
-					throw Errors.Parse()
+					throw Errors.Parse("Expected size of 4")
 				}
 			}
 			else -> {
-				throw Errors.Parse()
+				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 			}
 		}
 
@@ -294,7 +294,7 @@ object Conversion {
 			Float::class ->
 				return byteArrayToFloat(array) as T
 			else ->
-				throw Errors.Parse()
+				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 		}
 	}
 
@@ -319,7 +319,7 @@ object Conversion {
 			Float::class ->
 				return floatToByteArray(value as Float)
 			else ->
-				throw Errors.Parse()
+				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 		}
 	}
 

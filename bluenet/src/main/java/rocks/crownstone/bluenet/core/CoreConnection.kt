@@ -6,6 +6,7 @@ import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Util
 import java.util.*
 
 /**
@@ -162,6 +163,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	 * @return Whether the service is available.
 	 */
 	@Synchronized fun hasService(serviceUuid: UUID): Boolean {
+		Log.d(TAG, "hasService $serviceUuid")
 		return currentGatt?.getService(serviceUuid) != null
 	}
 
@@ -169,6 +171,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	 * @return Whether the characteristic is available.
 	 */
 	@Synchronized fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
+		Log.d(TAG, "hasCharacteristic $characteristicUuid $currentGatt ${currentGatt?.getService(serviceUuid)} ${currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid)}")
 		return currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid) != null
 	}
 
@@ -346,6 +349,9 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			promises.reject(Errors.DiscoveryStart())
 		}
 		return deferred.promise
+//				.then {
+//					Util.waitPromise(200, handler)
+//				}.unwrap()
 	}
 
 	@Synchronized private fun onGattServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
@@ -513,7 +519,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	 * @return Promise that resolves when unsubscribe was successful.
 	 */
 	@Synchronized fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID, subscriptionId: SubscriptionId): Promise<Unit, Exception> {
-		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid subscriptionId=$subscriptionId")
+		Log.i(TAG, "unsubscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid subscriptionId=$subscriptionId")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
 //		}
@@ -573,7 +579,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			}
 			else -> {
 				Log.e(TAG, "value=${Conversion.bytesToString(descriptor.value)}")
-				promises.reject(Errors.Parse())
+				promises.reject(Errors.Parse("unexpected value"))
 			}
 		}
 	}
