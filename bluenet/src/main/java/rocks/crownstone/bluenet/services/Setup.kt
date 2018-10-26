@@ -166,14 +166,14 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		// Subscribe for notifications
 		Util.recoverablePromise(
 				connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, writeCommand, processCallback, 3000),
-				fun (error: Exception): Boolean {
+				fun (error: Exception): Promise<Unit, Exception> {
 					// If the promise failed with a timeout error, assume it was a success (because we assume the crownstone rebooted before sending the notification).
 					if (error is Errors.Timeout) {
 //						if (step) ...
 						sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
-						return true
+						return Promise.ofSuccess(Unit)
 					}
-					return false
+					return Promise.ofFail(error)
 				}
 		)
 				.then {

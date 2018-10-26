@@ -34,7 +34,7 @@ object Util {
 		return deferred.promise
 	}
 
-	fun recoverablePromise(promise: Promise<Unit, Exception>, recoverError: (error: Exception) -> Boolean): Promise<Unit, Exception> {
+	fun recoverableUnitPromise(promise: Promise<Unit, Exception>, recoverError: (error: Exception) -> Boolean): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 		promise
 				.success {
@@ -47,6 +47,24 @@ object Util {
 					else {
 						deferred.reject(it)
 					}
+				}
+		return deferred.promise
+	}
+
+	fun <T>recoverablePromise(promise: Promise<T, Exception>, recoverError: (error: Exception) -> Promise<T, Exception>): Promise<T, Exception> {
+		val deferred = deferred<T, Exception>()
+		promise
+				.success {
+					deferred.resolve(it)
+				}
+				.fail {
+					recoverError(it)
+							.success {
+								deferred.resolve(it)
+							}
+							.fail {
+								deferred.reject(it)
+							}
 				}
 		return deferred.promise
 	}
