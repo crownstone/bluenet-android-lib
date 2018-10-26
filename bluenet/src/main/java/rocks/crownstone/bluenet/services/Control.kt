@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet.services
 
+import android.util.Log
 import nl.komponents.kovenant.Promise
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
@@ -29,7 +30,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	internal fun setup(packet: SetupPacket): Promise<Unit, Exception> {
-		return writeCommand(ControlType.SETUP, packet)
+		val controlPacket = ControlPacket(ControlType.SETUP, packet)
+		return writeCommand(controlPacket)
 	}
 
 
@@ -45,14 +47,16 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	private fun writeCommand(packet: ControlPacket): Promise<Unit, Exception> {
+		val array = packet.getArray()
+		Log.i(TAG, "writeCommand ${Conversion.bytesToString(array)}")
 		if (connection.isSetupMode) {
-			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, packet.getArray(), AccessLevel.SETUP)
+			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, array, AccessLevel.SETUP)
 			}
 			else {
-				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID, packet.getArray(), AccessLevel.SETUP)
+				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID, array, AccessLevel.SETUP)
 			}
 		}
-		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID, packet.getArray(), AccessLevel.HIGHEST_AVAILABLE)
+		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID, array, AccessLevel.HIGHEST_AVAILABLE)
 	}
 }
