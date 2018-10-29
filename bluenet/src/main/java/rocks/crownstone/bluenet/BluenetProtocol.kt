@@ -1,5 +1,7 @@
 package rocks.crownstone.bluenet
 
+import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Util
 import java.util.UUID
 
 object BluenetProtocol {
@@ -136,6 +138,7 @@ enum class ControlType(val num: Uint8) {
 	SETUP(31),
 	ENABLE_SWITCHCRAFT(32),
 	UART_MSG(33),
+	UART_ENABLE(34),
 	UNKNOWN(255);
 	companion object {
 		private val map = ControlType.values().associateBy(ControlType::num)
@@ -240,7 +243,6 @@ enum class DeviceType(val num: Int) {
 	GUIDESTONE(2),
 	CROWNSTONE_BUILTIN(3),
 	CROWNSTONE_DONGLE(4);
-
 	companion object {
 		private val map = DeviceType.values().associateBy(DeviceType::num)
 		//		fun fromInt(type: Int) = map.getOrDefault(type, UNKNOWN)
@@ -251,11 +253,50 @@ enum class DeviceType(val num: Int) {
 	}
 }
 
-enum class OperationMode() {
+enum class OperationMode {
 	UNKNOWN,
 	NORMAL,
 	SETUP,
 	DFU,
+}
+
+enum class KeepAliveAction(val num: Uint8) {
+	NO_CHANGE(0),
+	CHANGE(1),
+	UNKNOWN(255);
+	companion object {
+		private val map = KeepAliveAction.values().associateBy(KeepAliveAction::num)
+		fun fromNum(action: Uint8): KeepAliveAction {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+data class ErrorBitmask(
+		val num: Uint32,
+		val overCurrent: Boolean,
+		val overCurrentDimmer: Boolean,
+		val chipTemperature: Boolean,
+		val dimmerTemperature: Boolean,
+		val dimmerOnFailure: Boolean,
+		val dimmerOffFailure: Boolean
+) {
+	constructor(number: Uint32): this(number,
+			Util.isBitSet(number, 0),
+			Util.isBitSet(number, 1),
+			Util.isBitSet(number, 2),
+			Util.isBitSet(number, 3),
+			Util.isBitSet(number, 4),
+			Util.isBitSet(number, 5)
+	)
+//	constructor(overCurrent: Boolean,
+//				overCurrentDimmer: Boolean,
+//				chipTemperature: Boolean,
+//				dimmerTemperature: Boolean,
+//				dimmerOnFailure: Boolean,
+//				dimmerOffFailure: Boolean
+//	): this(
+//	)
 }
 
 

@@ -6,6 +6,7 @@ import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.services.packets.ControlPacket
 import rocks.crownstone.bluenet.services.packets.SetupPacket
+import rocks.crownstone.bluenet.services.packets.keepAlive.KeepAlivePacket
 import rocks.crownstone.bluenet.util.Conversion
 
 class Control(evtBus: EventBus, connection: ExtConnection) {
@@ -25,9 +26,82 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlType.PWM, value)
 	}
 
+//	fun multiSwtich()
+
+	fun allowDimming(allow: Boolean): Promise<Unit, Exception> {
+		return writeCommand(ControlType.ALLOW_DIMMING, allow)
+	}
+
+	fun lockSwitch(lock: Boolean): Promise<Unit, Exception> {
+		return writeCommand(ControlType.LOCK_SWITCH, lock)
+	}
+
+	fun enableSwitchCraft(enable: Boolean): Promise<Unit, Exception> {
+		return writeCommand(ControlType.ENABLE_SWITCHCRAFT, enable)
+	}
+
+	fun setUart(mode: Uint8): Promise<Unit, Exception> {
+		return writeCommand(ControlType.UART_ENABLE, mode)
+	}
+
+//	fun uartMessage()
+
+
+	fun setDfu(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.GOTO_DFU)
+	}
+
+	fun reset(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.RESET)
+	}
+
+	fun keepAliveState(switchValue: Uint8, timeout: Uint16): Promise<Unit, Exception> {
+		val keepAlivePacket = KeepAlivePacket(KeepAliveAction.CHANGE, switchValue, timeout)
+		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_STATE, keepAlivePacket))
+	}
+
+	fun keepAlive(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.KEEP_ALIVE)
+	}
+
+//	fun setSchedule()
+	fun removeSchedule(id: Uint8): Promise<Unit, Exception> {
+		return writeCommand(ControlType.SCHEDULE_ENTRY_REMOVE, id)
+	}
+
+	fun disconnect(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.DISCONNECT)
+	}
+
+	fun noop(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.NOOP)
+	}
+
+	fun increaseTx(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.INCREASE_TX)
+	}
+
+	fun resetErrors(): Promise<Unit, Exception> {
+		return resetErrors(0xFFFFFFFF)
+	}
+
+	fun resetErrors(bitmask: Uint32): Promise<Unit, Exception> {
+		return writeCommand(ControlType.RESET_STATE_ERRORS, bitmask)
+	}
+
 	fun factoryReset(): Promise<Unit, Exception> {
 		return writeCommand(ControlType.FACTORY_RESET, BluenetProtocol.FACTORY_RESET_CODE)
 	}
+
+	// mesh
+	fun keepAliveMeshRepeat(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.KEEP_ALIVE_REPEAT_LAST)
+	}
+//	fun keepAliveMeshState()
+//	fun meshCommand()
+
+
+
 
 	internal fun validateSetup(): Promise<Unit, Exception> {
 		return writeCommand(ControlType.VALIDATE_SETUP)
