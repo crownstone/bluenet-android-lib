@@ -57,6 +57,9 @@ object BluenetProtocol {
 	const val OPCODE_READ: Uint8 = 0
 	const val OPCODE_WRITE: Uint8 = 1
 	const val OPCODE_NOTIFY: Uint8 = 2
+
+	const val RECOVERY_CODE: Uint32 = 0xDEADBEEF
+	const val FACTORY_RESET_CODE: Uint32 = 0xDEADBEEF
 }
 
 enum class OpcodeType(val num: Uint8) {

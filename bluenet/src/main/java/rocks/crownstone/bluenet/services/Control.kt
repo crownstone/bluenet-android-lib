@@ -25,6 +25,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlType.PWM, value)
 	}
 
+	fun factoryReset(): Promise<Unit, Exception> {
+		return writeCommand(ControlType.FACTORY_RESET, BluenetProtocol.FACTORY_RESET_CODE)
+	}
+
 	internal fun validateSetup(): Promise<Unit, Exception> {
 		return writeCommand(ControlType.VALIDATE_SETUP)
 	}
@@ -33,6 +37,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		val controlPacket = ControlPacket(ControlType.SETUP, packet)
 		return writeCommand(controlPacket)
 	}
+
 
 
 	// Commands without payload
