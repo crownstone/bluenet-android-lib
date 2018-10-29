@@ -4,6 +4,7 @@ import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
+import rocks.crownstone.bluenet.util.Conversion
 import java.util.*
 
 /**
@@ -23,6 +24,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	 * Connect, discover service and get session data
 	 */
 	@Synchronized fun connect(address: DeviceAddress, timeout: Int=100000): Promise<Unit, Exception> {
+		Log.i(TAG, "connect $address")
 		return bleCore.connect(address, timeout)
 				.then {
 					isSetupMode = false
@@ -80,6 +82,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	}
 
 	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID, decrypt: Boolean=true): Promise<ByteArray, Exception> {
+		Log.i(TAG, "read $characteristicUuid decrypt=$decrypt")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
@@ -102,6 +105,9 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				.then {
 					encryptionManager.decryptPromise(address, it)
 				}.unwrap()
+				.success {
+					Log.i(TAG, "received merged notification on $characteristicUuid ${Conversion.bytesToString(it)}")
+				}
 	}
 
 	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long=0): Promise<Unit, Exception> {
@@ -114,6 +120,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 			if (decryptedData == null) {
 				return ProcessResult.ERROR
 			}
+			Log.i(TAG, "received merged notification on $characteristicUuid ${Conversion.bytesToString(mergedNotification)}")
 			return callback(decryptedData)
 		}
 		return bleCore.getMultipleMergedNotifications(serviceUuid, characteristicUuid, writeCommand, processCallBack, timeoutMs)
@@ -135,6 +142,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	}
 
 	@Synchronized private fun getSessionData(address: DeviceAddress): Promise<Unit, Exception> {
+		Log.i(TAG, "get session data $address")
 		if (isSetupMode) {
 			return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID)
 					.then {

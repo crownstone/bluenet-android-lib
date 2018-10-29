@@ -381,12 +381,14 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		}
 		val state = getConnectionState()
 		if (state != ConnectionState.CONNECTED) {
+			Log.e(TAG, "not connected")
 			return Promise.ofFail(getNotConnectedError(state))
 		}
 		val deferred = deferred<Unit, Exception>()
 		val gatt = this.currentGatt!! // Already checked in getConnectionState()
 		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
 		if (char == null) {
+			Log.e(TAG, "characteristic not found: $characteristicUuid")
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
 		promises.setBusy(Action.WRITE, deferred) // Resolve later in onGattCharacteristicWrite
@@ -426,12 +428,14 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 		}
 		val state = getConnectionState()
 		if (state != ConnectionState.CONNECTED) {
+			Log.e(TAG, "not connected")
 			return Promise.ofFail(getNotConnectedError(state))
 		}
 		val deferred = deferred<ByteArray, Exception>()
 		val gatt = this.currentGatt!! // Already checked in getConnectionState()
 		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
 		if (char == null) {
+			Log.e(TAG, "characteristic not found: $characteristicUuid")
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
 		promises.setBusy(Action.READ, deferred) // Resolve later in onGattCharacteristicRead

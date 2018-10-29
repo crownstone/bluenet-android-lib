@@ -87,6 +87,7 @@ class EncryptionManager {
 			return Promise.ofFail(Errors.Parse("failed to parse session data"))
 		}
 		this.sessionData = sessionData
+		Log.i(TAG, "session data set: $sessionData")
 		return Promise.ofSuccess(Unit)
 	}
 

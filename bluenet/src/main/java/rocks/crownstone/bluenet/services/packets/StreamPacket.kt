@@ -91,6 +91,10 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 		}
 		return null
 	}
+
+	override fun toString(): String {
+		return "type=$type opcode=$opCode dataSize=$dataSize data=${Conversion.bytesToString(getPayload())}"
+	}
 }
 
 class StreamPacketInt8(type: Uint8, value: Byte): StreamPacket(type, value)

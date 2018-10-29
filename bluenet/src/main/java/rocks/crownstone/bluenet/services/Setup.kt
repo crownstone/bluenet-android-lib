@@ -145,6 +145,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 				return ProcessResult.ERROR
 			}
 			val result = resultPacket.resultCode
+			Log.i(TAG, "result: ${result.name}")
 			when (result) {
 				ResultType.WAIT_FOR_SUCCESS -> {
 					sendProgress(FastSetupStep.WAIT_FOR_SUCCESS, deferred.promise.isDone())

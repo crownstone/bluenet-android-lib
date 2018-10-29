@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet.services
 
+import android.util.Log
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
@@ -248,6 +249,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	private fun setConfig(config: ConfigPacket): Promise<Unit, Exception> {
+		Log.i(TAG, "setConfig $config")
 		if (config.type != BluenetProtocol.OPCODE_WRITE) {
 			return Promise.ofFail(Errors.OpcodeWrong())
 		}
