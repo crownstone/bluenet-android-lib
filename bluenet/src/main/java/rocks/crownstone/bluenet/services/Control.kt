@@ -7,6 +7,7 @@ import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.services.packets.ControlPacket
 import rocks.crownstone.bluenet.services.packets.SetupPacket
 import rocks.crownstone.bluenet.services.packets.keepAlive.KeepAlivePacket
+import rocks.crownstone.bluenet.services.packets.keepAlive.MultiKeepAlivePacket
 import rocks.crownstone.bluenet.services.packets.multiSwitch.MultiSwitchPacket
 import rocks.crownstone.bluenet.util.Conversion
 
@@ -100,7 +101,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun keepAliveMeshRepeat(): Promise<Unit, Exception> {
 		return writeCommand(ControlType.KEEP_ALIVE_REPEAT_LAST)
 	}
-//	fun keepAliveMeshState(): Promise<Unit, Exception>
+	
+	fun keepAliveMeshState(packet: MultiKeepAlivePacket): Promise<Unit, Exception> {
+		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_MESH, packet))
+	}
 //	fun meshCommand(): Promise<Unit, Exception>
 
 

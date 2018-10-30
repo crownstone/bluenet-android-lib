@@ -298,6 +298,19 @@ enum class MultiSwitchIntent(val num: Uint8) {
 	}
 }
 
+enum class MultiKeepAliveType(val num: Uint8) {
+	SAME_TIMEOUT(1),
+	UNKNOWN(255);
+	companion object {
+		private val map = MultiKeepAliveType.values().associateBy(MultiKeepAliveType::num)
+		fun fromNum(action: Uint8): MultiKeepAliveType {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+
+
 data class ErrorBitmask(
 		val num: Uint32,
 		val overCurrent: Boolean,

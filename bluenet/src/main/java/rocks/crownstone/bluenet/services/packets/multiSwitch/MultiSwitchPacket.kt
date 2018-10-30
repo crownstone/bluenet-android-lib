@@ -23,7 +23,7 @@ class MultiSwitchPacket(val payload: PacketInterface): PacketInterface {
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		val payload = this.payload
-		if (payload == null || type == MultiSwitchType.UNKNOWN) {
+		if (payload == null || type == MultiSwitchType.UNKNOWN || bb.remaining() < getSize()) {
 			return false
 		}
 		bb.put(type.num.toByte())

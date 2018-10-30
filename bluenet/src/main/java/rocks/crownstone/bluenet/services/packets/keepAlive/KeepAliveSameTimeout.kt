@@ -1,31 +1,32 @@
-package rocks.crownstone.bluenet.services.packets.multiSwitch
+package rocks.crownstone.bluenet.services.packets.keepAlive
 
-import rocks.crownstone.bluenet.MultiSwitchIntent
 import rocks.crownstone.bluenet.Uint16
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.services.packets.PacketInterface
 import java.nio.ByteBuffer
 
-class MultiSwitchListPacket: PacketInterface {
-	val list = ArrayList<MultiSwitchListItemPacket>()
+class KeepAliveSameTimeout(val timeout: Uint16): PacketInterface {
+	val list = ArrayList<KeepAliveSameTimeoutItem>()
 
 	companion object {
-		const val HEADER_SIZE = 1
+		const val HEADER_SIZE = 4
 	}
 
-	fun add(item: MultiSwitchListItemPacket) {
+	fun add(item: KeepAliveSameTimeoutItem) {
 		list.add(item)
 	}
 
 	override fun getSize(): Int {
-		return HEADER_SIZE + list.size * MultiSwitchListItemPacket.SIZE
+		return HEADER_SIZE + list.size * KeepAliveSameTimeoutItem.SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		if (list.isEmpty() || bb.remaining() < getSize()) {
 			return false
 		}
+		bb.putShort(timeout.toShort())
 		bb.put(list.size.toByte())
+		bb.put(0) // reserved
 		for (it in list) {
 			if (!it.toBuffer(bb)) {
 				return false
@@ -35,14 +36,14 @@ class MultiSwitchListPacket: PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
-		return false
+		return false // Not implemented yet (no need?)
 	}
 }
 
-class MultiSwitchListItemPacket(var id: Uint8, var switchValue: Uint8, val timeout: Uint16, var intent: MultiSwitchIntent): PacketInterface {
+
+class KeepAliveSameTimeoutItem(val id: Uint8, val actionSwitchValue: Uint8): PacketInterface {
 	companion object {
-		const val SIZE = 5
+		const val SIZE = 2
 	}
 
 	override fun getSize(): Int {
@@ -54,14 +55,11 @@ class MultiSwitchListItemPacket(var id: Uint8, var switchValue: Uint8, val timeo
 			return false
 		}
 		bb.put(id.toByte())
-		bb.put(switchValue.toByte())
-		bb.putShort(timeout.toShort())
-		bb.put(intent.num.toByte())
+		bb.put(actionSwitchValue.toByte())
 		return true
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
-		return false
+		return false // Not implemented yet (no need?)
 	}
 }
