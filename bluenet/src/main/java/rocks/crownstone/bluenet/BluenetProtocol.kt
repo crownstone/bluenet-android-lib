@@ -272,6 +272,32 @@ enum class KeepAliveAction(val num: Uint8) {
 	}
 }
 
+enum class MultiSwitchType(val num: Uint8) {
+	LIST(0),
+	UNKNOWN(255);
+	companion object {
+		private val map = MultiSwitchType.values().associateBy(MultiSwitchType::num)
+		fun fromNum(action: Uint8): MultiSwitchType {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class MultiSwitchIntent(val num: Uint8) {
+	SPHERE_ENTER(0),
+	SPHERE_EXIT(1),
+	ENTER(2),
+	EXIT(3),
+	MANUAL(4),
+	UNKNOWN(255);
+	companion object {
+		private val map = MultiSwitchIntent.values().associateBy(MultiSwitchIntent::num)
+		fun fromNum(action: Uint8): MultiSwitchIntent {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
 data class ErrorBitmask(
 		val num: Uint32,
 		val overCurrent: Boolean,
