@@ -3,7 +3,7 @@ package rocks.crownstone.bluenet.services.packets
 import android.util.Log
 import rocks.crownstone.bluenet.OpcodeType
 import rocks.crownstone.bluenet.Uint8
-import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -24,7 +24,7 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 			dataSize = data.size
 		}
 		if (payload != null) {
-			dataSize = payload.getSize()
+			dataSize = payload.getPacketSize()
 		}
 	}
 
@@ -36,19 +36,19 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 	constructor(type: Uint8, int: Int,     opCode: OpcodeType = OpcodeType.WRITE): this(type, Conversion.int32ToByteArray(int), null, opCode)
 	constructor(type: Uint8, float: Float, opCode: OpcodeType = OpcodeType.WRITE): this(type, Conversion.floatToByteArray(float), null, opCode)
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return SIZE + dataSize
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < getSize()) {
-			Log.w(TAG, "buffer too small: ${bb.remaining()} < ${getSize()}")
+		if (bb.remaining() < getPacketSize()) {
+			Log.w(TAG, "buffer too small: ${bb.remaining()} < ${getPacketSize()}")
 			return false
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-		bb.put(type.toByte())
-		bb.put(opCode.num.toByte())
-		bb.putShort(dataSize.toShort())
+		bb.put(type)
+		bb.put(opCode.num)
+		bb.putShort(dataSize)
 		// TODO check payload size with dataSize?
 		val payload = this.payload
 		if (payload != null) {
@@ -65,9 +65,9 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 			Log.w(TAG, "buffer too small for header: ${bb.remaining()} < $SIZE")
 			return false
 		}
-		type = Conversion.toUint8(bb.get())
-		opCode = OpcodeType.fromNum(Conversion.toUint8(bb.get()))
-		dataSize = Conversion.toUint16(bb.getShort())
+		type = bb.getUint8()
+		opCode = OpcodeType.fromNum(bb.getUint8())
+		dataSize = bb.getUint16()
 		if (bb.remaining() < dataSize) {
 			Log.w(TAG, "buffer too small for payload: ${bb.remaining()} < $dataSize")
 			return false

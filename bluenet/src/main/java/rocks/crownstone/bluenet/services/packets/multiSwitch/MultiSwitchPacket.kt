@@ -2,6 +2,7 @@ package rocks.crownstone.bluenet.services.packets.multiSwitch
 
 import rocks.crownstone.bluenet.MultiSwitchType
 import rocks.crownstone.bluenet.services.packets.PacketInterface
+import rocks.crownstone.bluenet.util.put
 import java.nio.ByteBuffer
 
 class MultiSwitchPacket(val payload: PacketInterface): PacketInterface {
@@ -16,17 +17,17 @@ class MultiSwitchPacket(val payload: PacketInterface): PacketInterface {
 		}
 	}
 
-	override fun getSize(): Int {
-		val payloadSize = payload?.getSize() ?: 0
+	override fun getPacketSize(): Int {
+		val payloadSize = payload?.getPacketSize() ?: 0
 		return SIZE + payloadSize
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		val payload = this.payload
-		if (payload == null || type == MultiSwitchType.UNKNOWN || bb.remaining() < getSize()) {
+		if (payload == null || type == MultiSwitchType.UNKNOWN || bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.put(type.num.toByte())
+		bb.put(type.num)
 		return payload.toBuffer(bb)
 	}
 

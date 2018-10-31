@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet.services.packets.keepAlive
 import rocks.crownstone.bluenet.Uint16
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.services.packets.PacketInterface
+import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
 class KeepAliveSameTimeout(val timeout: Uint16): PacketInterface {
@@ -16,15 +17,15 @@ class KeepAliveSameTimeout(val timeout: Uint16): PacketInterface {
 		list.add(item)
 	}
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return HEADER_SIZE + list.size * KeepAliveSameTimeoutItem.SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (list.isEmpty() || bb.remaining() < getSize()) {
+		if (list.isEmpty() || bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.putShort(timeout.toShort())
+		bb.putShort(timeout)
 		bb.put(list.size.toByte())
 		bb.put(0) // reserved
 		for (it in list) {
@@ -46,12 +47,12 @@ class KeepAliveSameTimeoutItem(val id: Uint8, val actionSwitchValue: Uint8): Pac
 		const val SIZE = 2
 	}
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < getSize()) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.put(id.toByte())

@@ -4,6 +4,8 @@ import rocks.crownstone.bluenet.MultiSwitchIntent
 import rocks.crownstone.bluenet.Uint16
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.services.packets.PacketInterface
+import rocks.crownstone.bluenet.util.put
+import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
 class MultiSwitchListPacket: PacketInterface {
@@ -17,12 +19,12 @@ class MultiSwitchListPacket: PacketInterface {
 		list.add(item)
 	}
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return HEADER_SIZE + list.size * MultiSwitchListItemPacket.SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (list.isEmpty() || bb.remaining() < getSize()) {
+		if (list.isEmpty() || bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.put(list.size.toByte())
@@ -45,18 +47,18 @@ class MultiSwitchListItemPacket(var id: Uint8, var switchValue: Uint8, val timeo
 		const val SIZE = 5
 	}
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < getSize()) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.put(id.toByte())
-		bb.put(switchValue.toByte())
-		bb.putShort(timeout.toShort())
-		bb.put(intent.num.toByte())
+		bb.put(id)
+		bb.put(switchValue)
+		bb.putShort(timeout)
+		bb.put(intent.num)
 		return true
 	}
 

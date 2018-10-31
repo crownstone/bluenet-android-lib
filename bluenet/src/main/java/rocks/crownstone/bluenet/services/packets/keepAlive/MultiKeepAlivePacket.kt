@@ -2,6 +2,7 @@ package rocks.crownstone.bluenet.services.packets.keepAlive
 
 import rocks.crownstone.bluenet.MultiKeepAliveType
 import rocks.crownstone.bluenet.services.packets.PacketInterface
+import rocks.crownstone.bluenet.util.put
 import java.nio.ByteBuffer
 
 class MultiKeepAlivePacket(val payload: PacketInterface): PacketInterface {
@@ -17,15 +18,15 @@ class MultiKeepAlivePacket(val payload: PacketInterface): PacketInterface {
 		const val HEADER_SIZE = 1
 	}
 
-	override fun getSize(): Int {
-		return HEADER_SIZE + payload.getSize()
+	override fun getPacketSize(): Int {
+		return HEADER_SIZE + payload.getPacketSize()
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (type == MultiKeepAliveType.UNKNOWN || bb.remaining() < getSize()) {
+		if (type == MultiKeepAliveType.UNKNOWN || bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.put(type.num.toByte())
+		bb.put(type.num)
 		return payload.toBuffer(bb)
 	}
 

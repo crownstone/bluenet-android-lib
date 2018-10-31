@@ -10,12 +10,12 @@ class ScheduleCommandPacket(private val index: Uint8, private val entry: Schedul
 		const val HEADER_SIZE = 1
 	}
 
-	override fun getSize(): Int {
-		return HEADER_SIZE + entry.getSize()
+	override fun getPacketSize(): Int {
+		return HEADER_SIZE + entry.getPacketSize()
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < getSize()) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.put(index)

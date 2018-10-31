@@ -6,6 +6,9 @@ import rocks.crownstone.bluenet.Uint32
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.put
+import rocks.crownstone.bluenet.util.putInt
+import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -19,7 +22,7 @@ class SetupPacket(val type: Uint8,
 	}
 	private val TAG = this.javaClass.simpleName
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return SIZE
 	}
 
@@ -33,19 +36,19 @@ class SetupPacket(val type: Uint8,
 			return false
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-		bb.put(type.toByte())
-		bb.put(id.toByte())
+		bb.put(type)
+		bb.put(id)
 		bb.put(keySet.adminKeyBytes)
 		bb.put(keySet.memberKeyBytes)
 		bb.put(keySet.guestKeyBytes)
-		bb.putInt(meshAccessAddress.toInt())
+		bb.putInt(meshAccessAddress)
 		bb.put(Conversion.uuidToBytes(ibeaconData.uuid))
-		bb.putShort(ibeaconData.major.toShort())
-		bb.putShort(ibeaconData.minor.toShort())
+		bb.putShort(ibeaconData.major)
+		bb.putShort(ibeaconData.minor)
 		return true
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false
+		return false // Not implemented yet (no need?)
 	}
 }

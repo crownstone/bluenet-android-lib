@@ -31,12 +31,12 @@ open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
 		ids.add(id)
 	}
 
-	override fun getSize(): Int {
-		return HEADER_SIZE + ids.size * ID_SIZE + payload.getSize()
+	override fun getPacketSize(): Int {
+		return HEADER_SIZE + ids.size * ID_SIZE + payload.getPacketSize()
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (ids.isEmpty() || bb.remaining() < getSize()) {
+		if (ids.isEmpty() || bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.put(type.num)

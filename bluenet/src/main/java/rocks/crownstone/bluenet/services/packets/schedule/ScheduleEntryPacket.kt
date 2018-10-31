@@ -35,12 +35,12 @@ class ScheduleEntryPacket(): PacketInterface {
 		return timestamp != 0L
 	}
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < getSize()) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.put(0) // Reserved
@@ -92,7 +92,7 @@ class ScheduleEntryPacket(): PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < getSize()) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.get() // Reserved

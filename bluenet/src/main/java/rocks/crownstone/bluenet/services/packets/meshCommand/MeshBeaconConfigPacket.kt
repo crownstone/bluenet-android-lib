@@ -12,12 +12,12 @@ class MeshBeaconConfigPacket(beaconData: IbeaconData): MeshCommandPacket(BeaconC
 			const val SIZE = 21
 		}
 
-		override fun getSize(): Int {
+		override fun getPacketSize(): Int {
 			return SIZE
 		}
 
 		override fun toBuffer(bb: ByteBuffer): Boolean {
-			if (bb.remaining() < getSize()) {
+			if (bb.remaining() < getPacketSize()) {
 				return false
 			}
 			bb.putShort(beaconData.major)

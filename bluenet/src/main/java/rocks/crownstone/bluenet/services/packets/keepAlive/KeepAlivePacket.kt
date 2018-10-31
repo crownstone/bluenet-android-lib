@@ -4,7 +4,7 @@ import rocks.crownstone.bluenet.KeepAliveAction
 import rocks.crownstone.bluenet.Uint16
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.services.packets.PacketInterface
-import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 
 class KeepAlivePacket(var action: KeepAliveAction, var switchValue: Uint8, var timeout: Uint16): PacketInterface {
@@ -12,14 +12,14 @@ class KeepAlivePacket(var action: KeepAliveAction, var switchValue: Uint8, var t
 		val SIZE = 4
 	}
 
-	override fun getSize(): Int {
+	override fun getPacketSize(): Int {
 		return SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		bb.put(action.num.toByte())
-		bb.put(switchValue.toByte())
-		bb.putShort(timeout.toShort())
+		bb.put(action.num)
+		bb.put(switchValue)
+		bb.putShort(timeout)
 		return true
 	}
 
@@ -31,8 +31,8 @@ class KeepAlivePacket(var action: KeepAliveAction, var switchValue: Uint8, var t
 		if (action == KeepAliveAction.UNKNOWN) {
 			return false
 		}
-		switchValue = Conversion.toUint8(bb.get())
-		timeout = Conversion.toUint16(bb.getShort())
+		switchValue = bb.getUint8()
+		timeout = bb.getUint16()
 		return true
 	}
 }
