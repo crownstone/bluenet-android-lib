@@ -60,7 +60,7 @@ class ScheduleEntryPacket(): PacketInterface {
 					return false
 				}
 				if ((dayOfweekMask and WEEKDAY_MASK_ALL_DAYS) == WEEKDAY_MASK_ALL_DAYS) {
-					dayOfweekMask = 1 shl ScheduleWeekDayBitPos.ALL_DAYS.num
+					dayOfweekMask = dayOfweekMask or (1 shl ScheduleWeekDayBitPos.ALL_DAYS.num)
 				}
 				bb.put(dayOfweekMask.toByte())
 				bb.put(0) // Reserved
