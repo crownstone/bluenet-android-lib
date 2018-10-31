@@ -8,7 +8,9 @@ import rocks.crownstone.bluenet.services.packets.ControlPacket
 import rocks.crownstone.bluenet.services.packets.SetupPacket
 import rocks.crownstone.bluenet.services.packets.keepAlive.KeepAlivePacket
 import rocks.crownstone.bluenet.services.packets.keepAlive.MultiKeepAlivePacket
+import rocks.crownstone.bluenet.services.packets.meshCommand.MeshCommandPacket
 import rocks.crownstone.bluenet.services.packets.multiSwitch.MultiSwitchPacket
+import rocks.crownstone.bluenet.services.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.util.Conversion
 
 class Control(evtBus: EventBus, connection: ExtConnection) {
@@ -68,7 +70,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlType.KEEP_ALIVE)
 	}
 
-//	fun setSchedule(): Promise<Unit, Exception>
+	fun setSchedule(packet: ScheduleCommandPacket): Promise<Unit, Exception> {
+		return writeCommand(ControlType.SCHEDULE_ENTRY_SET, packet)
+	}
+
 	fun removeSchedule(id: Uint8): Promise<Unit, Exception> {
 		return writeCommand(ControlType.SCHEDULE_ENTRY_REMOVE, id)
 	}
@@ -101,11 +106,14 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun keepAliveMeshRepeat(): Promise<Unit, Exception> {
 		return writeCommand(ControlType.KEEP_ALIVE_REPEAT_LAST)
 	}
-	
+
 	fun keepAliveMeshState(packet: MultiKeepAlivePacket): Promise<Unit, Exception> {
 		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_MESH, packet))
 	}
-//	fun meshCommand(): Promise<Unit, Exception>
+
+	fun meshCommand(packet: MeshCommandPacket): Promise<Unit, Exception> {
+		return writeCommand(ControlPacket(ControlType.MESH_COMMAND, packet))
+	}
 
 
 

@@ -151,11 +151,12 @@ object Conversion {
 
 
 
-//	fun toUint8(b: Byte): Int {
-//		return b.toInt() and 0xFF
-//	}
-	fun toUint8(b: Byte): Uint8 {
-		return (b.toInt() and 0xFF).toShort()
+	fun toUint8(num: Byte): Uint8 {
+		return (num.toInt() and 0xFF).toShort()
+	}
+
+	fun toUint8(num: Int): Uint8 {
+		return (num and 0xFF).toShort()
 	}
 
 	fun toUint16(num: Short): Uint16 {

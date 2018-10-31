@@ -31,7 +31,6 @@ class MultiSwitchPacket(val payload: PacketInterface): PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
-		return false
+		return false // Not implemented yet (no need?)
 	}
 }

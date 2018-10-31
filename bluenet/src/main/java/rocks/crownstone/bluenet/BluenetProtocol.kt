@@ -309,6 +309,64 @@ enum class MultiKeepAliveType(val num: Uint8) {
 	}
 }
 
+enum class MeshCommandType(val num: Uint8) {
+	CONTROL(0),
+	BEACON_CONFIG(1),
+	CONFIG(2),
+	STATE(3),
+	UNKNOWN(255);
+	companion object {
+		private val map = MeshCommandType.values().associateBy(MeshCommandType::num)
+		fun fromNum(action: Uint8): MeshCommandType {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class ScheduleActionType(val num: Int) {
+	SWITCH(0),
+	FADE(1),
+	TOGGLE(2),
+	UNKNOWN(255);
+	companion object {
+		private val map = ScheduleActionType.values().associateBy(ScheduleActionType::num)
+		fun fromNum(action: Int): ScheduleActionType {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class ScheduleRepeatType(val num: Int) {
+	MINUTES(0),
+	DAY(1),
+	ONCE(2),
+	UNKNOWN(255);
+	companion object {
+		private val map = ScheduleRepeatType.values().associateBy(ScheduleRepeatType::num)
+		fun fromNum(action: Int): ScheduleRepeatType {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class ScheduleWeekDayBitPos(val num: Int) {
+	SUNDAY(0),
+	MONDAY(1),
+	TUESDAY(2),
+	WEDNESDAY(3),
+	THURSDAY(4),
+	FRIDAY(5),
+	SATURDAY(6),
+	ALL_DAYS(7),
+	UNKNOWN(255);
+	companion object {
+		private val map = ScheduleWeekDayBitPos.values().associateBy(ScheduleWeekDayBitPos::num)
+		fun fromNum(action: Int): ScheduleWeekDayBitPos {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
 
 
 data class ErrorBitmask(
