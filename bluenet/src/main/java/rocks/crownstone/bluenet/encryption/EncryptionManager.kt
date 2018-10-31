@@ -97,6 +97,7 @@ class EncryptionManager {
 			return Promise.ofFail(Errors.SessionDataMissing())
 		}
 		sessionData.tempKey = data
+		Log.i(TAG, "session key set")
 		return Promise.ofSuccess(Unit)
 	}
 
@@ -111,9 +112,9 @@ class EncryptionManager {
 					return null
 				}
 				val setupKey = sessionData.tempKey
-				val keyAccessLevel = if (accessLevel == AccessLevel.SETUP && setupKey != null) {
+				val keyAccessLevel = if ((accessLevel == AccessLevel.SETUP || accessLevel == AccessLevel.HIGHEST_AVAILABLE) && setupKey != null) {
 					// Use setup key
-					KeyAccessLevelPair(setupKey, accessLevel)
+					KeyAccessLevelPair(setupKey, AccessLevel.SETUP)
 				}
 				else {
 					// Just use highest available key

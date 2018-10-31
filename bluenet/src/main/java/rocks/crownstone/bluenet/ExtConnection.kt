@@ -5,6 +5,7 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Util.waitPromise
 import java.util.*
 
 /**
@@ -62,7 +63,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	 * Encrypt and write data.
 	 */
 	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel=AccessLevel.HIGHEST_AVAILABLE): Promise<Unit, Exception> {
-		Log.i(TAG, "write to $characteristicUuid accessLevel=${accessLevel.name}")
+		Log.i(TAG, "write to $characteristicUuid accessLevel=${accessLevel.name} data=${Conversion.bytesToString(data)}")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())

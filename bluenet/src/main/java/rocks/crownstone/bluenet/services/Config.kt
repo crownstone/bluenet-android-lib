@@ -250,7 +250,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 
 	private fun setConfig(config: ConfigPacket): Promise<Unit, Exception> {
 		Log.i(TAG, "setConfig $config")
-		if (config.type != BluenetProtocol.OPCODE_WRITE) {
+		if (config.opCode != OpcodeType.WRITE) {
 			return Promise.ofFail(Errors.OpcodeWrong())
 		}
 		return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), config.getArray())
