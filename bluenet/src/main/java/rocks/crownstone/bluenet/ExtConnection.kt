@@ -141,6 +141,10 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		return bleCore.hasCharacteristic(serviceUuid, characteristicUuid)
 	}
 
+	@Synchronized fun wait(timeMs: Long): Promise<Unit, Exception> {
+		return bleCore.wait(timeMs)
+	}
+
 	@Synchronized private fun getSessionData(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "get session data $address")
 		if (isSetupMode) {

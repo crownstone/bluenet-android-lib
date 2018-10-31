@@ -7,6 +7,7 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Util
+import rocks.crownstone.bluenet.util.Util.waitPromise
 import java.util.*
 
 /**
@@ -724,6 +725,10 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 				}
 
 		return deferred.promise
+	}
+
+	@Synchronized fun wait(timeMs: Long): Promise<Unit, Exception> {
+		return waitPromise(timeMs, handler)
 	}
 
 
