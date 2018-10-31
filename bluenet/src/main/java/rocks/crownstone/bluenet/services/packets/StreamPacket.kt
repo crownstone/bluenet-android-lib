@@ -72,6 +72,10 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 			Log.w(TAG, "buffer too small for payload: ${bb.remaining()} < $dataSize")
 			return false
 		}
+		val payload = this.payload
+		if (payload != null) {
+			return payload.fromBuffer(bb)
+		}
 		data = ByteArray(dataSize)
 		bb.get(data)
 		return true
