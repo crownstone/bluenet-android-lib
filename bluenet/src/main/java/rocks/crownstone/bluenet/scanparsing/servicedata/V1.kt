@@ -16,7 +16,9 @@ internal object V1 {
 		servicedata.setDeviceTypeFromServiceUuid()
 
 		// Can't just parse header, since we can only determine if stone is in setup mode after parsing all data.
+		// First try to parse without decrypting
 		parseServiceData(bb, servicedata)
+
 		// Check if it's in setup mode
 		if (servicedata.flagSetup &&
 				servicedata.crownstoneId == 0.toShort() &&
@@ -25,6 +27,11 @@ internal object V1 {
 				servicedata.energyUsed == 0L) {
 			servicedata.operationMode = OperationMode.SETUP
 		}
+		else {
+			// Assume normal operation mode
+			servicedata.operationMode = OperationMode.NORMAL
+		}
+
 		return true
 	}
 
@@ -40,6 +47,8 @@ internal object V1 {
 			}
 			return true
 		}
+		// Rewind byte buffer, because header parsing already parsed the whole buffer
+		bb.position(bb.position() - 16)
 		val decryptedBytes = Encryption.decryptEcb(bb, key)
 		if (decryptedBytes == null) {
 			return false
