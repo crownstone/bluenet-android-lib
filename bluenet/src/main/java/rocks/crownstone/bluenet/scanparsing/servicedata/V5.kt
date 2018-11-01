@@ -5,6 +5,7 @@ import rocks.crownstone.bluenet.DeviceType
 import rocks.crownstone.bluenet.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
+import rocks.crownstone.bluenet.util.getUint8
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -13,8 +14,8 @@ internal object V5 {
 		if (bb.remaining() < 17) {
 			return false
 		}
-		servicedata.deviceType = DeviceType.fromInt(bb.get().toInt())
-		servicedata.operationMode = OperationMode.NORMAL // TODO: set this before full parse was successful?
+		servicedata.deviceType = DeviceType.fromNum(bb.getUint8())
+		servicedata.operationMode = OperationMode.NORMAL
 		return true
 	}
 

@@ -3,9 +3,7 @@ package rocks.crownstone.bluenet.scanparsing.servicedata
 import rocks.crownstone.bluenet.Uint32
 import rocks.crownstone.bluenet.Uint8
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
-import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.PartialTime
-import rocks.crownstone.bluenet.util.Util
+import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 
 internal object Shared {
@@ -13,9 +11,9 @@ internal object Shared {
 
 	internal fun parseStatePacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.flagExternalData = external
-		servicedata.crownstoneId = Conversion.toUint8(bb.get())
-		servicedata.switchState = Conversion.toUint8(bb.get())
-		parseFlags(Conversion.toUint8(bb.get()), servicedata)
+		servicedata.crownstoneId = bb.getUint8()
+		servicedata.switchState = bb.getUint8()
+		parseFlags(bb.getUint8(), servicedata)
 		servicedata.temperature = bb.get()
 		parsePowerFactor(bb, servicedata)
 		servicedata.powerUsageReal = bb.getShort() / 8.0
@@ -34,10 +32,10 @@ internal object Shared {
 
 	internal fun parseErrorPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.flagExternalData = external
-		servicedata.crownstoneId = Conversion.toUint8(bb.get())
-		parseErrorBitmask(Conversion.toUint32(bb.getInt()), servicedata)
+		servicedata.crownstoneId = bb.getUint8()
+		parseErrorBitmask(bb.getUint32(), servicedata)
 		servicedata.errorTimestamp = Conversion.toUint32(bb.getInt())
-		parseFlags(Conversion.toUint8(bb.get()), servicedata)
+		parseFlags(bb.getUint8(), servicedata)
 		servicedata.temperature = bb.get()
 		parsePartialTimestamp(bb, servicedata)
 		if (external) {
@@ -57,13 +55,13 @@ internal object Shared {
 	}
 
 	internal fun parseSetupPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
-		servicedata.switchState = Conversion.toUint8(bb.get())
-		parseFlags(Conversion.toUint8(bb.get()), servicedata)
+		servicedata.switchState = bb.getUint8()
+		parseFlags(bb.getUint8(), servicedata)
 		servicedata.temperature = bb.get()
 		parsePowerFactor(bb, servicedata)
 		servicedata.powerUsageReal = bb.getShort() / 8.0
 		setPowerUsageApparent(servicedata)
-		parseErrorBitmask(Conversion.toUint32(bb.getInt()), servicedata)
+		parseErrorBitmask(bb.getUint32(), servicedata)
 		servicedata.changingData = bb.get().toInt()
 		bb.getInt() // reserved
 		servicedata.validation = true // No need for validation so set to true
@@ -111,7 +109,7 @@ internal object Shared {
 
 	// Currently assumes flags have been parsed already
 	private fun parsePartialTimestamp(bb: ByteBuffer, servicedata: CrownstoneServiceData) {
-		val partialTimestamp = Conversion.toUint16(bb.getShort())
+		val partialTimestamp = bb.getUint16()
 		if (servicedata.flagTimeSet) {
 			servicedata.timestamp = PartialTime.reconstructTimestamp(partialTimestamp)
 		}

@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet.scanparsing.servicedata
 import rocks.crownstone.bluenet.DeviceType
 import rocks.crownstone.bluenet.OperationMode
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
+import rocks.crownstone.bluenet.util.getUint8
 import java.nio.ByteBuffer
 
 internal object V6 {
@@ -10,8 +11,8 @@ internal object V6 {
 		if (bb.remaining() < 16) {
 			return false
 		}
-		servicedata.deviceType = DeviceType.fromInt(bb.get().toInt())
-		servicedata.operationMode = OperationMode.SETUP // TODO: set this before full parse was successful?
+		servicedata.deviceType = DeviceType.fromNum(bb.getUint8())
+		servicedata.operationMode = OperationMode.SETUP
 		return true
 	}
 

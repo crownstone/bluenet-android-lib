@@ -5,6 +5,8 @@ import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.util.Util
+import rocks.crownstone.bluenet.util.getUint16
+import rocks.crownstone.bluenet.util.getUint8
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -60,8 +62,8 @@ internal object V1 {
 	}
 
 	private fun parseServiceData(bb: ByteBuffer, servicedata: CrownstoneServiceData) {
-		servicedata.crownstoneId = Conversion.toUint16(bb.getShort()).toShort()
-		servicedata.switchState = Conversion.toUint8(bb.get())
+		servicedata.crownstoneId = bb.getUint16().toShort()
+		servicedata.switchState = bb.getUint8()
 		val flags = bb.get()
 		servicedata.flagExternalData = (Util.isBitSet(flags, 1))
 		servicedata.flagError = (Util.isBitSet(flags, 2))

@@ -13,7 +13,7 @@ internal object V3 {
 			return false
 		}
 		servicedata.setDeviceTypeFromServiceUuid()
-		servicedata.operationMode = OperationMode.NORMAL // TODO: set this before full parse was successful?
+		servicedata.operationMode = OperationMode.NORMAL
 		return true
 	}
 

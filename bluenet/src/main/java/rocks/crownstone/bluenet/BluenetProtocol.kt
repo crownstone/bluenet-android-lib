@@ -233,7 +233,7 @@ enum class ConfigType(val num: Uint8) {
 	}
 }
 
-enum class DeviceType(val num: Int) {
+enum class DeviceType(val num: Uint8) {
 	UNKNOWN(0),
 	CROWNSTONE_PLUG(1),
 	GUIDESTONE(2),
@@ -243,7 +243,7 @@ enum class DeviceType(val num: Int) {
 		private val map = DeviceType.values().associateBy(DeviceType::num)
 		//		fun fromInt(type: Int) = map.getOrDefault(type, UNKNOWN)
 		//@JvmStatic
-		fun fromInt(type: Int): DeviceType {
+		fun fromNum(type: Uint8): DeviceType {
 			return map[type] ?: return UNKNOWN
 		}
 	}
