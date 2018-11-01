@@ -15,11 +15,13 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	private val eventBus = evtBus
 	private val connection = connection
 
+	// -------------------- //
 	// --- setters only --- //
-
+	// -------------------- //
 
 	fun setCrownstoneId(id: Uint8): Promise<Unit, Exception> {
-		return setConfigValue(ConfigType.CROWNSTONE_ID, id)
+		val stoneId = Conversion.toUint16(id) // Is still uint16
+		return setConfigValue(ConfigType.CROWNSTONE_ID, stoneId)
 	}
 
 	fun setAdminKey(key: ByteArray): Promise<Unit, Exception> {
@@ -47,8 +49,9 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 
+	// --------------------------- //
 	// --- setters and getters --- //
-
+	// --------------------------- //
 
 	fun setMeshAccessAddress(address: Uint32): Promise<Unit, Exception> {
 		return setConfigValue(ConfigType.MESH_ACCESS_ADDRESS, address)
@@ -206,6 +209,9 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 
+	// ------------------------ //
+	// --- helper functions --- //
+	// ------------------------ //
 
 	private inline fun <reified T>getConfigValue(type: ConfigType): Promise<T, Exception> {
 		return getConfig(type)

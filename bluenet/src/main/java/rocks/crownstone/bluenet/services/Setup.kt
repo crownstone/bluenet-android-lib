@@ -14,6 +14,10 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	private val eventBus = evtBus
 	private val connection = connection
 
+	companion object {
+		val OLD_SETUP_WAIT_MS = 500L // Time to wait between steps in ms
+	}
+
 	private enum class OldSetupStep(val num: Int) {
 		START(1),
 		INCREASED_TX(2),
@@ -72,65 +76,71 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 
 		sendProgress(OldSetupStep.START)
 		// TODO: increase TX?
-		return config.setCrownstoneId(id)
+		return control.increaseTx()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
+				}.unwrap()
+				.then {
+					config.setCrownstoneId(id)
+				}.unwrap()
+				.then {
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.ID_WRITTEN)
 					config.setAdminKey(adminKey)
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.ADMIN_KEY_WRITTEN)
 					config.setMemberKey(memberKey)
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.MEMBER_KEY_WRITTEN)
 					config.setGuestKey(guestKey)
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.GUEST_KEY_WRITTEN)
 					config.setMeshAccessAddress(meshAccessAddress)
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.MESH_ADDRESS_WRITTEN)
 					config.setIbeaconUuid(ibeaconData.uuid)
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.IBEACON_UUID_WRITTEN)
 					config.setIbeaconMajor(ibeaconData.major)
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.IBEACON_MAJOR_WRITTEN)
 					config.setIbeaconMinor(ibeaconData.minor)
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.IBEACON_MINOR_WRITTEN)
 					control.validateSetup()
 				}.unwrap()
 				.then {
-					connection.wait(500)
+					connection.wait(OLD_SETUP_WAIT_MS)
 				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.FINALIZE_WRITTEN)
