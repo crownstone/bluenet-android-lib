@@ -7,7 +7,7 @@ import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 
 internal object Shared {
-	const val VALIDATION = 0xFA.toByte()
+	private const val VALIDATION = 0xFA.toByte()
 
 	internal fun parseStatePacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.flagExternalData = external
@@ -34,7 +34,7 @@ internal object Shared {
 		servicedata.flagExternalData = external
 		servicedata.crownstoneId = bb.getUint8()
 		parseErrorBitmask(bb.getUint32(), servicedata)
-		servicedata.errorTimestamp = Conversion.toUint32(bb.getInt())
+		servicedata.errorTimestamp = bb.getUint32()
 		parseFlags(bb.getUint8(), servicedata)
 		servicedata.temperature = bb.get()
 		parsePartialTimestamp(bb, servicedata)
