@@ -1,18 +1,26 @@
 package rocks.crownstone.bluenet.scanparsing
 
-import rocks.crownstone.bluenet.Int8
-
 class IbeaconRssiAverager {
-	private val list = ArrayList<Int8>()
-	var average: Double = -127.0; private set
+	private val list = ArrayList<Int>()
+	private var average: Int = -127
 
-	fun add(rssi: Int8) {
+	fun add(rssi: Int) {
 		list.add(rssi)
 	}
 
-	fun calculateAverage(): Double {
-		average = calculateAverageIbeaconSpec()
+	fun getAverage(): Int {
+		if (average == -127) {
+			calculateAverage()
+		}
 		return average
+	}
+
+	fun clear() {
+		list.clear()
+	}
+
+	internal fun calculateAverage() {
+		average = calculateAverageIbeaconSpec().toInt()
 	}
 
 	internal fun calculateMedian(): Double {
@@ -23,7 +31,13 @@ class IbeaconRssiAverager {
 			2 -> (list[0] + list[1]) / 2.0
 			else -> {
 				list.sort()
-				list[list.size / 2].toDouble()
+				val center = list.size / 2
+				if (list.size % 2 == 0) {
+					(list[center-1] + list[center]) / 2.0
+				}
+				else {
+					list[center].toDouble()
+				}
 			}
 		}
 	}
@@ -44,9 +58,5 @@ class IbeaconRssiAverager {
 			sum += list[i]
 		}
 		return (sum / (endIndex - startIndex))
-	}
-
-	fun clear() {
-		list.clear()
 	}
 }

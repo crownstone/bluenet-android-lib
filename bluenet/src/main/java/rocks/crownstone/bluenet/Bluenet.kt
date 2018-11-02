@@ -4,9 +4,11 @@ import android.app.Activity
 import android.app.Notification
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
 import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
+import rocks.crownstone.bluenet.scanparsing.IbeaconRanger
 import rocks.crownstone.bluenet.scanparsing.ScanHandler
 import rocks.crownstone.bluenet.services.Config
 import rocks.crownstone.bluenet.services.Control
@@ -24,6 +26,7 @@ class Bluenet {
 	private var scanHandler: ScanHandler? = null
 	private lateinit var service: BackgroundServiceManager
 	private val encryptionManager = EncryptionManager()
+	private lateinit var iBeaconRanger: IbeaconRanger
 
 	private var initialized = false
 
@@ -36,6 +39,7 @@ class Bluenet {
 	lateinit var control: Control
 	lateinit var config: Config
 	lateinit var state: State
+	val handler = Handler()
 
 
 	/**
@@ -70,7 +74,7 @@ class Bluenet {
 		control = Control(eventBus, connection)
 		config = Config(eventBus, connection)
 		state = State(eventBus, connection)
-
+		iBeaconRanger = IbeaconRanger(eventBus, handler)
 
 		service = BackgroundServiceManager(appContext, eventBus)
 		return service.runInBackground()

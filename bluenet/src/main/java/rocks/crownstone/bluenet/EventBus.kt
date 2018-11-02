@@ -47,7 +47,8 @@ class EventBus {
 			BluenetEvent.NEAREST_VALIDATED.name,
 			BluenetEvent.NEAREST_VALIDATED_NORMAL.name,
 			BluenetEvent.NEAREST_SETUP.name,
-			BluenetEvent.NEAREST_DFU.name -> Log.v(TAG, "emit $eventType data: $data")
+			BluenetEvent.NEAREST_DFU.name,
+			BluenetEvent.IBEACON_SCAN.name -> Log.v(TAG, "emit $eventType data: $data")
 			else -> Log.i(TAG, "emit $eventType data: $data")
 		}
 		if (!eventSubscriptions.containsKey(eventType)) {

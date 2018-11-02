@@ -31,6 +31,9 @@ enum class BluenetEvent {
 	NEAREST_DFU,              // Validated device in dfu operation mode was scanned. NearestDeviceListEntry as data.
 	NEAREST_SETUP,            // Validated device in setup operation mode was scanned. NearestDeviceListEntry as data.
 	SETUP_PROGRESS,  // Setup is in progress, Double (progress, where 1.0 is done) as data.
+	IBEACON_SCAN,    // List of iBeacons was scanned. ScannedIbeaconList as data.
+	IBEACON_ENTER_REGION, // Region was entered. iBeacon UUID as data.
+	IBEACON_EXIT_REGION,  // Region was exited. iBeacon UUID as data.
 }
 
 typealias Int8 = Byte
@@ -74,3 +77,5 @@ data class KeyAccessLevelPair(val key: ByteArray, val accessLevel: AccessLevel) 
 	// TODO: override equals() and hashCode()
 }
 
+data class ScannedIbeacon(val address: DeviceAddress, val ibeaconData: IbeaconData, val rssi: Int)
+typealias ScannedIbeaconList = List<ScannedIbeacon>
