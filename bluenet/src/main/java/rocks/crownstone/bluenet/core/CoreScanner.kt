@@ -14,13 +14,14 @@ import rocks.crownstone.bluenet.EventBus
  * Class that adds scanning to the bluetooth LE core class.
  */
 open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(appContext, evtBus) {
-	private var scanFilters = ArrayList<ScanFilter>()
+	private var scanFilters: List<ScanFilter> = ArrayList()
+	private var scanSettingsBuilder = ScanSettings.Builder()
 	private var scanSettings: ScanSettings
 	private var scanning = false
 
 	init {
 		// Init scan settings
-		val builder = ScanSettings.Builder()
+		val builder = scanSettingsBuilder
 		builder.setScanMode(ScanSettings.SCAN_MODE_BALANCED)
 		//builder.setScanResultType(SCAN_RESULT_TYPE_FULL)
 		builder.setReportDelay(0)
@@ -58,35 +59,72 @@ open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(a
 
 	}
 
+	enum class ScanMode(val num: Int) {
+		LOW_POWER(0),
+		BALANCED(1),
+		LOW_LATENCY(2),
+	}
 
-	private val scanCallback = object: ScanCallback() {
-		@Synchronized override fun onScanResult(callbackType: Int, result: ScanResult?) {
+	/**
+	 * Change the scan mode used to scan for devices. See [ScanSettings] for the different scan modes.
+	 * You need to stop and start scanning again for this to take effect.
+	 */
+	@Synchronized fun setScanMode(mode: ScanMode) {
+		scanSettingsBuilder.setScanMode(mode.num)
+		scanSettings = scanSettingsBuilder.build()
+	}
 
-			// Sometimes a scan result is still received after scanning has been stopped.
-			// Sometimes a scan with invalid rssi is received, ignore this result.
-			if (!scanning || result == null || result.rssi >= 0) {
-				return
-			}
+	/**
+	 * Set new scan filters.
+	 * You need to stop and start scanning again for this to take effect.
+	 */
+	@Synchronized fun setScanFilters(filters: List<ScanFilter>) {
+		scanFilters = filters
+	}
 
-			eventBus.emit(BluenetEvent.SCAN_RESULT_RAW, result)
+	@Synchronized private fun onBleScanResult(callbackType: Int, result: ScanResult?) {
+		// Sometimes a scan result is still received after scanning has been stopped.
+		// Sometimes a scan with invalid rssi is received, ignore this result.
+		if (!scanning || result == null || result.rssi >= 0) {
+			return
 		}
 
-		@Synchronized override fun onBatchScanResults(results: MutableList<ScanResult>?) {
-			if (results != null) {
-				for (result in results) {
-					onScanResult(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, result)
-				}
-			}
-		}
+		eventBus.emit(BluenetEvent.SCAN_RESULT_RAW, result)
+	}
 
-		@Synchronized override fun onScanFailed(errorCode: Int) {
-			Log.e(TAG, "onScanFailed: $errorCode")
-			if (errorCode == SCAN_FAILED_ALREADY_STARTED) {
-				// No problem!
-				return
+	@Synchronized private fun onBleBatchScanResults(results: MutableList<ScanResult>?) {
+		if (results != null) {
+			for (result in results) {
+				onBleScanResult(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, result)
 			}
-			scanning = false
-			eventBus.emit(BluenetEvent.SCAN_FAILURE)
 		}
 	}
+
+	@Synchronized private fun onBleScanFailed(errorCode: Int) {
+		Log.e(TAG, "onScanFailed: $errorCode")
+		if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
+			// No problem!
+			return
+		}
+		scanning = false
+		eventBus.emit(BluenetEvent.SCAN_FAILURE)
+	}
+
+	private val scanCallback = object: ScanCallback() {
+		override fun onScanResult(callbackType: Int, result: ScanResult?) {
+			onBleScanResult(callbackType, result)
+		}
+		override fun onBatchScanResults(results: MutableList<ScanResult>?) {
+			onBleBatchScanResults(results)
+		}
+		override fun onScanFailed(errorCode: Int) {
+			onBleScanFailed(errorCode)
+		}
+	}
+
+	// Filters:
+	// - scan mode - low level
+	// - ibeacon uuid - low level
+	// - service data header? - not available in every scan -> high level
+	// - unique only - requires decryption -> high level
 }

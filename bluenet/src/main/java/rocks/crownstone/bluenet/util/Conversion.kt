@@ -47,11 +47,17 @@ object Conversion {
 		return uuidToBytes(stringToUuid(uuidStr))
 	}
 
-	fun uuidToBytes(uuid: UUID): ByteArray {
+	fun uuidToBytes(uuid: UUID, order: ByteOrder= ByteOrder.LITTLE_ENDIAN): ByteArray {
 		val bb = ByteBuffer.allocate(16)
-		bb.order(ByteOrder.LITTLE_ENDIAN)
-		bb.putLong(uuid.leastSignificantBits)
-		bb.putLong(uuid.mostSignificantBits)
+		bb.order(order)
+		if (order == ByteOrder.BIG_ENDIAN) {
+			bb.putLong(uuid.mostSignificantBits)
+			bb.putLong(uuid.leastSignificantBits)
+		}
+		else {
+			bb.putLong(uuid.leastSignificantBits)
+			bb.putLong(uuid.mostSignificantBits)
+		}
 		return bb.array()
 	}
 

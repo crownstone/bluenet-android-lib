@@ -1,6 +1,6 @@
 package rocks.crownstone.bluenet
 
-import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanFilter
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
@@ -23,6 +23,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 
 //	private val handler = Handler() // Can only be done when constructed on UI thread, do with different thread?
 	private val handler: Handler
+	val filterManager = ScanFilterManager(::onScanFilterUpdate)
 
 //	private var scanning = false
 	private var running = false
@@ -54,17 +55,12 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 		}
 	}
 
-
-	@Synchronized fun setFilter() {
-
-	}
-
-	@Synchronized fun startScan() {
+	@Synchronized fun startScan(delay: Long = 0) {
 		Log.i(TAG, "startScan")
 		if (!running) {
 			running = true
 			handler.removeCallbacksAndMessages(null)
-			handler.post(startScanRunnable)
+			handler.postDelayed(startScanRunnable, delay)
 		}
 //		return true
 	}
@@ -80,8 +76,21 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		return true
 	}
 
+	@Synchronized private fun onScanFilterUpdate(filters: List<ScanFilter>) {
+		Log.i(TAG, "onScanFilterUpdate: $filters")
+		// TODO: delay?
+		// TODO: return a promise
+		val wasRunning = running
+		stopScan()
+		core.setScanFilters(filters)
+		if (wasRunning) {
+			startScan(500)
+		}
+	}
+
 	@Synchronized private fun startInterval() {
 		Log.i(TAG, "startInterval")
+		// TODO: check if we don't start too often in a certain amount of time.
 //		if (core.startScan()) {
 			core.startScan()
 //			scanning = true
@@ -119,6 +128,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	}
 
 	@Synchronized private fun onScanFail() {
+		Log.e(TAG, "onScanFail: TODO")
 		// TODO
 	}
 

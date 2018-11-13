@@ -196,6 +196,17 @@ class Bluenet {
 		return eventBus.subscribe(eventType, callback)
 	}
 
+	@Synchronized fun addIbeaconFilter(uuid: UUID?) {
+		if (uuid == null) {
+			bleScanner?.filterManager?.addIbeaconFilter()
+			return
+		}
+		bleScanner?.filterManager?.addIbeaconFilter(uuid)
+	}
+
+	@Synchronized fun remIbeaconFilter(uuid: UUID) {
+		bleScanner?.filterManager?.remIbeaconFilter(uuid)
+	}
 
 	@Synchronized fun startScanning() {
 		Log.i(TAG, "startScanning")

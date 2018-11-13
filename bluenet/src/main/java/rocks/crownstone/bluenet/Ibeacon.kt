@@ -2,6 +2,7 @@ package rocks.crownstone.bluenet
 
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.getUint16
+import rocks.crownstone.bluenet.util.getUint8
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -26,15 +27,20 @@ class Ibeacon {
 			if (bb.remaining() < 2) {
 				return null
 			}
-			val advertisementId = bb.getUint16()
-			if (advertisementId == BluenetProtocol.IBEACON_ADVERTISEMENT_ID && bb.remaining() >= 16 + 2 + 2 + 1) {
-				val uuid = UUID(bb.getLong(), bb.getLong())
-				val major = Conversion.toUint16(bb.getShort())
-				val minor = Conversion.toUint16(bb.getShort())
-				val rssiAtOneMeter = bb.get()
-				return IbeaconData(uuid, major, minor, rssiAtOneMeter)
+			if (bb.getUint8().toInt() != BluenetProtocol.IBEACON_TYPE) {
+				return null
 			}
-			return null
+			if (bb.getUint8().toInt() != BluenetProtocol.IBEACON_SIZE) {
+				return null
+			}
+			if (bb.remaining() < BluenetProtocol.IBEACON_SIZE) {
+				return null
+			}
+			val uuid = UUID(bb.getLong(), bb.getLong())
+			val major = Conversion.toUint16(bb.getShort())
+			val minor = Conversion.toUint16(bb.getShort())
+			val rssiAtOneMeter = bb.get()
+			return IbeaconData(uuid, major, minor, rssiAtOneMeter)
 		}
 	}
 }

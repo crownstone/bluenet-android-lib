@@ -10,7 +10,12 @@ object BluenetProtocol {
 	val SERVICE_DATA_UUID_GUIDESTONE         = UUID.fromString("0000C003-0000-1000-8000-00805F9B34FB")
 	val SERVICE_DATA_UUID_DFU                = UUID.fromString("00001530-1212-efde-1523-785feabcd123")
 
+	val SETUP_IBEACON_UUID = UUID.fromString("A643423E-E175-4AF0-A2E4-31E32f729A8A")
+
 	const val APPLE_COMPANY_ID = 0x004c
+	const val APPLE_HEADER_SIZE = 2
+	const val IBEACON_TYPE = 0x02
+	const val IBEACON_SIZE = 0x15
 	const val IBEACON_ADVERTISEMENT_ID = 0x0215 // Actually 2 separate fields: type and length
 
 	// Crownstone service
