@@ -196,17 +196,36 @@ class Bluenet {
 		return eventBus.subscribe(eventType, callback)
 	}
 
-	@Synchronized fun addIbeaconFilter(uuid: UUID?) {
-		if (uuid == null) {
-			bleScanner?.filterManager?.addIbeaconFilter()
-			return
+	@Synchronized fun scanForIbeacons(enable: Boolean) {
+		when (enable) {
+			true -> bleScanner?.filterManager?.addIbeaconFilter()
+			false -> bleScanner?.filterManager?.remIbeaconFilter()
 		}
-		bleScanner?.filterManager?.addIbeaconFilter(uuid)
 	}
 
-	@Synchronized fun remIbeaconFilter(uuid: UUID) {
-		bleScanner?.filterManager?.remIbeaconFilter(uuid)
+	@Synchronized fun scanForCrownstones() {
+		bleScanner?.filterManager?.addCrownstoneFilter()
+		startScanning()
 	}
+
+	@Synchronized fun scanForIbeacons() {
+		bleScanner?.filterManager?.addIbeaconFilter()
+		startScanning()
+	}
+
+	//TODO: stop scanning for ibeacons or crownstones, while continuing the other.
+
+//	@Synchronized fun addIbeaconFilter(uuid: UUID?) {
+//		if (uuid == null) {
+//			bleScanner?.filterManager?.addIbeaconFilter()
+//			return
+//		}
+//		bleScanner?.filterManager?.addIbeaconFilter(uuid)
+//	}
+//
+//	@Synchronized fun remIbeaconFilter(uuid: UUID) {
+//		bleScanner?.filterManager?.remIbeaconFilter(uuid)
+//	}
 
 	@Synchronized fun startScanning() {
 		Log.i(TAG, "startScanning")
@@ -215,6 +234,7 @@ class Bluenet {
 
 	@Synchronized fun stopScanning() {
 		Log.i(TAG, "stopScanning")
+		bleScanner?.filterManager?.remCrownstoneFilter()
 		bleScanner?.stopScan()
 	}
 

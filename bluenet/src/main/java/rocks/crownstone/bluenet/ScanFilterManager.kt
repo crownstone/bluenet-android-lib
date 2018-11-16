@@ -1,6 +1,7 @@
 package rocks.crownstone.bluenet
 
 import android.bluetooth.le.ScanFilter
+import android.os.ParcelUuid
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteOrder
 import java.util.*
@@ -15,15 +16,7 @@ import java.util.*
  * @updateCallback Function that's called when filter list changed.
  */
 class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
-//	private val scanFilters = ArrayList<ScanFilter>()
-
 	private val filters = HashMap<String, Filter>()
-
-
-//	enum class FilterType {
-//		IBEACON,
-//		IBEACON_UUID,
-//	}
 
 	private data class Filter(val filter: ScanFilter)
 
@@ -53,16 +46,15 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 				.setManufacturerData(BluenetProtocol.APPLE_COMPANY_ID, data, dataMask)
 				.build()
 		filters[id] = Filter(scanFilter)
-//		scanFilters.add(scanFilter)
 		updateCallback(getFilters())
 	}
 
 	/**
-	 * Remove filter for any iBeacon.
+	 * Remove the any iBeacon filter.
 	 */
 	@Synchronized fun remIbeaconFilter() {
-		val id = "ibeacons"
-		if (filters.containsKey(id)) {
+		val id = "ibeacon"
+		if (!filters.containsKey(id)) {
 			return
 		}
 		filters.remove(id)
@@ -72,13 +64,13 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 	/**
 	 * Adds filter for iBeacons with certain UUID.
 	 */
-	@Synchronized fun addIbeaconFilter(ibeaconUUID: UUID) {
-		val id = "ibeacons $ibeaconUUID"
+	@Synchronized fun addIbeaconFilter(ibeaconUuid: UUID) {
+		val id = "ibeacon $ibeaconUuid"
 		if (filters.containsKey(id)) {
 			return
 		}
 		// iBeacon data is in big endian format
-		val uuidArray = Conversion.uuidToBytes(ibeaconUUID, ByteOrder.BIG_ENDIAN)
+		val uuidArray = Conversion.uuidToBytes(ibeaconUuid, ByteOrder.BIG_ENDIAN)
 		val data = ByteArray(BluenetProtocol.APPLE_HEADER_SIZE + BluenetProtocol.IBEACON_SIZE, { 0 })
 		val dataMask = ByteArray(BluenetProtocol.APPLE_HEADER_SIZE + BluenetProtocol.IBEACON_SIZE, { 0 })
 		data[0] = BluenetProtocol.IBEACON_TYPE.toByte()
@@ -100,12 +92,70 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 	/**
 	 * Remove filter for iBeacons with certain UUID.
 	 */
-	@Synchronized fun remIbeaconFilter(ibeaconUUID: UUID) {
-		val id = "ibeacons $ibeaconUUID"
-		if (filters.containsKey(id)) {
+	@Synchronized fun remIbeaconFilter(ibeaconUuid: UUID) {
+		val id = "ibeacons $ibeaconUuid"
+		if (!filters.containsKey(id)) {
 			return
 		}
 		filters.remove(id)
 		updateCallback(getFilters())
+	}
+
+	@Synchronized fun addCrownstoneFilter() {
+		var update = false
+		update = update || addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG, false)
+		update = update || addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN, false)
+		update = update || addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE, false)
+		update = update || addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)
+		if (update) {
+			updateCallback(getFilters())
+		}
+	}
+
+	@Synchronized fun remCrownstoneFilter() {
+		var update = false
+		update = update || remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG, false)
+		update = update || remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN, false)
+		update = update || remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE, false)
+		update = update || remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)
+		if (update) {
+			updateCallback(getFilters())
+		}
+	}
+
+	@Synchronized fun addServiceDataFilter(serviceUuid: UUID) {
+		addServiceDataFilter(serviceUuid, true)
+	}
+
+	@Synchronized private fun addServiceDataFilter(serviceUuid: UUID, update: Boolean): Boolean {
+		val id = "serviceData $serviceUuid"
+		if (filters.containsKey(id)) {
+			return false
+		}
+		val parcelUuid = ParcelUuid(serviceUuid)
+		val scanFilterBuilder = ScanFilter.Builder()
+		scanFilterBuilder.setServiceData(parcelUuid, null)
+		val scanFilter = scanFilterBuilder.build()
+		filters[id] = Filter(scanFilter)
+		if (update) {
+			updateCallback(getFilters())
+		}
+		return true
+	}
+
+	@Synchronized fun remServiceDataFilter(serviceUuid: UUID) {
+		remServiceDataFilter(serviceUuid, true)
+	}
+
+	@Synchronized fun remServiceDataFilter(serviceUuid: UUID, update: Boolean): Boolean {
+		val id = "serviceData $serviceUuid"
+		if (!filters.containsKey(id)) {
+			return false
+		}
+		filters.remove(id)
+		if (update) {
+			updateCallback(getFilters())
+		}
+		return true
 	}
 }
