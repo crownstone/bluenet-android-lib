@@ -62,6 +62,8 @@ class CrownstoneServiceData {
 	var errorDimmerFailureOff = false;  internal set
 	var errorTimestamp = 0L;            internal set
 
+	var unique = false; internal set // Whether this service data was different from the previous.
+
 	/**
 	 * Parses first bytes to determine the advertisement type, device type, and operation mode, without decrypting the data.
 	 * Result is cached.
@@ -146,16 +148,24 @@ class CrownstoneServiceData {
 
 	internal fun setDeviceTypeFromServiceUuid() {
 		val uuid = serviceUuid // Make immutable
-		when (uuid) {
-			null -> deviceType = DeviceType.UNKNOWN
-			BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG -> deviceType = DeviceType.CROWNSTONE_PLUG
-			BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN -> deviceType = DeviceType.CROWNSTONE_BUILTIN
-			BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE -> deviceType = DeviceType.GUIDESTONE
-			else -> deviceType = DeviceType.UNKNOWN
+		deviceType = when (uuid) {
+			null -> DeviceType.UNKNOWN
+			BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG -> DeviceType.CROWNSTONE_PLUG
+			BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_BUILTIN -> DeviceType.CROWNSTONE_BUILTIN
+			BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE -> DeviceType.GUIDESTONE
+			else -> DeviceType.UNKNOWN
 		}
 	}
 
+	internal fun checkUnique(previous: CrownstoneServiceData?) {
+		if (previous == null) {
+			unique = true
+			return
+		}
+		unique = (previous.changingData != changingData)
+	}
+
 	override fun toString(): String {
-		return "version=$version type=${type} serviceUuid=$serviceUuid deviceType=${deviceType.name} id=$crownstoneId switchState=$switchState temperature=$temperature powerUsageReal=$powerUsageReal powerUsageApparent=$powerUsageApparent powerFactor=$powerFactor energyUsed=$energyUsed externalRssi=$externalRssi timestamp=$timestamp validation=$validation changingData=$changingData"
+		return "version=$version type=${type} serviceUuid=$serviceUuid deviceType=${deviceType.name} id=$crownstoneId switchState=$switchState temperature=$temperature powerUsageReal=$powerUsageReal powerUsageApparent=$powerUsageApparent powerFactor=$powerFactor energyUsed=$energyUsed externalRssi=$externalRssi timestamp=$timestamp validation=$validation changingData=$changingData unique=$unique"
 	}
 }
