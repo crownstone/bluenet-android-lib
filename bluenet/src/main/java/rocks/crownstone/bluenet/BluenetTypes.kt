@@ -63,6 +63,12 @@ enum class ProcessResult {
 	ERROR,
 }
 
+enum class ScanMode(val num: Int) {
+	LOW_POWER(0),   // 5120ms interval, of which 512ms scan time.
+	BALANCED(1),    // 4096ms interval, of which 1024ms scan time.
+	LOW_LATENCY(2), // 4096ms interval, of which 4096ms scan time.
+}
+
 typealias ProcessCallback = (ByteArray) -> ProcessResult
 
 //data class BleNotification(val characteristicUuid: UUID, val data: ByteArray)

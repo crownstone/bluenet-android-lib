@@ -9,6 +9,7 @@ import android.os.Build
 import android.util.Log
 import rocks.crownstone.bluenet.BluenetEvent
 import rocks.crownstone.bluenet.EventBus
+import rocks.crownstone.bluenet.ScanMode
 
 /**
  * Class that adds scanning to the bluetooth LE core class.
@@ -57,12 +58,6 @@ open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(a
 		}
 		scanner.stopScan(scanCallback)
 
-	}
-
-	enum class ScanMode(val num: Int) {
-		LOW_POWER(0),
-		BALANCED(1),
-		LOW_LATENCY(2),
 	}
 
 	/**

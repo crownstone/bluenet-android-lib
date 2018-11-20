@@ -208,33 +208,48 @@ class Bluenet {
 		startScanning()
 	}
 
-	@Synchronized fun scanForIbeacons() {
-		bleScanner?.filterManager?.addIbeaconFilter()
-		startScanning()
+	/**
+	 * Filter for Crownstones with service data.
+	 */
+	@Synchronized fun filterForCrownstones(enable: Boolean) {
+		when (enable) {
+			true ->  bleScanner?.filterManager?.addCrownstoneFilter()
+			false -> bleScanner?.filterManager?.remCrownstoneFilter()
+		}
 	}
 
-	//TODO: stop scanning for ibeacons or crownstones, while continuing the other.
+	/**
+	 * Filter for iBeacons.
+	 */
+	@Synchronized fun filterForIbeacons(enable: Boolean) {
+		when (enable) {
+			true ->  bleScanner?.filterManager?.addIbeaconFilter()
+			false -> bleScanner?.filterManager?.remIbeaconFilter()
+		}
+	}
 
-//	@Synchronized fun addIbeaconFilter(uuid: UUID?) {
-//		if (uuid == null) {
-//			bleScanner?.filterManager?.addIbeaconFilter()
-//			return
-//		}
-//		bleScanner?.filterManager?.addIbeaconFilter(uuid)
-//	}
-//
-//	@Synchronized fun remIbeaconFilter(uuid: UUID) {
-//		bleScanner?.filterManager?.remIbeaconFilter(uuid)
-//	}
+	/**
+	 * Set scan interval: trade off between battery usage and response time.
+	 */
+	@Synchronized fun setScanInterval(scanMode: ScanMode) {
+		bleScanner?.setScanInterval(scanMode)
+	}
 
+	/**
+	 * Start scanning.
+	 *
+	 * At least one filter is required to be able to scan in the background.
+	 */
 	@Synchronized fun startScanning() {
 		Log.i(TAG, "startScanning")
 		bleScanner?.startScan()
 	}
 
+	/**
+	 * Stop scanning.
+	 */
 	@Synchronized fun stopScanning() {
 		Log.i(TAG, "stopScanning")
-		bleScanner?.filterManager?.remCrownstoneFilter()
 		bleScanner?.stopScan()
 	}
 
