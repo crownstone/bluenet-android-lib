@@ -5,17 +5,18 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 
-/*
-Class that provides the following:
-- When scanning, stopping now and then, to avoid bluetoothLeScanner stop giving results after 30 minutes (see https://stackoverflow.com/questions/43833904/android-bluetooth-le-scanner-stops-after-a-time).
-- (to do) Parsing advertisements and decrypting the service data.
-- (to do) Keeping up a list of recently seen devices.
-- (to do) Set scan filters based on iBeacon, Crownstone type or mode.
-- (to do) Making sure startScan is not called too often within a short time (see https://stackoverflow.com/questions/45681711/app-is-scanning-too-frequently-with-scansettings-scan-mode-opportunistic).
-- (to do) Emit events: unverified advertisement, verified advertisement,
+/**
+ * Class that provides the following:
+ * - When scanning, stopping now and then, to avoid bluetoothLeScanner stop giving results after 5 or 30 minutes. See:
+ *     - https://stackoverflow.com/questions/43833904/android-bluetooth-le-scanner-stops-after-a-time
+ *     - https://android.googlesource.com/platform/packages/apps/Bluetooth/+/1fdc7c138db776b02bc751fd7a80c519ea3324d1
+ *     - https://android.googlesource.com/platform/packages/apps/Bluetooth/+/623b906dcd0e4c0b85db20c67df76b3bb2884e74
+ * - (to do) Making sure startScan is not called too often within a short time. See:
+ *     - https://stackoverflow.com/questions/45681711/app-is-scanning-too-frequently-with-scansettings-scan-mode-opportunistic
+ *     - https://android.googlesource.com/platform/packages/apps/Bluetooth/+/1fdc7c138db776b02bc751fd7a80c519ea3324d1
+ * - Set scan filters, via the filterManager.
+ * - Set scan interval.
  */
-
-
 class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
@@ -29,7 +30,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	private var running = false
 	private var wasRunning = false
 	private var scanPause: Long = 100
-	private var scanDuration: Long  = 60000
+	private var scanDuration: Long  = 120 * 1000 // Restart every 2 minutes
 
 	private var startScanRunnable: Runnable
 	private var stopScanRunnable: Runnable
@@ -76,16 +77,25 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 //		return true
 	}
 
-	@Synchronized private fun onScanFilterUpdate(filters: List<ScanFilter>) {
-		Log.i(TAG, "onScanFilterUpdate: $filters")
+	@Synchronized fun setScanInterval(mode: ScanMode) {
+		core.setScanMode(mode)
+		restart()
+	}
+
+	@Synchronized private fun restart() {
 		// TODO: delay?
 		// TODO: return a promise
 		val wasRunning = running
-		stopScan()
-		core.setScanFilters(filters)
 		if (wasRunning) {
+			stopScan()
 			startScan(500)
 		}
+	}
+
+	@Synchronized private fun onScanFilterUpdate(filters: List<ScanFilter>) {
+		Log.i(TAG, "onScanFilterUpdate: $filters")
+		core.setScanFilters(filters)
+		restart()
 	}
 
 	@Synchronized private fun startInterval() {
