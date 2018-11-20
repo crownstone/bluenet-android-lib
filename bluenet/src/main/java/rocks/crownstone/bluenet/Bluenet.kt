@@ -16,6 +16,11 @@ import rocks.crownstone.bluenet.services.Setup
 import rocks.crownstone.bluenet.services.State
 import java.util.*
 
+/**
+ * The main library class.
+ *
+ * This is the only class a user should use.
+ */
 class Bluenet {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = EventBus()
@@ -27,12 +32,11 @@ class Bluenet {
 	private lateinit var service: BackgroundServiceManager
 	private val encryptionManager = EncryptionManager()
 	private lateinit var iBeaconRanger: IbeaconRanger
-
-	private var initialized = false
-
-	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
-
 	private val nearestDevices = NearestDevices(eventBus)
+
+	// State
+	private var initialized = false
+	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
 
 	// Public variables, used to write and read services.
 	lateinit var setup: Setup
@@ -186,26 +190,39 @@ class Bluenet {
 		return bleCore.handlePermissionResult(requestCode, permissions, grantResults)
 	}
 
-
-
+	/**
+	 * Subscribe on an event.
+	 */
 	@Synchronized fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
 	}
 
+	/**
+	 * Subscribe on an event.
+	 */
 	@Synchronized fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
 	}
 
-	@Synchronized fun scanForIbeacons(enable: Boolean) {
-		when (enable) {
-			true -> bleScanner?.filterManager?.addIbeaconFilter()
-			false -> bleScanner?.filterManager?.remIbeaconFilter()
-		}
+	/**
+	 * Unsubscribe from an event.
+	 */
+	@Synchronized fun unsubscribe(id: SubscriptionId) {
+		eventBus.unsubscribe(id)
 	}
 
-	@Synchronized fun scanForCrownstones() {
-		bleScanner?.filterManager?.addCrownstoneFilter()
-		startScanning()
+	/**
+	 * Run bluenet in foreground. This will make the app less likely to get killed for battery saving, but will show an ongoing notification.
+	 */
+	@Synchronized fun runInForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
+		return service.runInForeground(notificationId, notification)
+	}
+
+	/**
+	 * Run bluenet in background. This will make the app more likely to get killed for battery saving.
+	 */
+	@Synchronized fun runInBackground(): Promise<Unit, Exception> {
+		return service.runInBackground()
 	}
 
 	/**
@@ -281,18 +298,6 @@ class Bluenet {
 		return connection.disconnect(clearCache)
 	}
 
-//	@Synchronized fun discoverServices(): Promise<Unit, Exception> {
-//		return bleCore.discoverServices(true)
-//	}
-
-//	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID): Promise<ByteArray, Exception> {
-//		return bleCore.read(serviceUuid, characteristicUuid)
-//	}
-
-//	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray): Promise<Unit, Exception> {
-//		return bleCore.write(serviceUuid, characteristicUuid, data)
-//	}
-
 	@Synchronized private fun onCoreScannerReady(data: Any) {
 		initScanner()
 		eventBus.emit(BluenetEvent.SCANNER_READY)
@@ -302,11 +307,11 @@ class Bluenet {
 		}
 	}
 
-	private fun onCoreScannerNotReady(data: Any) {
+	@Synchronized private fun onCoreScannerNotReady(data: Any) {
 		eventBus.emit(BluenetEvent.SCANNER_NOT_READY)
 	}
 
-	private fun onPermissionGranted(data: Any) {
+	@Synchronized private fun onPermissionGranted(data: Any) {
 		initScanner()
 	}
 }

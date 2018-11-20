@@ -5,12 +5,24 @@ import android.util.Log
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 
+/**
+ * Class that parses scans.
+ *
+ * Parses iBeacon data.
+ * Parses and validates Crownstone service data. Also checks if service data is unique.
+ * Parses dfu data.
+ *
+ * Uses ScannedDevice for parsing.
+ * Uses Encryption manager for decryption.
+ * Uses Validator for validation.
+ *
+ * Emits SCAN_RESULT.
+ */
 class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val encryptionManager = encryptionMngr
 	private val validators = HashMap<DeviceAddress, Validator>() // TODO: grows over time
-
 	private val lastServiceDataMap = HashMap<DeviceAddress, CrownstoneServiceData>() // TODO: grows over time
 
 	init {
@@ -21,7 +33,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		Log.v(TAG, "onRawScan")
 
 		if (result.device.address == null) {
-			Log.w(TAG, "Device without address")
+			Log.e(TAG, "Device without address")
 			return
 		}
 		val device = ScannedDevice(result)
@@ -42,10 +54,10 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 					device.parseServiceData(null)
 				}
 				OperationMode.DFU -> {
-					// TODO
+					// Nothing?
 				}
 				else -> {
-					// TODO
+					// Nothing?
 				}
 		}
 

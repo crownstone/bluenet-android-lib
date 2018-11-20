@@ -4,6 +4,14 @@ import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 
 /**
  * Class that emits the nearest devices.
+ *
+ * Emits nearest:
+ * - validated device (any mode).
+ * - validated device in normal mode.
+ * - validated device in setup mode.
+ * - validated device in dfu mode.
+ *
+ * Uses NearestDeviceList to keep up the nearest.
  */
 class NearestDevices(evtBus: EventBus) {
 	val TAG = this.javaClass.simpleName

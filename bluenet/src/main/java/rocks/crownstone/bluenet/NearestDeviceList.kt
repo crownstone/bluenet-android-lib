@@ -6,6 +6,12 @@ import java.util.*
 
 data class NearestDeviceListEntry(val deviceAddress: DeviceAddress, var rssi: Int, var lastSeenTime: Long)
 
+/**
+ * Class that keeps up the nearest device.
+ *
+ * Devices will be added by the update() function.
+ * Devices will be removed by timeout or be remove().
+ */
 class NearestDeviceList {
 	val TAG = this.javaClass.simpleName
 	companion object {
@@ -16,7 +22,7 @@ class NearestDeviceList {
 
 	private var nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0)
 
-	fun update(device: ScannedDevice) {
+	@Synchronized internal fun update(device: ScannedDevice) {
 		Log.v(TAG, "update ${device.address} ${device.rssi}")
 		val now = Date()
 		val entry = NearestDeviceListEntry(device.address, device.rssi, now.time)
@@ -30,7 +36,7 @@ class NearestDeviceList {
 		}
 	}
 
-	fun remove(device: ScannedDevice) {
+	@Synchronized internal fun remove(device: ScannedDevice) {
 		Log.v(TAG, "remove ${device.address}")
 		val entry = map.remove(device.address)
 		if (entry != null && entry.deviceAddress == nearest.deviceAddress) {
@@ -39,14 +45,14 @@ class NearestDeviceList {
 		}
 	}
 
-	fun getNearest(): NearestDeviceListEntry? {
+	@Synchronized fun getNearest(): NearestDeviceListEntry? {
 		if (nearest.deviceAddress == "") {
 			return null
 		}
 		return nearest
 	}
 
-	private fun calcNearest(now: Date) {
+	@Synchronized private fun calcNearest(now: Date) {
 		Log.d(TAG, "calcNearest")
 //		val now = Date()
 		// Remove old items

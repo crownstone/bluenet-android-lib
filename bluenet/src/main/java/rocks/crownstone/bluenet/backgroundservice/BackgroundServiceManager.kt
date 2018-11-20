@@ -10,7 +10,9 @@ import android.os.IBinder
 import android.util.Log
 import nl.komponents.kovenant.*
 
-
+/**
+ * Service that can run in foreground.
+ */
 class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
