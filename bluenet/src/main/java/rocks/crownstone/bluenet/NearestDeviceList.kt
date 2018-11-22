@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet
 
+import android.os.SystemClock
 import android.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import java.util.*
@@ -24,13 +25,13 @@ class NearestDeviceList {
 
 	@Synchronized internal fun update(device: ScannedDevice) {
 		Log.v(TAG, "update ${device.address} ${device.rssi}")
-		val now = Date()
-		val entry = NearestDeviceListEntry(device.address, device.rssi, now.time)
+		val now = SystemClock.elapsedRealtime()
+		val entry = NearestDeviceListEntry(device.address, device.rssi, now)
 		map[device.address] = entry
 		if (entry.rssi > nearest.rssi) {
 			nearest = entry
 		}
-		else if (now.time - nearest.lastSeenTime > TIMEOUT_MS) {
+		else if (now - nearest.lastSeenTime > TIMEOUT_MS) {
 			// Need to recalculate when the nearest is timed out
 			calcNearest(now)
 		}
@@ -41,7 +42,7 @@ class NearestDeviceList {
 		val entry = map.remove(device.address)
 		if (entry != null && entry.deviceAddress == nearest.deviceAddress) {
 			// Need to recalculate when the nearest is removed
-			calcNearest(Date())
+			calcNearest(SystemClock.elapsedRealtime())
 		}
 	}
 
@@ -52,15 +53,14 @@ class NearestDeviceList {
 		return nearest
 	}
 
-	@Synchronized private fun calcNearest(now: Date) {
+	@Synchronized private fun calcNearest(now: Long) {
 		Log.d(TAG, "calcNearest")
-//		val now = Date()
 		// Remove old items
 //		map.entries.removeIf()
 		val it = map.entries.iterator()
 		while (it.hasNext()) {
 			val entry = it.next().value
-			if (now.time - entry.lastSeenTime > TIMEOUT_MS) {
+			if (now - entry.lastSeenTime > TIMEOUT_MS) {
 				Log.d(TAG, "remove $entry")
 				it.remove()
 			}
