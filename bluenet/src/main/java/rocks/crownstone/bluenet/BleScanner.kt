@@ -113,7 +113,9 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, handler: Handler) {
 		// Check if we start too often.
 		if (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD) {
 			// We're starting too often, delay this start.
-			startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
+//			startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
+			handler.removeCallbacksAndMessages(null)
+			handler.postDelayed(startScanRunnable, BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
 			return
 		}
 		core.startScan()
