@@ -34,6 +34,13 @@ object Util {
 		return deferred.promise
 	}
 
+	/**
+	 * Makes a unit promise recoverable.
+	 *
+	 * @param promise The promise to recover.
+	 * @param recoverError Function that returns true when promise should be recovered. Example: { error -> error is Exception }
+	 * @return Promise that resolves when original promise resolves or is recovered.
+	 */
 	fun recoverableUnitPromise(promise: Promise<Unit, Exception>, recoverError: (error: Exception) -> Boolean): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 		promise
@@ -51,14 +58,21 @@ object Util {
 		return deferred.promise
 	}
 
-	fun <T>recoverablePromise(promise: Promise<T, Exception>, recoverError: (error: Exception) -> Promise<T, Exception>): Promise<T, Exception> {
+	/**
+	 * Makes a promise recoverable.
+	 *
+	 * @param promise The promise to recover.
+	 * @param recoverPromise Function that returns a new promise, based on the error. Example: { error ->	return@recoverablePromise Promise.ofSuccess(5) }
+	 * @return Promise that resolves when original promise resolves, or the recoverPromise when the original promise is rejected.
+	 */
+	fun <T>recoverablePromise(promise: Promise<T, Exception>, recoverPromise: (error: Exception) -> Promise<T, Exception>): Promise<T, Exception> {
 		val deferred = deferred<T, Exception>()
 		promise
 				.success {
 					deferred.resolve(it)
 				}
 				.fail {
-					recoverError(it)
+					recoverPromise(it)
 							.success {
 								deferred.resolve(it)
 							}

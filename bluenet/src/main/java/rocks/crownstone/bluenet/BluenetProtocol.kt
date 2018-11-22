@@ -45,6 +45,10 @@ object BluenetProtocol {
 	val CHAR_HARDWARE_REVISION_UUID = UUID.fromString("00002a27-0000-1000-8000-00805f9b34fb")
 	val CHAR_FIRMWARE_REVISION_UUID = UUID.fromString("00002a26-0000-1000-8000-00805f9b34fb")
 
+	// DFU service
+	val DFU_SERVICE_UUID = UUID.fromString("00001530-1212-efde-1523-785feabcd123")
+	val CHAR_DFU_CONTROL_UUID = UUID.fromString("00001531-1212-efde-1523-785feabcd123")
+
 	val DESCRIPTOR_CHAR_CONFIG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 	// Verification code for ECB encryption

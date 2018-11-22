@@ -34,6 +34,7 @@ enum class BluenetEvent {
 	IBEACON_SCAN,    // List of iBeacons was scanned. ScannedIbeaconList as data.
 	IBEACON_ENTER_REGION, // Region was entered. iBeacon UUID as data.
 	IBEACON_EXIT_REGION,  // Region was exited. iBeacon UUID as data.
+	DFU_PROGRESS,
 }
 
 typealias Int8 = Byte

@@ -41,6 +41,8 @@ object Errors {
 
 	class Timeout: Exception("timed out")
 
+	class Aborted: Exception("aborted")
+
 	// encryption errors
 	open class Encryption(msg: String="encryption failed"): Exception(msg)
 	class EncryptionKeyMissing: Encryption("missing key")
