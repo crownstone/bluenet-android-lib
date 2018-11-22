@@ -3,7 +3,9 @@ package rocks.crownstone.bluenet
 import android.bluetooth.le.ScanFilter
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.SystemClock
 import android.util.Log
+import java.util.*
 
 /**
  * Class that provides the following:
@@ -17,13 +19,12 @@ import android.util.Log
  * - Set scan filters, via the filterManager.
  * - Set scan interval.
  */
-class BleScanner(evtBus: EventBus, bleCore: BleCore) {
+class BleScanner(evtBus: EventBus, bleCore: BleCore, handler: Handler) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val core = bleCore
 
-//	private val handler = Handler() // Can only be done when constructed on UI thread, do with different thread?
-	private val handler: Handler
+	private val handler = handler
 	val filterManager = ScanFilterManager(::onScanFilterUpdate)
 
 //	private var scanning = false
@@ -31,15 +32,18 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 	private var wasRunning = false
 	private var scanPause: Long = 100
 	private var scanDuration: Long  = 120 * 1000 // Restart every 2 minutes
+	private val lastStartTimes = LinkedList<Long>()
 
 	private var startScanRunnable: Runnable
 	private var stopScanRunnable: Runnable
 
+//	private var lastStartTime: Long = 0
+
 	init {
 		Log.i(TAG, "init")
-		val handlerThread = HandlerThread("BleScanner")
-		handlerThread.start()
-		handler = Handler(handlerThread.looper)
+//		val handlerThread = HandlerThread("BleScanner")
+//		handlerThread.start()
+//		handler = Handler(handlerThread.looper)
 
 //		val onScan = { result: Any -> onScan(result as ScanResult) }
 //		val subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW.name, onScan)
@@ -84,7 +88,6 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 
 	@Synchronized private fun restart() {
 		// TODO: delay?
-		// TODO: return a promise
 		val wasRunning = running
 		if (wasRunning) {
 			stopScan()
@@ -100,26 +103,33 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore) {
 
 	@Synchronized private fun startInterval() {
 		Log.i(TAG, "startInterval")
-		// TODO: check if we don't start too often in a certain amount of time.
-//		if (core.startScan()) {
-			core.startScan()
-//			scanning = true
-			if (scanPause > 0) {
-				handler.postDelayed(stopScanRunnable, scanDuration)
-			}
-//		}
+
+		val now = SystemClock.elapsedRealtime() // See https://developer.android.com/reference/android/os/SystemClock
+		// Keep up list of last start times.
+		lastStartTimes.addLast(now)
+		while (lastStartTimes.size > BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) {
+			lastStartTimes.removeFirst()
+		}
+		// Check if we start too often.
+		if (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD) {
+			// We're starting too often, delay this start.
+			startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
+			return
+		}
+		core.startScan()
+//		scanning = true
+		if (scanPause > 0) {
+			handler.postDelayed(stopScanRunnable, scanDuration)
+		}
 	}
 
 	@Synchronized private fun stopInterval() {
 		Log.i(TAG, "stopInterval")
-//		if (core.stopScan()) {
-			core.stopScan()
-//			scanning = true
-
-			if (scanPause > 0) {
-				handler.postDelayed(startScanRunnable, scanPause)
-			}
-//		}
+		core.stopScan()
+//		scanning = true
+		if (scanPause > 0) {
+			handler.postDelayed(startScanRunnable, scanPause)
+		}
 	}
 
 	@Synchronized private fun onCoreScannerReady(data: Any) {

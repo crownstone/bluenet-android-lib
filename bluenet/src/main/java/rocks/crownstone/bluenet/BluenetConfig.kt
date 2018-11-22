@@ -15,4 +15,8 @@ object BluenetConfig {
 	val TIMEOUT_GET_STATE: Long = 5000
 
 	val DELAY_REFRESH_CACHE: Long = 1000
+
+	// See https://android.googlesource.com/platform/packages/apps/Bluetooth/+/b26e4a3f58192cf3c33883982b2ba37c2589fd68/src/com/android/bluetooth/gatt/AppScanStats.java#84
+	val SCAN_CHECK_NUM_PER_PERIOD = 4
+	val SCAN_CHECK_PERIOD = 30 * 1000
 }

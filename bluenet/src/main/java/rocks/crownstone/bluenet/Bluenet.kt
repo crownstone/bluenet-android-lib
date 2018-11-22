@@ -108,7 +108,7 @@ class Bluenet {
 	@Synchronized private fun initScanner() {
 		bleCore.initScanner()
 		if (bleScanner == null) {
-			bleScanner = BleScanner(eventBus, bleCore)
+			bleScanner = BleScanner(eventBus, bleCore, handler)
 		}
 		if (scanHandler == null) {
 			scanHandler = ScanHandler(eventBus, encryptionManager)
