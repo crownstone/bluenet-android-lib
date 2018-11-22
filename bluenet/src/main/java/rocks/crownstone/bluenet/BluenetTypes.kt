@@ -58,6 +58,13 @@ typealias SphereId = String
 typealias Keys = HashMap<SphereId, KeyData>
 data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)
 
+enum class CrownstoneMode {
+	NORMAL,
+	SETUP,
+	DFU,
+	UNKNOWN
+}
+
 enum class ProcessResult {
 	NOT_DONE,
 	DONE,

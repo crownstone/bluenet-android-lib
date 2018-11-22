@@ -53,7 +53,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 //	fun uartMessage(): Promise<Unit, Exception>
 
 
-	fun setDfu(): Promise<Unit, Exception> {
+	fun goToDfu(): Promise<Unit, Exception> {
 		return writeCommand(ControlType.GOTO_DFU)
 	}
 
@@ -143,7 +143,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	private fun writeCommand(packet: ControlPacket): Promise<Unit, Exception> {
 		val array = packet.getArray()
 		Log.i(TAG, "writeCommand ${Conversion.bytesToString(array)}")
-		if (connection.isSetupMode) {
+		if (connection.mode == CrownstoneMode.SETUP) {
 			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
 				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, array, AccessLevel.SETUP)
 			}

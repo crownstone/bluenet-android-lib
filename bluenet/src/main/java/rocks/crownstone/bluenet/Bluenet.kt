@@ -288,9 +288,9 @@ class Bluenet {
 	}
 
 
-	@Synchronized fun connect(address: DeviceAddress): Promise<Unit, Exception> {
+	@Synchronized fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return connection.connect(address, 100000)
+		return connection.connect(address, timeoutMs)
 	}
 
 	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {

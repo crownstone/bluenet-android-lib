@@ -112,6 +112,7 @@ class EventBus {
 	}
 
 	@Synchronized fun reset() {
+		Log.i(TAG, "reset")
 		subscribers.clear()
 		eventSubscriptions.clear()
 		pendingSubscriptions.clear()

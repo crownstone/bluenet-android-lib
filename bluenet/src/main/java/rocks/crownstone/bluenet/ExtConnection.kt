@@ -5,38 +5,39 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.Util.waitPromise
 import java.util.*
 
 /**
- * Extends the connection with encryption.
+ * Extends the connection with:
+ * - Encryption.
+ * - Reading of session data.
+ * - Checking of Crownstone mode.
  */
 class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
-	var isConnected = false
-		private set
-	var isSetupMode = false
+//	var isConnected = false
+//		private set
+	var mode = CrownstoneMode.UNKNOWN
 		private set
 
 	/**
 	 * Connect, discover service and get session data
 	 */
-	@Synchronized fun connect(address: DeviceAddress, timeout: Int=100000): Promise<Unit, Exception> {
+	@Synchronized fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return bleCore.connect(address, timeout)
+		return bleCore.connect(address, timeoutMs)
 				.then {
-					isSetupMode = false
+					mode = CrownstoneMode.UNKNOWN
 					bleCore.discoverServices(false)
 				}.unwrap()
 				.then {
-					checkSetupMode()
-					getSessionData(address)
+					postConnect(address)
 				}.unwrap()
 				.success {
-					isConnected = true
+//					isConnected = true
 				}
 	}
 
@@ -97,12 +98,20 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}.unwrap()
 	}
 
-	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>): Promise<ByteArray, Exception> {
+	@Synchronized fun subscribe(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
+		return bleCore.subscribe(serviceUuid, characteristicUuid, callback)
+	}
+
+	@Synchronized fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID, subscriptionId: SubscriptionId): Promise<Unit, Exception> {
+		return bleCore.unsubscribe(serviceUuid, characteristicUuid, subscriptionId)
+	}
+
+	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long): Promise<ByteArray, Exception> {
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
 		}
-		return bleCore.getSingleMergedNotification(serviceUuid, characteristicUuid, writeCommand)
+		return bleCore.getSingleMergedNotification(serviceUuid, characteristicUuid, writeCommand, timeoutMs)
 				.then {
 					encryptionManager.decryptPromise(address, it)
 				}.unwrap()
@@ -111,7 +120,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}
 	}
 
-	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long=0): Promise<Unit, Exception> {
+	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
@@ -146,33 +155,54 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		return bleCore.wait(timeMs)
 	}
 
-	@Synchronized private fun getSessionData(address: DeviceAddress): Promise<Unit, Exception> {
-		Log.i(TAG, "get session data $address")
-		if (isSetupMode) {
-			return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID)
-					.then {
-						encryptionManager.parseSessionData(address, it, false)
-					}.unwrap()
-					.then {
-						bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
-					}.unwrap()
-					.then {
-						encryptionManager.parseSessionKey(address, it)
-					}.unwrap()
-		}
-		else {
-			return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_NONCE_UUID)
-					.then {
-						encryptionManager.parseSessionData(address, it, true)
-					}.unwrap()
+	@Synchronized private fun postConnect(address: DeviceAddress): Promise<Unit, Exception> {
+		Log.i(TAG, "postConnect $address")
+		checkMode()
+		when (mode) {
+			CrownstoneMode.SETUP -> {
+				Log.i(TAG, "get session data and key")
+				return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID)
+						.then {
+							encryptionManager.parseSessionData(address, it, false)
+						}.unwrap()
+						.then {
+							bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
+						}.unwrap()
+						.then {
+							encryptionManager.parseSessionKey(address, it)
+						}.unwrap()
+			}
+			CrownstoneMode.NORMAL -> {
+				Log.i(TAG, "get session data")
+				return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_NONCE_UUID)
+						.then {
+							encryptionManager.parseSessionData(address, it, true)
+						}.unwrap()
+			}
+			CrownstoneMode.DFU -> {
+				// Refresh services
+				return bleCore.refreshDeviceCache()
+			}
+			else -> {
+				return Promise.ofFail(Errors.Mode())
+			}
 		}
 	}
 
 
-	@Synchronized private fun checkSetupMode() {
-		Log.i(TAG, "checkSetupMode: ${bleCore.hasService(BluenetProtocol.SETUP_SERVICE_UUID)}")
-		if (bleCore.hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
-			isSetupMode = true
+	@Synchronized private fun checkMode() {
+		Log.i(TAG, "checkMode")
+		if (hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
+			mode = CrownstoneMode.SETUP
+		}
+		else if (hasService(BluenetProtocol.DFU_SERVICE_UUID)) {
+			mode = CrownstoneMode.DFU
+		}
+		else if (hasService(BluenetProtocol.CROWNSTONE_SERVICE_UUID)) {
+			mode = CrownstoneMode.NORMAL
+		}
+		else {
+			mode = CrownstoneMode.UNKNOWN
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package rocks.crownstone.bluenet.core
 
+import android.os.Handler
 import android.util.Log
 import nl.komponents.kovenant.Deferred
 import nl.komponents.kovenant.resolve
@@ -14,7 +15,7 @@ enum class Action {
 	WRITE,
 	SUBSCRIBE,
 	UNSUBSCRIBE,
-	REFRESH,
+	REFRESH_CACHE,
 }
 
 enum class PromiseType {
@@ -23,8 +24,9 @@ enum class PromiseType {
 	BYTE_ARRAY,
 }
 
-class CorePromises {
+class CorePromises(handler: Handler) {
 	private val TAG = this.javaClass.simpleName
+	private val handler = handler
 
 	// Keeps up what action is expected to be performed
 	private var action = Action.NONE
@@ -46,15 +48,16 @@ class CorePromises {
 		return true
 	}
 
-	@Synchronized fun <V> setBusy(action: Action, deferred: Deferred<V, Exception>): Boolean {
+	@Synchronized fun <V> setBusy(action: Action, deferred: Deferred<V, Exception>, timeoutMs: Long): Boolean {
 		if (isBusy()) {
 			return false
 		}
 		Log.d(TAG, "setBusy action=${action.name}")
 		when (action) {
-			Action.CONNECT, Action.DISCONNECT, Action.REFRESH, Action.DISCOVER, Action.WRITE, Action.SUBSCRIBE, Action.UNSUBSCRIBE -> {
+			Action.CONNECT, Action.DISCONNECT, Action.REFRESH_CACHE, Action.DISCOVER, Action.WRITE, Action.SUBSCRIBE, Action.UNSUBSCRIBE -> {
 				promiseType = PromiseType.UNIT
 				unitPromise = deferred as Deferred<Unit, Exception> // Can't check :(
+				handler.postDelayed(timeoutRunnable, timeoutMs)
 				this.action = action
 			}
 			Action.READ -> {
@@ -71,13 +74,21 @@ class CorePromises {
 		return true
 	}
 
+	val timeoutRunnable = Runnable {
+		timeout()
+	}
+
+	@Synchronized fun timeout() {
+		reject(Errors.Timeout())
+	}
+
 //	@Synchronized fun setBusy(action: Action, deferred: Deferred<Unit, Exception>): Boolean {
 //		if (isBusy()) {
 //			return false
 //		}
 //		Log.d(TAG, "setBusy action=${action.name}")
 //		when (action) {
-//			Action.CONNECT, Action.DISCONNECT, Action.REFRESH, Action.DISCOVER, Action.WRITE -> {
+//			Action.CONNECT, Action.DISCONNECT, Action.REFRESH_CACHE, Action.DISCOVER, Action.WRITE -> {
 //				promiseType = PromiseType.UNIT
 //				unitPromise = deferred
 //				this.action = action

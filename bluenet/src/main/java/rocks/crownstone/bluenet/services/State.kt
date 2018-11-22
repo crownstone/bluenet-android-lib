@@ -65,7 +65,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 			return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_CONTROL_UUID, StatePacket(type).getArray())
 		}
 		val deferred = deferred<StatePacket, Exception>()
-		connection.getSingleMergedNotification(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_READ_UUID, writeCommand)
+		connection.getSingleMergedNotification(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_READ_UUID, writeCommand, BluenetConfig.TIMEOUT_GET_STATE)
 				.success {
 					val statePacket = StatePacket()
 					if (!statePacket.fromArray(it) || statePacket.type != type.num) {

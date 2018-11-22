@@ -235,7 +235,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 			return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), ConfigPacket(type).getArray())
 		}
 		val deferred = deferred<ConfigPacket, Exception>()
-		connection.getSingleMergedNotification(getServiceUuid(), getCharacteristicReadUuid(), writeCommand)
+		connection.getSingleMergedNotification(getServiceUuid(), getCharacteristicReadUuid(), writeCommand, BluenetConfig.TIMEOUT_GET_CONFIG)
 				.success {
 					val configPacket = ConfigPacket()
 					if (!configPacket.fromArray(it) || configPacket.type != type.num) {
@@ -263,23 +263,23 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	private fun getServiceUuid(): UUID {
-		return when (connection.isSetupMode) {
-			true -> BluenetProtocol.SETUP_SERVICE_UUID
-			false -> BluenetProtocol.CROWNSTONE_SERVICE_UUID
+		return when (connection.mode) {
+			CrownstoneMode.SETUP -> BluenetProtocol.SETUP_SERVICE_UUID
+			else -> BluenetProtocol.CROWNSTONE_SERVICE_UUID
 		}
 	}
 
 	private fun getCharacteristicWriteUuid(): UUID {
-		return when (connection.isSetupMode) {
-			true -> BluenetProtocol.CHAR_SETUP_CONFIG_CONTROL_UUID
-			false -> BluenetProtocol.CHAR_CONFIG_CONTROL_UUID
+		return when (connection.mode) {
+			CrownstoneMode.SETUP -> BluenetProtocol.CHAR_SETUP_CONFIG_CONTROL_UUID
+			else -> BluenetProtocol.CHAR_CONFIG_CONTROL_UUID
 		}
 	}
 
 	private fun getCharacteristicReadUuid(): UUID {
-		return when (connection.isSetupMode) {
-			true -> BluenetProtocol.CHAR_SETUP_CONFIG_READ_UUID
-			false -> BluenetProtocol.CHAR_CONFIG_READ_UUID
+		return when (connection.mode) {
+			CrownstoneMode.SETUP -> BluenetProtocol.CHAR_SETUP_CONFIG_READ_UUID
+			else -> BluenetProtocol.CHAR_CONFIG_READ_UUID
 		}
 	}
 }

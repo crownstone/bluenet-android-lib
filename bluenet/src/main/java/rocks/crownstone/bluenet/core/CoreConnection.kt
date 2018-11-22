@@ -6,7 +6,6 @@ import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.Util
 import rocks.crownstone.bluenet.util.Util.waitPromise
 import java.util.*
 
@@ -19,7 +18,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 
 	// The notification callbacks are stored in a dedicated eventbus.
 	// An eventbus is used so that we can later subscribe to notifications multiple times, and so it can be cleaned up easily.
-	// TODO: cleanup on close or on connect.
+	// Cleaned up on disconnect and connect.
 	private val notificationEventBus = EventBus()
 
 	init {
@@ -33,7 +32,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	 * @param timeout Reject promise after this time.
 	 * @return Promise
 	 */
-	@Synchronized fun connect(address: DeviceAddress, timeout: Int): Promise<Unit, Exception> {
+	@Synchronized fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		if (!isBleReady()) {
 			return Promise.ofFail(Errors.BleNotReady())
@@ -43,6 +42,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 
 		if (gatt != null) {
 			Log.d(TAG, "gatt already open")
+			// TODO: disconnect and close?
 			if (gatt.device.address != address) {
 				return Promise.ofFail(Errors.BusyOtherDevice())
 			}
@@ -56,10 +56,9 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 					if (promises.isBusy()) {
 						return Promise.ofFail(Errors.Busy())
 					}
-					promises.setBusy(Action.CONNECT, deferred) // Resolve later in onGattConnectionStateChange
+					promises.setBusy(Action.CONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
 					Log.d(TAG, "gatt.connect")
 					gatt.connect() // When doing this on a gatt that's invalid (due to bluetooth being turned off), this throws a android.os.DeadObjectException
-					// TODO: timeout
 				}
 				else -> {
 					if (promises.isBusy()) {
@@ -88,7 +87,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 					if (promises.isBusy()) {
 						return Promise.ofFail(Errors.Busy())
 					}
-					promises.setBusy(Action.CONNECT, deferred) // Resolve later in onGattConnectionStateChange
+					promises.setBusy(Action.CONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
 					Log.d(TAG, "device.connectGatt")
 					if (android.os.Build.VERSION.SDK_INT >= 23) {
 						this.currentGatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
@@ -97,7 +96,6 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 						this.currentGatt = device.connectGatt(context, false, gattCallback)
 					}
 					Log.d(TAG, "gatt=${this.currentGatt}")
-					// TODO: timeout
 				}
 				else -> {
 					if (promises.isBusy()) {
@@ -137,7 +135,16 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 				if (promises.isBusy()) {
 					return Promise.ofFail(Errors.Busy())
 				}
-				promises.setBusy(Action.DISCONNECT, deferred) // Resolve later in onGattConnectionStateChange
+				promises.setBusy(Action.DISCONNECT, deferred, BluenetConfig.TIMEOUT_DISCONNECT) // Resolve later in onGattConnectionStateChange
+				Log.d(TAG, "gatt.disconnect")
+				gatt.disconnect()
+			}
+			BluetoothProfile.STATE_CONNECTING -> {
+				if (promises.isBusy()) {
+					return Promise.ofFail(Errors.Busy())
+				}
+				promises.setBusy(Action.DISCONNECT, deferred, BluenetConfig.TIMEOUT_DISCONNECT) // Resolve later in onGattConnectionStateChange
+				// TODO: does the connection state always change?
 				Log.d(TAG, "gatt.disconnect")
 				gatt.disconnect()
 			}
@@ -214,9 +221,11 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 
 		when (newState) {
 			BluetoothProfile.STATE_CONNECTED -> {
+				notificationEventBus.reset()
 				promises.resolve(Action.CONNECT)
 			}
 			BluetoothProfile.STATE_DISCONNECTED -> {
+				notificationEventBus.reset()
 				promises.resolve(Action.DISCONNECT)
 			}
 		}
@@ -289,11 +298,15 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			return Promise.ofFail(getNotConnectedError(state))
 		}
 		val deferred = deferred<Unit, Exception>()
-		promises.setBusy(Action.REFRESH, deferred) // Resolve later
+		promises.setBusy(Action.REFRESH_CACHE, deferred, BluenetConfig.TIMEOUT_REFRESH_CACHE) // Resolve later
 		refreshGatt()
 		// Wait some time before resolving
-		handler.postDelayed({ promises.resolve(Action.REFRESH) }, 1000)
+		handler.postDelayed({ resolveRefreshDeviceCache() }, BluenetConfig.DELAY_REFRESH_CACHE)
 		return deferred.promise
+	}
+
+	@Synchronized private fun resolveRefreshDeviceCache() {
+		promises.resolve(Action.REFRESH_CACHE)
 	}
 
 	// The refresh() method does perform the service discovery, but you are not aware of it (no callback is called).
@@ -343,7 +356,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			// Use cached results
 			return Promise.ofSuccess(Unit)
 		}
-		promises.setBusy(Action.DISCOVER, deferred) // Resolve later in onGattServicesDiscovered
+		promises.setBusy(Action.DISCOVER, deferred, BluenetConfig.TIMEOUT_DISCOVER) // Resolve later in onGattServicesDiscovered
 		Log.d(TAG, "gatt.discoverServices")
 		val result = gatt.discoverServices()
 		if (!result) {
@@ -392,7 +405,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			Log.e(TAG, "characteristic not found: $characteristicUuid")
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
-		promises.setBusy(Action.WRITE, deferred) // Resolve later in onGattCharacteristicWrite
+		promises.setBusy(Action.WRITE, deferred, BluenetConfig.TIMEOUT_WRITE) // Resolve later in onGattCharacteristicWrite
 		char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 		Log.d(TAG, "gatt.writeCharacteristic")
 		val result = char.setValue(data) && gatt.writeCharacteristic(char)
@@ -439,7 +452,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			Log.e(TAG, "characteristic not found: $characteristicUuid")
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
-		promises.setBusy(Action.READ, deferred) // Resolve later in onGattCharacteristicRead
+		promises.setBusy(Action.READ, deferred, BluenetConfig.TIMEOUT_READ) // Resolve later in onGattCharacteristicRead
 		Log.d(TAG, "gatt.readCharacteristic")
 		val result = gatt.readCharacteristic(char)
 		if (!result) {
@@ -495,7 +508,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			return Promise.ofFail(Errors.SubscribeAlreadySubscribed())
 		}
 
-		promises.setBusy(Action.SUBSCRIBE, deferred) // Resolve later in onGattDescriptorWrite
+		promises.setBusy(Action.SUBSCRIBE, deferred, BluenetConfig.TIMEOUT_SUBSCRIBE) // Resolve later in onGattDescriptorWrite
 		Log.d(TAG, "gatt.setCharacteristicNotification")
 		var result = gatt.setCharacteristicNotification(char, true)
 		if (!result) {
@@ -542,7 +555,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
 		notificationEventBus.unsubscribe(subscriptionId)
-		promises.setBusy(Action.UNSUBSCRIBE, deferred) // Resolve later in onGattDescriptorWrite
+		promises.setBusy(Action.UNSUBSCRIBE, deferred, BluenetConfig.TIMEOUT_UNSUBSCRIBE) // Resolve later in onGattDescriptorWrite
 		Log.d(TAG, "gatt.setCharacteristicNotification")
 		var result = gatt.setCharacteristicNotification(char, false)
 		if (!result) {
@@ -616,22 +629,56 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 	/**
 	 * Subscribes for notifications, executes write command, waits for a complete multipart notification to be received, and unsubscribes.
 	 *
+	 * @writeCommand Function that is executed after subscribing to notifications.
+	 * @timeoutMs    Timeout in ms after which the promise is rejected. Set to 0 for no timeout at all.
+	 *
 	 * @return Promise with multipart notification when resolved.
 	 */
-	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>): Promise<ByteArray, Exception> {
+	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long): Promise<ByteArray, Exception> {
 		Log.i(TAG, "getSingleMergedNotification serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val deferred = deferred<ByteArray, Exception>()
 		var unsubId = UUID(0,0)
-		// TODO: timeout
+		var done = false
+
+		val timeoutRunnable = Runnable {
+			Log.i(TAG, "getSingleMergedNotification timeout")
+			if (!done) {
+				done = true
+				unsubscribe(serviceUuid, characteristicUuid, unsubId)
+						.always {
+							deferred.reject(Errors.Timeout())
+						}
+			}
+		}
+
+		if (timeoutMs > 0) {
+			handler.postDelayed(timeoutRunnable, timeoutMs)
+		}
+
+		fun onDone(data: ByteArray) {
+			if (!done) {
+				handler.removeCallbacks(timeoutRunnable)
+				done = true
+				deferred.resolve(data)
+			}
+		}
+
+		fun onError(error: Exception) {
+			if (!done) {
+				handler.removeCallbacks(timeoutRunnable)
+				done = true
+				deferred.reject(error)
+			}
+		}
 
 		val notificationMerger = MultipartNotificationMerger({ mergedNotification: ByteArray ->
 			// Called when notifications are merged
 			unsubscribe(serviceUuid, characteristicUuid, unsubId)
 					.success {
-						deferred.resolve(mergedNotification)
+						onDone(mergedNotification)
 					}
 					.fail {
-						deferred.reject(it)
+						onError(it)
 					}
 		})
 
@@ -646,7 +693,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appC
 					writeCommand()
 				}.unwrap()
 				.fail {
-					deferred.reject(it)
+					onError(it)
 				}
 
 		return deferred.promise

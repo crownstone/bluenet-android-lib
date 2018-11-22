@@ -28,7 +28,10 @@ object Errors {
 	class NotConnected: Exception("not connected")
 	class CharacteristicNotFound: Exception("characteristic not found")
 	class SessionDataMissing: Exception("no session data")
-	class NotInSetupMode: Exception("not in setup mode")
+
+	// Wrong crownstone mode
+	open class Mode(msg: String = "wrong mode"): Exception(msg)
+	class NotInMode(expectedMode: CrownstoneMode): Mode("not in ${expectedMode.name} mode")
 
 	// parsing
 	class ProcessCallback: Exception("process callback error")

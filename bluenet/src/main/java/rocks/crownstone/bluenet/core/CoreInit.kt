@@ -29,7 +29,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	protected val TAG = "BleCore"
 	protected val eventBus = evtBus
 	protected val context = appContext
-	protected val promises = CorePromises()
+	protected val handler = Handler() // Same thread
+	protected val promises = CorePromises(handler)
 
 	protected lateinit var bleManager: BluetoothManager
 	protected lateinit var bleAdapter: BluetoothAdapter
@@ -46,8 +47,6 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	private var locationPermissionPromise: Deferred<Unit, Exception>? = null
 	private var enableBlePromise: Deferred<Unit, Exception>? = null
 	private var enableLocationServicePromise: Deferred<Unit, Exception>? = null
-
-	protected val handler = Handler() // Same thread
 
 	// Keep up if broadcast receivers are registered
 	private var receiverRegisteredBle = false

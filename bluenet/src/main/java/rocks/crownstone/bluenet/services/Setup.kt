@@ -43,8 +43,8 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	fun setup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
-		if (!connection.isSetupMode) {
-			return Promise.ofFail(Errors.NotInSetupMode())
+		if (connection.mode != CrownstoneMode.SETUP) {
+			return Promise.ofFail(Errors.NotInMode(CrownstoneMode.SETUP))
 		}
 		val adminKey =  keySet.adminKeyBytes
 		val memberKey = keySet.memberKeyBytes
