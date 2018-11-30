@@ -1,6 +1,5 @@
 package rocks.crownstone.bluenet.structs
 
-import rocks.crownstone.bluenet.IbeaconData
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.util.Conversion

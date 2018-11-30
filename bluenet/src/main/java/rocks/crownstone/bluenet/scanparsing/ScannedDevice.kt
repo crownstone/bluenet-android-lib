@@ -4,6 +4,7 @@ import android.bluetooth.le.ScanResult
 import android.util.Log
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.structs.DeviceAddress
+import rocks.crownstone.bluenet.structs.IbeaconData
 import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.util.Conversion
 

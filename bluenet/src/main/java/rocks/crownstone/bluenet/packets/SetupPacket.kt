@@ -1,7 +1,7 @@
 package rocks.crownstone.bluenet.packets
 
 import android.util.Log
-import rocks.crownstone.bluenet.IbeaconData
+import rocks.crownstone.bluenet.structs.IbeaconData
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.encryption.KeySet

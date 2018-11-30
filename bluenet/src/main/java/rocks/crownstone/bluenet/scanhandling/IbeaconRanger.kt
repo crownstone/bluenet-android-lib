@@ -6,6 +6,7 @@ import android.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.structs.DeviceAddress
+import rocks.crownstone.bluenet.structs.IbeaconData
 import rocks.crownstone.bluenet.structs.ScannedIbeacon
 import rocks.crownstone.bluenet.util.EventBus
 import java.util.*

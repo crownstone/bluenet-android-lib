@@ -1,6 +1,6 @@
 package rocks.crownstone.bluenet.packets.meshCommand
 
-import rocks.crownstone.bluenet.IbeaconData
+import rocks.crownstone.bluenet.structs.IbeaconData
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.putShort
