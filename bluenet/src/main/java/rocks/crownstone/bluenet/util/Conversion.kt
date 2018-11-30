@@ -2,7 +2,7 @@ package rocks.crownstone.bluenet.util
 
 import android.bluetooth.BluetoothAdapter
 import android.util.Base64
-import rocks.crownstone.bluenet.*
+import rocks.crownstone.bluenet.structs.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*

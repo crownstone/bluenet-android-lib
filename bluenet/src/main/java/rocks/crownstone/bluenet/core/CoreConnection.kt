@@ -5,7 +5,10 @@ import android.content.Context
 import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
+import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.SubscriptionId
 import rocks.crownstone.bluenet.util.Util.waitPromise
 import java.util.*
 

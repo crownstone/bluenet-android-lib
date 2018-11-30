@@ -1,8 +1,8 @@
 package rocks.crownstone.bluenet.util
 
-import rocks.crownstone.bluenet.Uint16
-import rocks.crownstone.bluenet.Uint32
-import rocks.crownstone.bluenet.Uint8
+import rocks.crownstone.bluenet.structs.Uint16
+import rocks.crownstone.bluenet.structs.Uint32
+import rocks.crownstone.bluenet.structs.Uint8
 import java.nio.ByteBuffer
 
 fun ByteBuffer.put(value: Uint8) {

@@ -18,9 +18,8 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import nl.komponents.kovenant.*
-import rocks.crownstone.bluenet.BluenetEvent
-import rocks.crownstone.bluenet.EventBus
-import rocks.crownstone.bluenet.LocationServiceRequestActivity
+import rocks.crownstone.bluenet.structs.BluenetEvent
+import rocks.crownstone.bluenet.util.EventBus
 
 /**
  * Class that initializes the bluetooth LE core.

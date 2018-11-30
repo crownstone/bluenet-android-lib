@@ -1,6 +1,6 @@
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
-import rocks.crownstone.bluenet.OperationMode
+import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import java.nio.ByteBuffer
 

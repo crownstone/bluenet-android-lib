@@ -1,10 +1,8 @@
 package rocks.crownstone.bluenet.core
 
 import android.util.Log
-import rocks.crownstone.bluenet.BluenetProtocol
-import rocks.crownstone.bluenet.EventCallback
+import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
-import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 
 /**

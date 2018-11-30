@@ -9,7 +9,7 @@
 			android:required="true"/>
 
 	<application>
-		<activity android:name=".LocationServiceRequestActivity"></activity>
+		<activity android:name=".core.LocationServiceRequestActivity"></activity>
 	</application>
 
 </manifest>

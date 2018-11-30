@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import nl.komponents.kovenant.*
+import rocks.crownstone.bluenet.util.EventBus
 
 /**
  * Service that can run in foreground.

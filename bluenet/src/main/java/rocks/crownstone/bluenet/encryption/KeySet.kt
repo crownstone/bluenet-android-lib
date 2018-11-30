@@ -1,9 +1,9 @@
 package rocks.crownstone.bluenet.encryption
 
 import android.util.Log
-import rocks.crownstone.bluenet.BluenetProtocol.AES_BLOCK_SIZE
-import rocks.crownstone.bluenet.KeyAccessLevelPair
-import rocks.crownstone.bluenet.Uint8
+import rocks.crownstone.bluenet.structs.BluenetProtocol.AES_BLOCK_SIZE
+import rocks.crownstone.bluenet.structs.KeyAccessLevelPair
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.charset.Charset
 

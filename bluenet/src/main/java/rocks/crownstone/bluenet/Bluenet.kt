@@ -7,14 +7,25 @@ import android.content.Intent
 import android.os.Handler
 import android.util.Log
 import nl.komponents.kovenant.*
+import rocks.crownstone.bluenet.connection.Config
+import rocks.crownstone.bluenet.connection.Control
+import rocks.crownstone.bluenet.connection.ExtConnection
+import rocks.crownstone.bluenet.connection.Setup
+import rocks.crownstone.bluenet.connection.State
 import rocks.crownstone.bluenet.encryption.EncryptionManager
-import rocks.crownstone.bluenet.scanparsing.IbeaconRanger
-import rocks.crownstone.bluenet.scanparsing.ScanHandler
-import rocks.crownstone.bluenet.services.Config
-import rocks.crownstone.bluenet.services.Control
-import rocks.crownstone.bluenet.services.Setup
-import rocks.crownstone.bluenet.services.State
-import java.util.*
+import rocks.crownstone.bluenet.scanning.BleScanner
+import rocks.crownstone.bluenet.scanhandling.IbeaconRanger
+import rocks.crownstone.bluenet.scanhandling.NearestDeviceListEntry
+import rocks.crownstone.bluenet.scanhandling.NearestDevices
+import rocks.crownstone.bluenet.scanhandling.ScanHandler
+import rocks.crownstone.bluenet.structs.BluenetEvent
+import rocks.crownstone.bluenet.structs.DeviceAddress
+import rocks.crownstone.bluenet.structs.Keys
+import rocks.crownstone.bluenet.structs.ScanMode
+import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.EventCallback
+import rocks.crownstone.bluenet.util.EventType
+import rocks.crownstone.bluenet.util.SubscriptionId
 
 /**
  * The main library class.

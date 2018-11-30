@@ -1,6 +1,6 @@
 package rocks.crownstone.bluenet.encryption
 
-import rocks.crownstone.bluenet.Uint8
+import rocks.crownstone.bluenet.structs.Uint8
 
 enum class AccessLevel(val num: Uint8) {
 	ADMIN(0),

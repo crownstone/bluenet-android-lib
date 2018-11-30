@@ -1,6 +1,6 @@
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
-import rocks.crownstone.bluenet.OperationMode
+import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData

@@ -1,7 +1,7 @@
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
-import rocks.crownstone.bluenet.Uint32
-import rocks.crownstone.bluenet.Uint8
+import rocks.crownstone.bluenet.structs.Uint32
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer

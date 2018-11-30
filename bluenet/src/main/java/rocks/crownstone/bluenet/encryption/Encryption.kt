@@ -1,12 +1,12 @@
 package rocks.crownstone.bluenet.encryption
 
 import android.util.Log
-import rocks.crownstone.bluenet.BluenetProtocol.AES_BLOCK_SIZE
-import rocks.crownstone.bluenet.BluenetProtocol.PACKET_NONCE_LENGTH
-import rocks.crownstone.bluenet.BluenetProtocol.SESSION_NONCE_LENGTH
-import rocks.crownstone.bluenet.BluenetProtocol.VALIDATION_KEY_LENGTH
-import rocks.crownstone.bluenet.BluenetProtocol.ACCESS_LEVEL_LENGTH
-import rocks.crownstone.bluenet.Uint8
+import rocks.crownstone.bluenet.structs.BluenetProtocol.AES_BLOCK_SIZE
+import rocks.crownstone.bluenet.structs.BluenetProtocol.PACKET_NONCE_LENGTH
+import rocks.crownstone.bluenet.structs.BluenetProtocol.SESSION_NONCE_LENGTH
+import rocks.crownstone.bluenet.structs.BluenetProtocol.VALIDATION_KEY_LENGTH
+import rocks.crownstone.bluenet.structs.BluenetProtocol.ACCESS_LEVEL_LENGTH
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteBuffer
 import java.security.GeneralSecurityException

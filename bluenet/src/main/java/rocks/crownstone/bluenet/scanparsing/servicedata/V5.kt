@@ -1,8 +1,8 @@
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
 import android.util.Log
-import rocks.crownstone.bluenet.DeviceType
-import rocks.crownstone.bluenet.OperationMode
+import rocks.crownstone.bluenet.structs.DeviceType
+import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.util.getUint8
