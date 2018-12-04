@@ -41,7 +41,7 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 
 
 
-	fun runInForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
+	@Synchronized fun runInForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
 		Log.i(TAG, "runInForeground")
 		return startService(true).then {
 			startForeground(notificationId, notification)
@@ -50,7 +50,7 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 
 
 
-	fun runInBackground(): Promise<Unit, Exception> {
+	@Synchronized fun runInBackground(): Promise<Unit, Exception> {
 		Log.i(TAG, "runInBackground")
 		return startService(false).then {
 			startBackground()

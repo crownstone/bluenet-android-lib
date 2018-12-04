@@ -47,7 +47,7 @@ class Bluenet {
 
 	// State
 	private var initialized = false
-	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
+	private var scannerReadyPromises = ArrayList<Deferred<Unit, Exception>>()
 
 	// Public variables, used to write and read services.
 	lateinit var setup: Setup
@@ -150,30 +150,20 @@ class Bluenet {
 	 *                 and from there calls Bluenet.handlePermissionResult().
 	 *                 The activity should implement Activity.onActivityResult(),
 	 *                 and from there call Bluenet.handleActivityResult().
-	 * @return Promise that resolves when ready to scan, rejected only when already waiting to be resolved.
+	 * @return Promise that resolves when ready to scan, never rejected.
 	 */
 	@Synchronized fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "makeScannerReady")
-//		return initScanner(activity)
-//				.then {
-//					bleCore.makeScannerReady(activity)
-//				}.unwrap()
-		val deferred = deferred<Unit, Exception>()
-		val promise = deferred.promise
 
 		if (isScannerReady()) {
-			deferred.resolve()
-			return promise
+			return Promise.ofSuccess(Unit)
 		}
 
-		if (scannerReadyPromise != null) {
-			deferred.reject(Exception("busy"))
-			return promise
-		}
-		scannerReadyPromise = deferred
+		val deferred = deferred<Unit, Exception>()
+		scannerReadyPromises.add(deferred)
 
 		bleCore.tryMakeScannerReady(activity)
-		return promise
+		return deferred.promise
 	}
 
 	/**
@@ -312,10 +302,10 @@ class Bluenet {
 	@Synchronized private fun onCoreScannerReady(data: Any) {
 		initScanner()
 		eventBus.emit(BluenetEvent.SCANNER_READY)
-		if (scannerReadyPromise != null) {
-			scannerReadyPromise?.resolve()
-			scannerReadyPromise = null
+		for (deferred in scannerReadyPromises) {
+			deferred.resolve()
 		}
+		scannerReadyPromises.clear()
 	}
 
 	@Synchronized private fun onCoreScannerNotReady(data: Any) {
