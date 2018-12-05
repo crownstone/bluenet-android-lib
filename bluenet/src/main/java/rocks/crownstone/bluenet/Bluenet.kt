@@ -130,7 +130,7 @@ class Bluenet {
 	 * @return True when scanner is ready.
 	 */
 	@Synchronized fun isScannerReady(): Boolean {
-		return (bleScanner != null) && (bleCore.isScannerReady())
+		return (initialized) && (bleScanner != null) && (bleCore.isScannerReady())
 	}
 
 	/**
