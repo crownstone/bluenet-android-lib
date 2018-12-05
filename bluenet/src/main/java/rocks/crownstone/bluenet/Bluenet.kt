@@ -167,9 +167,14 @@ class Bluenet {
 	}
 
 	/**
-	 * Set the keys.
+	 * Set the keys for encryption and decryption.
+	 *
+	 * The keys consist of a KeySet per sphere.
+	 * SphereId is usually the sphere id that is used in the cloud, but can be any string you like.
+	 * Currently, the iBeacon UUID is used to select which KeySet should be used,
+	 * so that should match with the iBeacon UUID that is used for setup.
 	 */
-	@Synchronized fun loadSphereData(keys: Keys) {
+	@Synchronized fun loadKeys(keys: Keys) {
 		encryptionManager.setKeys(keys)
 	}
 

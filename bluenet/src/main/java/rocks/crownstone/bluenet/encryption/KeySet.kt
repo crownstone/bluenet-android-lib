@@ -48,9 +48,6 @@ class KeySet() {
 		catch (e: java.lang.NumberFormatException) {
 			Log.e(TAG, "Invalid key format")
 			e.printStackTrace()
-//			adminKeyString = null
-//			memberKeyString = null
-//			guestKeyString = null
 			adminKeyBytes = null
 			memberKeyBytes = null
 			guestKeyBytes = null
