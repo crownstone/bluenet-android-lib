@@ -81,6 +81,13 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		}
 
 		eventBus.emit(BluenetEvent.SCAN_RESULT, device)
+		if (device.validated) {
+			eventBus.emit(BluenetEvent.SCAN_RESULT_VALIDATED, device)
+			val unique = serviceData?.unique ?: false
+			if (unique) {
+				eventBus.emit(BluenetEvent.SCAN_RESULT_VALIDATED_UNIQUE, device)
+			}
+		}
 	}
 
 	@Synchronized private fun getValidator(device: ScannedDevice): Validator {
