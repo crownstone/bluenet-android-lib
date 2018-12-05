@@ -17,6 +17,8 @@ import kotlin.collections.HashSet
 
 /**
  * Class to simulate iBeacon ranging.
+ *
+ * Only iBeacons with a tracked iBeaconUUID will be handled.
  * Once per second a list of of devices with averaged RSSI is sent.
  * Enter and exit region events are sent.
  */
@@ -25,9 +27,11 @@ class IbeaconRanger(val eventBus: EventBus, val handler: Handler) {
 	private val lastSeenRegion = HashMap<UUID, Long>()
 	private val inRegion = HashSet<UUID>()
 	private val deviceMap = HashMap<DeviceAddress, DeviceData>()
+	private val trackedUuids = HashSet<UUID>()
 	private var isTimeoutRunning = false
 	private val timeoutRunnable = Runnable { onTimeout() }
 	private val tickRunnable = Runnable { onTick() }
+
 	init {
 		eventBus.subscribe(BluenetEvent.SCAN_RESULT, ::onScan)
 		handler.postDelayed(tickRunnable, TICK_INTERVAL_MS)
@@ -46,11 +50,30 @@ class IbeaconRanger(val eventBus: EventBus, val handler: Handler) {
 		handler.removeCallbacks(tickRunnable)
 	}
 
+	@Synchronized fun track(ibeaconUuid: UUID) {
+		trackedUuids.add(ibeaconUuid)
+	}
+
+	@Synchronized fun stopTracking(ibeaconUuid: UUID) {
+		trackedUuids.remove(ibeaconUuid)
+		lastSeenRegion.remove(ibeaconUuid)
+		inRegion.remove(ibeaconUuid)
+		val keys = deviceMap.keys
+		for (key in keys) {
+			if (deviceMap[key]?.ibeaconData?.uuid == ibeaconUuid) {
+				deviceMap.remove(key)
+			}
+		}
+	}
+
 	@Synchronized private fun onScan(data: Any) {
 		val device = data as ScannedDevice
 
 		// Keep up last seen per region (uuid), and check for enter region
 		val ibeaconData = device.ibeaconData ?: return
+		if (ibeaconData.uuid !in trackedUuids) {
+			return
+		}
 		val currentTime = SystemClock.elapsedRealtime()
 		lastSeenRegion[ibeaconData.uuid] = currentTime
 		if (!inRegion.contains(ibeaconData.uuid)) {

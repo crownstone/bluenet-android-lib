@@ -26,6 +26,7 @@ import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.EventCallback
 import rocks.crownstone.bluenet.util.EventType
 import rocks.crownstone.bluenet.util.SubscriptionId
+import java.util.*
 
 /**
  * The main library class.
@@ -278,6 +279,14 @@ class Bluenet {
 
 	@Synchronized fun getNearestValidated(): NearestDeviceListEntry? {
 		return nearestDevices.nearestValidated.getNearest()
+	}
+
+	@Synchronized fun trackIbeacon(ibeaconUuid: UUID) {
+		iBeaconRanger.track(ibeaconUuid)
+	}
+
+	@Synchronized fun stopTrackingIbeacon(ibeaconUuid: UUID) {
+		iBeaconRanger.stopTracking(ibeaconUuid)
 	}
 
 	@Synchronized fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
