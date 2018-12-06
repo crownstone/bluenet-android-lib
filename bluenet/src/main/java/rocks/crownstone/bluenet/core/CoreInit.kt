@@ -61,6 +61,10 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 		// The request code to enable location services.
 		const val REQ_CODE_ENABLE_LOCATION_SERVICE = 57003
 
+		// Timeout for a location service permission request. If timeout expires, promise is rejected or resolved.
+		// This only serves as fallback in case handlePermissionResult() is not called.
+		private const val LOCATION_SERVICE_PERMISSION_TIMEOUT: Long = 5000
+
 		// Timeout for a bluetooth enable request. If timeout expires, promise is rejected.
 		private const val BLUETOOTH_ENABLE_TIMEOUT: Long = 5000
 
@@ -256,7 +260,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	 * Does not check if location service is enabled.
 	 *
 	 * @param activity Activity that will be used to ask for permissions (if needed).
-	 *                 The activity must has Activity.onRequestPermissionsResult() implemented,
+	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
 	 *                 and from there calls BleCore.handlePermissionResult().
 	 * @return Promise that will be resolved when permissions are granted.
 	 */
@@ -286,8 +290,25 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 				arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
 				REQ_CODE_PERMISSIONS_LOCATION)
 
+		handler.postDelayed(getLocationPermissionTimeout, LOCATION_SERVICE_PERMISSION_TIMEOUT)
+
 		// Wait for result
 		return promise
+	}
+
+	private val getLocationPermissionTimeout = Runnable {
+		onLocationPermissionTimeout()
+	}
+
+	@Synchronized fun onLocationPermissionTimeout() {
+		Log.i(TAG, "onLocationPermissionTimeout")
+		if (isLocationPermissionGranted()) {
+			locationPermissionPromise?.resolve()
+		}
+		else {
+			locationPermissionPromise?.reject(Exception("location permission not granted after timeout"))
+		}
+		locationPermissionPromise = null
 	}
 
 	/**
@@ -298,6 +319,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	@Synchronized fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
 		when (requestCode) {
 			REQ_CODE_PERMISSIONS_LOCATION -> {
+				handler.removeCallbacks(getLocationPermissionTimeout)
 				if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
 						grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 					// Permission granted.

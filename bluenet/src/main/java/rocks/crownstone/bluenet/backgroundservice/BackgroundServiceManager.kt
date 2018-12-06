@@ -39,6 +39,14 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 		}
 	}
 
+	@Synchronized fun destroy() {
+		// TODO: check if this actually works well
+		val intent = Intent(context, BackgroundService::class.java)
+		context.stopService(intent)
+		foreground = false
+		startServiceDeferred = null
+		service = null
+	}
 
 
 	@Synchronized fun runInForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {

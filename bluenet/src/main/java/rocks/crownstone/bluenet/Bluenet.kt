@@ -35,6 +35,7 @@ import java.util.*
  */
 class Bluenet {
 	private val TAG = this.javaClass.simpleName
+	private val handler = Handler()
 	private val eventBus = EventBus()
 	private lateinit var context: Context
 	private lateinit var bleCore: BleCore
@@ -43,7 +44,6 @@ class Bluenet {
 	private var scanHandler: ScanHandler? = null
 	private lateinit var service: BackgroundServiceManager
 	private val encryptionManager = EncryptionManager()
-	private lateinit var iBeaconRanger: IbeaconRanger
 	private val nearestDevices = NearestDevices(eventBus)
 
 	// State
@@ -51,11 +51,13 @@ class Bluenet {
 	private var scannerReadyPromises = ArrayList<Deferred<Unit, Exception>>()
 
 	// Public variables, used to write and read services.
-	lateinit var setup: Setup
-	lateinit var control: Control
-	lateinit var config: Config
-	lateinit var state: State
-	val handler = Handler()
+	lateinit var setup: Setup; private set
+	lateinit var control: Control; private set
+	lateinit var config: Config; private set
+	lateinit var state: State; private set
+
+	// Public variables
+	lateinit var iBeaconRanger: IbeaconRanger; private set
 
 
 	/**
@@ -101,10 +103,21 @@ class Bluenet {
 	}
 
 	/**
+	 * De-init the library.
+	 *
+	 * Cleans up everything that isn't automatically cleaned.
+	 */
+	@Synchronized fun destroy() {
+		iBeaconRanger.destroy()
+		service.destroy()
+		// TODO: more?
+	}
+
+	/**
 	 * Initializes the scanner.
 	 *
 	 * @param activity Activity that will be used to ask for permissions (if needed).
-	 *                 The activity must has Activity.onRequestPermissionsResult() implemented,
+	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
 	 *                 and from there calls Bluenet.handlePermissionResult().
 	 * @return Promise that resolves when initialized (rejected when BLE hardware or location permission is missing).
 	 *         When resolved, you can already call startScanning(), but it will give no result until scanner is ready.
@@ -138,6 +151,10 @@ class Bluenet {
 	 * Try to make the scanner ready to scan.
 	 * You can wait for the event SCANNER_READY.
 	 * @param activity Activity to be used to ask for requests.
+	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
+	 *                 and from there calls Bluenet.handlePermissionResult().
+	 *                 The activity should implement Activity.onActivityResult(),
+	 *                 and from there call Bluenet.handleActivityResult().
 	 */
 	@Synchronized fun tryMakeScannerReady(activity: Activity) {
 		initScanner(activity)
@@ -147,7 +164,7 @@ class Bluenet {
 	/**
 	 * Make the scanner ready to scan.
 	 * @param activity Activity that will be used to for requests (if needed).
-	 *                 The activity must has Activity.onRequestPermissionsResult() implemented,
+	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
 	 *                 and from there calls Bluenet.handlePermissionResult().
 	 *                 The activity should implement Activity.onActivityResult(),
 	 *                 and from there call Bluenet.handleActivityResult().
@@ -186,6 +203,17 @@ class Bluenet {
 	 */
 	@Synchronized fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		return bleCore.handleActivityResult(requestCode, resultCode, data)
+	}
+
+	/**
+	 * Checks and requests location permission, required for scanning.
+	 *
+	 * @param activity Activity to be used to ask for permissions.
+	 *                 The activity can implement Activity.onRequestPermissionsResult() to see if the user canceled.
+	 *                 The request code will be BleCore.REQ_CODE_PERMISSIONS_LOCATION
+	 */
+	@Synchronized fun requestLocationPermission(activity: Activity) {
+		bleCore.requestLocationPermission(activity)
 	}
 
 	/**
@@ -281,13 +309,13 @@ class Bluenet {
 		return nearestDevices.nearestValidated.getNearest()
 	}
 
-	@Synchronized fun trackIbeacon(ibeaconUuid: UUID) {
-		iBeaconRanger.track(ibeaconUuid)
-	}
-
-	@Synchronized fun stopTrackingIbeacon(ibeaconUuid: UUID) {
-		iBeaconRanger.stopTracking(ibeaconUuid)
-	}
+//	@Synchronized fun trackIbeacon(ibeaconUuid: UUID, referenceId: String) {
+//		iBeaconRanger.track(ibeaconUuid, referenceId)
+//	}
+//
+//	@Synchronized fun stopTrackingIbeacon(ibeaconUuid: UUID) {
+//		iBeaconRanger.stopTracking(ibeaconUuid)
+//	}
 
 	@Synchronized fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
 		Log.i(TAG, "setBackground $background")
