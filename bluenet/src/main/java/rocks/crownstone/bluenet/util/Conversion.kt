@@ -18,6 +18,12 @@ object Conversion {
 	private const val ADDRESS_LENGTH = 6
 	private const val ADDRESS_STRING_LENGTH = 17
 
+	/**
+	 * Convert UUID to string.
+	 *
+	 * If UUID starts with BASE_UUID_START, and ends with BASE_UUID_END,
+	 * only the relevant part will be returned.
+	 */
 	fun uuidToString(uuid: UUID): String {
 		val uuidString = uuid.toString()
 
@@ -27,24 +33,36 @@ object Conversion {
 		return uuidString
 	}
 
-	fun stringToUuid(uuidStr: String): UUID {
+	/**
+	 * Convert string to UUID.
+	 *
+	 * Returns null if the string is invalid.
+	 */
+	fun stringToUuid(uuidStr: String): UUID? {
 		var fullUuidStr = uuidStr
 		if (uuidStr.length == 4) {
 			fullUuidStr = BASE_UUID_START + uuidStr + BASE_UUID_END
 		}
-		return UUID.fromString(fullUuidStr)
+		val uuid = try {
+			UUID.fromString(fullUuidStr)
+		}
+		catch (e: IllegalArgumentException) {
+			null
+		}
+		return uuid
 	}
 
-	fun stringToUuid(uuids: Array<String>): Array<UUID> {
-		val result = Array<UUID>(uuids.size) { UUID(0,0) }
+	fun stringToUuid(uuids: Array<String>): Array<UUID?> {
+		val result = Array<UUID?>(uuids.size) { UUID(0,0) }
 		for (i in uuids.indices) {
 			result[i] = stringToUuid(uuids[i])
 		}
 		return result
 	}
 
-	fun uuidToBytes(uuidStr: String): ByteArray {
-		return uuidToBytes(stringToUuid(uuidStr))
+	fun uuidToBytes(uuidStr: String): ByteArray? {
+		val uuid = stringToUuid(uuidStr) ?: return null
+		return uuidToBytes(uuid)
 	}
 
 	fun uuidToBytes(uuid: UUID, order: ByteOrder= ByteOrder.LITTLE_ENDIAN): ByteArray {
