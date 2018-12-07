@@ -590,7 +590,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	 *
 	 * @return True if bluetooth is enabled.
 	 */
-	@Synchronized private fun isBleEnabled(): Boolean {
+	@Synchronized fun isBleEnabled(): Boolean {
 		val result = bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON
 		Log.i(TAG, "isBleEnabled: $result (enabled=${bleAdapter.isEnabled}, state=${bleAdapter.state}, STATE_ON=${BluetoothAdapter.STATE_ON})")
 		return result
@@ -601,7 +601,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	 *
 	 * @return True when location service is enabled.
 	 */
-	@Synchronized private fun isLocationServiceEnabled(): Boolean {
+	@Synchronized fun isLocationServiceEnabled(): Boolean {
 		if (Build.VERSION.SDK_INT < 23) {
 			Log.i(TAG, "isLocationServiceEnabled true")
 			return true
@@ -617,7 +617,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus) {
 	/**
 	 * Check if location permissions are granted.
 	 */
-	@Synchronized private fun isLocationPermissionGranted(): Boolean {
+	@Synchronized fun isLocationPermissionGranted(): Boolean {
 		if (Build.VERSION.SDK_INT < 23) {
 			Log.i(TAG, "isLocationPermissionGranted true")
 			return true

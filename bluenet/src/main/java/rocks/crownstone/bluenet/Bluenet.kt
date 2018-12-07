@@ -141,6 +141,27 @@ class Bluenet {
 	}
 
 	/**
+	 * @return True when location permission is granted.
+	 */
+	@Synchronized fun isLocationPermissionGranted(): Boolean {
+		return bleCore.isLocationPermissionGranted()
+	}
+
+	/**
+	 * @return True when bluetooth is enabled.
+	 */
+	@Synchronized fun isBleEnabled(): Boolean {
+		return bleCore.isBleEnabled()
+	}
+
+	/**
+	 * @return True when location service is enabled.
+	 */
+	@Synchronized fun isLocationServiceEnabled(): Boolean {
+		return bleCore.isLocationServiceEnabled()
+	}
+
+	/**
 	 * @return True when scanner is ready.
 	 */
 	@Synchronized fun isScannerReady(): Boolean {
