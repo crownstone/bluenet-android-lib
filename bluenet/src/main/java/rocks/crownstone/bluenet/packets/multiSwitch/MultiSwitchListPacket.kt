@@ -15,8 +15,10 @@ class MultiSwitchListPacket: PacketInterface {
 		const val HEADER_SIZE = 1
 	}
 
-	fun add(item: MultiSwitchListItemPacket) {
+	fun add(item: MultiSwitchListItemPacket): Boolean {
 		list.add(item)
+		// TODO: return false when list is too large
+		return true
 	}
 
 	override fun getPacketSize(): Int {
