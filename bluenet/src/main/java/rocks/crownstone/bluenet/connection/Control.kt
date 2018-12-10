@@ -35,6 +35,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlPacket(ControlType.MULTI_SWITCH, packet))
 	}
 
+	fun setTime(timestamp: Uint32): Promise<Unit, Exception> {
+		return writeCommand(ControlType.SET_TIME, timestamp)
+	}
+
 	fun allowDimming(allow: Boolean): Promise<Unit, Exception> {
 		return writeCommand(ControlType.ALLOW_DIMMING, allow)
 	}
