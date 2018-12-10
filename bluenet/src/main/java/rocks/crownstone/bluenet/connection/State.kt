@@ -38,13 +38,14 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 		return getStateValue(StateType.TIME)
 	}
 
-	fun getErrors(): Promise<Uint32, Exception> {
-		// TODO: class for errors
-		return getStateValue(StateType.ERRORS)
+	fun getErrors(): Promise<ErrorState, Exception> {
+		val promise: Promise<Uint32, Exception> = getStateValue(StateType.ERRORS)
+		return promise.then {
+			ErrorState(it)
+		}
 	}
 
 	inline private fun <reified T>getStateValue(type: StateType): Promise<T, Exception> {
-		val deferred = deferred<StatePacket, Exception>()
 		return getState(type)
 				.then {
 					val arr = it.getPayload()

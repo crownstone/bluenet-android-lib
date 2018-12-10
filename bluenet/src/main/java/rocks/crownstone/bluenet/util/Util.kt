@@ -28,6 +28,23 @@ object Util {
 		return value and (1 shl bit).inv()
 	}
 
+
+	fun setBit(value: Long, bit: Int): Long {
+		return value or (1L shl bit)
+	}
+
+	fun setBit(value: Int, bit: Int): Int {
+		return value or (1 shl bit)
+	}
+
+	fun setBit(value: Short, bit: Int): Short {
+		return (value.toInt() or (1 shl bit)).toShort()
+	}
+
+	fun setBit(value: Byte, bit: Int): Byte {
+		return (value.toInt() or (1 shl bit)).toByte()
+	}
+
 	fun waitPromise(timeMs: Long, handler: Handler): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 		handler.postDelayed({deferred.resolve()}, timeMs)

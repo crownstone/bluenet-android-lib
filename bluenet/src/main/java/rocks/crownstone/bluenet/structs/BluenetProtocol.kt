@@ -66,6 +66,18 @@ object BluenetProtocol {
 
 	const val RECOVERY_CODE: Uint32 = 0xDEADBEEF
 	const val FACTORY_RESET_CODE: Uint32 = 0xDEADBEEF
+
+	// State error bitmask
+	const val STATE_ERROR_POS_OVERCURRENT =        0
+	const val STATE_ERROR_POS_OVERCURRENT_DIMMER = 1
+	const val STATE_ERROR_POS_TEMP_CHIP =          2
+	const val STATE_ERROR_POS_TEMP_DIMMER =        3
+	const val STATE_ERROR_POS_DIMMER_ON_FAILURE =  4
+	const val STATE_ERROR_POS_DIMMER_OFF_FAILURE = 5
+
+	// Schedule override bitmask
+	const val SCHEDULE_OVERRIDE_BIT_POS_ALL =      0
+	const val SCHEDULE_OVERRIDE_BIT_POS_LOCATION = 1
 }
 
 enum class OpcodeType(val num: Uint8) {
@@ -379,33 +391,66 @@ data class IbeaconData(val uuid: UUID, val major: Uint16, val minor: Uint16, val
 
 
 
-data class ErrorBitmask(
-		val num: Uint32,
-		val overCurrent: Boolean,
-		val overCurrentDimmer: Boolean,
-		val chipTemperature: Boolean,
-		val dimmerTemperature: Boolean,
-		val dimmerOnFailure: Boolean,
-		val dimmerOffFailure: Boolean
-) {
-	constructor(number: Uint32): this(number,
-			Util.isBitSet(number, 0),
-			Util.isBitSet(number, 1),
-			Util.isBitSet(number, 2),
-			Util.isBitSet(number, 3),
-			Util.isBitSet(number, 4),
-			Util.isBitSet(number, 5)
-	)
-//	constructor(overCurrent: Boolean,
-//				overCurrentDimmer: Boolean,
-//				chipTemperature: Boolean,
-//				dimmerTemperature: Boolean,
-//				dimmerOnFailure: Boolean,
-//				dimmerOffFailure: Boolean
-//	): this(
-//	)
+class ErrorState private constructor() {
+//	private constructor()
+	var bitmask: Uint32 = 0; private set
+	var overCurrent =       false; private set
+	var overCurrentDimmer = false; private set
+	var chipTemperature =   false; private set
+	var dimmerTemperature = false; private set
+	var dimmerOnFailure =   false; private set
+	var dimmerOffFailure =  false; private set
+	constructor(bitmask: Uint32): this() {
+		overCurrent =       Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT)
+		overCurrentDimmer = Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT_DIMMER)
+		chipTemperature =   Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_TEMP_CHIP)
+		dimmerTemperature = Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_TEMP_DIMMER)
+		dimmerOnFailure =   Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_DIMMER_ON_FAILURE)
+		dimmerOffFailure =  Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_DIMMER_OFF_FAILURE)
+		this.bitmask = bitmask
+	}
+	constructor(overCurrent: Boolean,
+				overCurrentDimmer: Boolean,
+				chipTemperature: Boolean,
+				dimmerTemperature: Boolean,
+				dimmerOnFailure: Boolean,
+				dimmerOffFailure: Boolean
+	): this() {
+		bitmask = 0
+		if (overCurrent) {       bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT) }
+		if (overCurrentDimmer) { bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT_DIMMER) }
+		if (chipTemperature) {   bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_TEMP_CHIP) }
+		if (dimmerTemperature) { bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_TEMP_DIMMER) }
+		if (dimmerOnFailure) {   bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_DIMMER_ON_FAILURE) }
+		if (dimmerOffFailure) {  bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_DIMMER_OFF_FAILURE) }
+		this.overCurrent =       overCurrent
+		this.overCurrentDimmer = overCurrentDimmer
+		this.chipTemperature =   chipTemperature
+		this.dimmerTemperature = dimmerTemperature
+		this.dimmerOnFailure =   dimmerOnFailure
+		this.dimmerOffFailure =  dimmerOffFailure
+	}
 }
 
+class ScheduleOverride private constructor() {
+	var bitmask: Uint8 = 0; private set
+	var all =      false; private set
+	var location = false; private set
+	constructor(bitmask: Uint8): this() {
+		all =      Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL),
+		location = Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_LOCATION)
+		this.bitmask = bitmask
+	}
+	constructor(all: Boolean,
+				location: Boolean
+	): this() {
+		bitmask = 0
+		if (all) {      bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL) }
+		if (location) { bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_LOCATION) }
+		this.all = all
+		this.location = location
+	}
+}
 
 
 object BluenetConfigOld {

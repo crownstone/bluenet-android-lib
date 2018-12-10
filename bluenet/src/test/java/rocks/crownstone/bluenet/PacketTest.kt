@@ -43,7 +43,7 @@ class PacketTest {
 		assertTrue(schedulePacket.list[3].repeatType.num == 1)
 		assertTrue(schedulePacket.list[3].overrideMask == 1.toShort())
 		assertTrue(schedulePacket.list[3].timestamp == 1540995487L)
-		assertTrue(schedulePacket.list[3].dayOfweekMask == 112)
+		assertTrue(schedulePacket.list[3].dayOfWeekMask == 112)
 		assertTrue(schedulePacket.list[3].switchVal == 99.toShort())
 
 		assertTrue(schedulePacket.list[5].isActive())
@@ -57,7 +57,7 @@ class PacketTest {
 		assertTrue(schedulePacket.list[7].actionType.num == 1)
 		assertTrue(schedulePacket.list[7].overrideMask == 127.toShort())
 		assertTrue(schedulePacket.list[7].timestamp == 1540995487L)
-		assertTrue(schedulePacket.list[7].dayOfweekMask == 255)
+		assertTrue(schedulePacket.list[7].dayOfWeekMask == 255)
 		assertTrue(schedulePacket.list[7].switchVal == 50.toShort())
 		assertTrue(schedulePacket.list[7].fadeDuration == 15)
 	}

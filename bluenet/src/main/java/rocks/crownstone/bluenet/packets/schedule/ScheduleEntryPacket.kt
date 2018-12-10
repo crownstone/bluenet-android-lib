@@ -13,7 +13,7 @@ class ScheduleEntryPacket(): PacketInterface {
 
 	// Repeat
 	var minutes: Uint16 = 0
-	var dayOfweekMask: Int = 0
+	var dayOfWeekMask: Int = 0
 
 	// Action
 	var switchVal: Uint8 = 0
@@ -56,13 +56,13 @@ class ScheduleEntryPacket(): PacketInterface {
 				bb.putShort(minutes)
 			}
 			ScheduleRepeatType.DAY -> {
-				if (dayOfweekMask == 0) {
+				if (dayOfWeekMask == 0) {
 					return false
 				}
-				if ((dayOfweekMask and WEEKDAY_MASK_ALL_DAYS) == WEEKDAY_MASK_ALL_DAYS) {
-					dayOfweekMask = dayOfweekMask or (1 shl ScheduleWeekDayBitPos.ALL_DAYS.num)
+				if ((dayOfWeekMask and WEEKDAY_MASK_ALL_DAYS) == WEEKDAY_MASK_ALL_DAYS) {
+					dayOfWeekMask = dayOfWeekMask or (1 shl ScheduleWeekDayBitPos.ALL_DAYS.num)
 				}
-				bb.put(dayOfweekMask.toByte())
+				bb.put(dayOfWeekMask.toByte())
 				bb.put(0) // Reserved
 			}
 			ScheduleRepeatType.ONCE -> {
@@ -111,7 +111,7 @@ class ScheduleEntryPacket(): PacketInterface {
 				minutes = bb.getUint16()
 			}
 			ScheduleRepeatType.DAY -> {
-				dayOfweekMask = bb.getUint8().toInt()
+				dayOfWeekMask = bb.getUint8().toInt()
 				bb.get() // Reserved
 			}
 			ScheduleRepeatType.ONCE -> {

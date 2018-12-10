@@ -99,6 +99,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return resetErrors(0xFFFFFFFF)
 	}
 
+	fun resetErrors(errorState: ErrorState): Promise<Unit, Exception> {
+		return resetErrors(errorState.bitmask)
+	}
+
 	fun resetErrors(bitmask: Uint32): Promise<Unit, Exception> {
 		return writeCommand(ControlType.RESET_STATE_ERRORS, bitmask)
 	}
