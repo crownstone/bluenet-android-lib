@@ -54,6 +54,12 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 			return Promise.ofFail(Errors.ValueWrong())
 		}
 
+		if ((id <= 0 || id > 255) ||
+				(ibeaconData.major < 0 || ibeaconData.major > 0xFFFF) ||
+				(ibeaconData.minor < 0 || ibeaconData.minor > 0xFFFF)) {
+			return Promise.ofFail(Errors.ValueWrong())
+		}
+
 		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
 			return fastSetup(id, keySet, meshAccessAddress, ibeaconData)
 		}
