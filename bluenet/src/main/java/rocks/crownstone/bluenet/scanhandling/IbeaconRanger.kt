@@ -173,21 +173,22 @@ class IbeaconRanger(val eventBus: EventBus, val handler: Handler) {
 	@Synchronized private fun onEnterRegion(uuid: UUID) {
 		Log.i(TAG, "onEnterRegion $uuid")
 		inRegion.add(uuid)
-		// Make a copy to avoid concurrency issues
-		val list = IbeaconRegionList()
-		list.addAll(inRegion)
-//		val list = inRegion.clone()
-		eventBus.emit(BluenetEvent.IBEACON_ENTER_REGION, list)
+		eventBus.emit(BluenetEvent.IBEACON_ENTER_REGION, getEventData(uuid))
 	}
 
 	@Synchronized private fun onExitRegion(uuid: UUID) {
 		Log.i(TAG, "onExitRegion $uuid")
 		inRegion.remove(uuid)
-		// Make a copy to avoid concurrency issues
+		eventBus.emit(BluenetEvent.IBEACON_EXIT_REGION, getEventData(uuid))
+	}
+
+	@Synchronized private fun getEventData(changedUuid: UUID): IbeaconRegionEventData {
 		val list = IbeaconRegionList()
-		list.addAll(inRegion)
-//		val list = inRegion.clone()
-		eventBus.emit(BluenetEvent.IBEACON_EXIT_REGION, list)
+		for (uuid in inRegion) {
+			val referenceId = trackedUuids[uuid] ?: ""
+			list[uuid] = referenceId
+		}
+		return IbeaconRegionEventData(changedUuid, list)
 	}
 
 

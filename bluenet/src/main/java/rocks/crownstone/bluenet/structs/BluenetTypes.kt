@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet.structs
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Util
 import java.util.*
 
 
@@ -34,8 +35,8 @@ enum class BluenetEvent {
 	NEAREST_SETUP,            // Validated device in setup operation mode was scanned. NearestDeviceListEntry as data.
 	SETUP_PROGRESS,  // Setup is in progress, Double (progress, where 1.0 is done) as data.
 	IBEACON_SCAN,    // List of iBeacons was scanned. ScannedIbeaconList as data.
-	IBEACON_ENTER_REGION, // Region was entered. IbeaconRegionList as data (list of entered regions).
-	IBEACON_EXIT_REGION,  // Region was exited. IbeaconRegionList as data (list of entered regions).
+	IBEACON_ENTER_REGION, // Region was entered. IbeaconRegionEventData as data.
+	IBEACON_EXIT_REGION,  // Region was exited. IbeaconRegionEventData as data.
 	DFU_PROGRESS,
 }
 
@@ -95,4 +96,5 @@ data class KeyAccessLevelPair(val key: ByteArray, val accessLevel: AccessLevel) 
 
 data class ScannedIbeacon(val address: DeviceAddress, val ibeaconData: IbeaconData, val rssi: Int, val referenceId: String)
 typealias ScannedIbeaconList = ArrayList<ScannedIbeacon>
-typealias IbeaconRegionList = HashSet<UUID>
+typealias IbeaconRegionList = HashMap<UUID, String> // Map with list of entered region UUIDs with reference id as value.
+data class IbeaconRegionEventData(val changedRegion: UUID, val list: IbeaconRegionList) // Changed region is the UUID that was entered or exited.
