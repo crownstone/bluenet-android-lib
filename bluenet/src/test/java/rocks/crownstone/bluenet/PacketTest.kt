@@ -41,9 +41,9 @@ class PacketTest {
 
 		assertTrue(schedulePacket.list[3].isActive())
 		assertTrue(schedulePacket.list[3].repeatType.num == 1)
-		assertTrue(schedulePacket.list[3].overrideMask == 1.toShort())
+		assertTrue(schedulePacket.list[3].overrideMask.bitmask == 1.toShort())
 		assertTrue(schedulePacket.list[3].timestamp == 1540995487L)
-		assertTrue(schedulePacket.list[3].dayOfWeekMask == 112)
+		assertTrue(schedulePacket.list[3].dayOfWeekMask.bitmask == 112.toShort())
 		assertTrue(schedulePacket.list[3].switchVal == 99.toShort())
 
 		assertTrue(schedulePacket.list[5].isActive())
@@ -55,9 +55,9 @@ class PacketTest {
 		assertTrue(schedulePacket.list[7].isActive())
 		assertTrue(schedulePacket.list[7].repeatType.num == 1)
 		assertTrue(schedulePacket.list[7].actionType.num == 1)
-		assertTrue(schedulePacket.list[7].overrideMask == 127.toShort())
+		assertTrue(schedulePacket.list[7].overrideMask.bitmask == 127.toShort())
 		assertTrue(schedulePacket.list[7].timestamp == 1540995487L)
-		assertTrue(schedulePacket.list[7].dayOfWeekMask == 255)
+		assertTrue(schedulePacket.list[7].dayOfWeekMask.bitmask == 255.toShort())
 		assertTrue(schedulePacket.list[7].switchVal == 50.toShort())
 		assertTrue(schedulePacket.list[7].fadeDuration == 15)
 	}

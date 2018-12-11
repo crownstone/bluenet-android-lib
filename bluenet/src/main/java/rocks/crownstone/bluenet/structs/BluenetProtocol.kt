@@ -78,6 +78,16 @@ object BluenetProtocol {
 	// Schedule override bitmask
 	const val SCHEDULE_OVERRIDE_BIT_POS_ALL =      0
 	const val SCHEDULE_OVERRIDE_BIT_POS_LOCATION = 1
+
+	const val SCHEDULE_WEEKDAY_BIT_POS_SUNDAY    = 0
+	const val SCHEDULE_WEEKDAY_BIT_POS_MONDAY    = 1
+	const val SCHEDULE_WEEKDAY_BIT_POS_TUESDAY   = 2
+	const val SCHEDULE_WEEKDAY_BIT_POS_WEDNESDAY = 3
+	const val SCHEDULE_WEEKDAY_BIT_POS_THURSDAY  = 4
+	const val SCHEDULE_WEEKDAY_BIT_POS_FRIDAY    = 5
+	const val SCHEDULE_WEEKDAY_BIT_POS_SATURDAY  = 6
+	const val SCHEDULE_WEEKDAY_BIT_POS_ALL_DAYS  = 7
+	const val SCHEDULE_WEEKDAY_MASK_ALL_DAYS = 0x7F // 01111111
 }
 
 enum class OpcodeType(val num: Uint8) {
@@ -391,15 +401,15 @@ data class IbeaconData(val uuid: UUID, val major: Uint16, val minor: Uint16, val
 
 
 
-class ErrorState private constructor() {
-//	private constructor()
+class ErrorState() {
 	var bitmask: Uint32 = 0; private set
-	var overCurrent =       false; private set
-	var overCurrentDimmer = false; private set
-	var chipTemperature =   false; private set
-	var dimmerTemperature = false; private set
-	var dimmerOnFailure =   false; private set
-	var dimmerOffFailure =  false; private set
+	var overCurrent =       false
+	var overCurrentDimmer = false
+	var chipTemperature =   false
+	var dimmerTemperature = false
+	var dimmerOnFailure =   false
+	var dimmerOffFailure =  false
+
 	constructor(bitmask: Uint32): this() {
 		overCurrent =       Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT)
 		overCurrentDimmer = Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT_DIMMER)
@@ -409,13 +419,8 @@ class ErrorState private constructor() {
 		dimmerOffFailure =  Util.isBitSet(bitmask, BluenetProtocol.STATE_ERROR_POS_DIMMER_OFF_FAILURE)
 		this.bitmask = bitmask
 	}
-	constructor(overCurrent: Boolean,
-				overCurrentDimmer: Boolean,
-				chipTemperature: Boolean,
-				dimmerTemperature: Boolean,
-				dimmerOnFailure: Boolean,
-				dimmerOffFailure: Boolean
-	): this() {
+
+	fun calcBitMask(): Uint32 {
 		bitmask = 0
 		if (overCurrent) {       bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT) }
 		if (overCurrentDimmer) { bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT_DIMMER) }
@@ -423,32 +428,76 @@ class ErrorState private constructor() {
 		if (dimmerTemperature) { bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_TEMP_DIMMER) }
 		if (dimmerOnFailure) {   bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_DIMMER_ON_FAILURE) }
 		if (dimmerOffFailure) {  bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_DIMMER_OFF_FAILURE) }
-		this.overCurrent =       overCurrent
-		this.overCurrentDimmer = overCurrentDimmer
-		this.chipTemperature =   chipTemperature
-		this.dimmerTemperature = dimmerTemperature
-		this.dimmerOnFailure =   dimmerOnFailure
-		this.dimmerOffFailure =  dimmerOffFailure
+		return bitmask
 	}
 }
 
-class ScheduleOverride private constructor() {
+class ScheduleOverride() {
 	var bitmask: Uint8 = 0; private set
-	var all =      false; private set
-	var location = false; private set
+	var all =      false
+		set(value) { onSet(value, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL) }
+	var location = false
+		set(value) { onSet(value, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL) }
+
 	constructor(bitmask: Uint8): this() {
-		all =      Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL),
+		all =      Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL)
 		location = Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_LOCATION)
 		this.bitmask = bitmask
 	}
-	constructor(all: Boolean,
-				location: Boolean
-	): this() {
+
+	fun calcBitMask(): Uint8 {
 		bitmask = 0
 		if (all) {      bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL) }
 		if (location) { bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_LOCATION) }
-		this.all = all
-		this.location = location
+		return bitmask
+	}
+
+	private fun onSet(value: Boolean, bit: Int) {
+		when (value) {
+			true -> bitmask = Util.setBit(bitmask, bit)
+			false -> bitmask = Util.clearBit(bitmask, bit)
+		}
+	}
+}
+
+class ScheduleDayOfWeek() {
+	var bitmask: Uint8 = 0; private set
+	var sunday =    false
+	var monday =    false
+	var tuesday =   false
+	var wednesday = false
+	var thursday =  false
+	var friday =    false
+	var saturday =  false
+	var everyDay =  false
+
+	constructor(bitmask: Uint8): this() {
+		sunday =    Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_SUNDAY)
+		monday =    Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_MONDAY)
+		tuesday =   Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_TUESDAY)
+		wednesday = Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_WEDNESDAY)
+		thursday =  Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_THURSDAY)
+		friday =    Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_FRIDAY)
+		saturday =  Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_SATURDAY)
+		everyDay =  Util.isBitSet(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_ALL_DAYS)
+		this.bitmask = bitmask
+	}
+
+	fun calcBitMask(): Uint8 {
+		bitmask = 0
+		if (sunday) {    bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_SUNDAY) }
+		if (monday) {    bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_MONDAY) }
+		if (tuesday) {   bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_TUESDAY) }
+		if (wednesday) { bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_WEDNESDAY) }
+		if (thursday) {  bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_THURSDAY) }
+		if (friday) {    bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_FRIDAY) }
+		if (saturday) {  bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_SATURDAY) }
+		if (everyDay) {  bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_ALL_DAYS) }
+		if ((bitmask.toInt() and BluenetProtocol.SCHEDULE_WEEKDAY_MASK_ALL_DAYS) == BluenetProtocol.SCHEDULE_WEEKDAY_MASK_ALL_DAYS) {
+			bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_ALL_DAYS)
+//			bitmask = Util.setBit(bitmask, ScheduleWeekDayBitPos.ALL_DAYS.num)
+		}
+		return bitmask
 	}
 }
 

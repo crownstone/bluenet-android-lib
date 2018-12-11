@@ -8,18 +8,20 @@ import java.nio.ByteBuffer
 class ScheduleEntryPacket(): PacketInterface {
 	var repeatType: ScheduleRepeatType = ScheduleRepeatType.UNKNOWN
 	var actionType: ScheduleActionType = ScheduleActionType.UNKNOWN
-	var overrideMask: Uint8 = 0
+//	var overrideMask: Uint8 = 0
+	var overrideMask = ScheduleOverride()
 	var timestamp: Uint32 = 0
 
 	// Repeat
 	var minutes: Uint16 = 0
-	var dayOfWeekMask: Int = 0
+//	var dayOfWeekMask: Int = 0
+	var dayOfWeekMask = ScheduleDayOfWeek()
 
 	// Action
 	var switchVal: Uint8 = 0
 	var fadeDuration: Uint16 = 0
 
-	constructor(repeatType: ScheduleRepeatType, actionType: ScheduleActionType, timestamp: Uint32, overrideMask: Uint8 = 0): this() {
+	constructor(repeatType: ScheduleRepeatType, actionType: ScheduleActionType, timestamp: Uint32, overrideMask: ScheduleOverride = ScheduleOverride()): this() {
 		this.repeatType = repeatType
 		this.actionType = actionType
 		this.timestamp = timestamp
@@ -28,7 +30,6 @@ class ScheduleEntryPacket(): PacketInterface {
 
 	companion object {
 		const val SIZE = 1+1+1+4+2+3
-		const val WEEKDAY_MASK_ALL_DAYS = 0x7F // 01111111
 	}
 
 	fun isActive(): Boolean {
@@ -46,7 +47,7 @@ class ScheduleEntryPacket(): PacketInterface {
 		bb.put(0) // Reserved
 		val type = Conversion.toUint8(repeatType.num + (actionType.num shl 4))
 		bb.put(type)
-		bb.put(overrideMask)
+		bb.put(overrideMask.calcBitMask())
 		bb.putInt(timestamp)
 		when (repeatType) {
 			ScheduleRepeatType.MINUTES -> {
@@ -56,13 +57,11 @@ class ScheduleEntryPacket(): PacketInterface {
 				bb.putShort(minutes)
 			}
 			ScheduleRepeatType.DAY -> {
-				if (dayOfWeekMask == 0) {
+				val dayOfWeekBitmask = dayOfWeekMask.calcBitMask()
+				if (dayOfWeekBitmask == 0.toShort()) {
 					return false
 				}
-				if ((dayOfWeekMask and WEEKDAY_MASK_ALL_DAYS) == WEEKDAY_MASK_ALL_DAYS) {
-					dayOfWeekMask = dayOfWeekMask or (1 shl ScheduleWeekDayBitPos.ALL_DAYS.num)
-				}
-				bb.put(dayOfWeekMask.toByte())
+				bb.put(dayOfWeekMask.bitmask)
 				bb.put(0) // Reserved
 			}
 			ScheduleRepeatType.ONCE -> {
@@ -99,7 +98,7 @@ class ScheduleEntryPacket(): PacketInterface {
 		val type = bb.get().toInt()
 		repeatType = ScheduleRepeatType.fromNum(type and 0x0F)
 		actionType = ScheduleActionType.fromNum((type and 0xF0) shr 4)
-		overrideMask = bb.getUint8()
+		overrideMask = ScheduleOverride(bb.getUint8())
 		timestamp = bb.getUint32()
 		if (!isActive()) {
 			// skip remaining 5 bytes
@@ -111,7 +110,7 @@ class ScheduleEntryPacket(): PacketInterface {
 				minutes = bb.getUint16()
 			}
 			ScheduleRepeatType.DAY -> {
-				dayOfWeekMask = bb.getUint8().toInt()
+				dayOfWeekMask = ScheduleDayOfWeek(bb.getUint8())
 				bb.get() // Reserved
 			}
 			ScheduleRepeatType.ONCE -> {

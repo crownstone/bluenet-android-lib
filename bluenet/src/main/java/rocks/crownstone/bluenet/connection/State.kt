@@ -5,7 +5,9 @@ import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
 import nl.komponents.kovenant.unwrap
 import rocks.crownstone.bluenet.*
+import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.StatePacket
+import rocks.crownstone.bluenet.packets.schedule.ScheduleListPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
@@ -25,9 +27,54 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	// TODO: schedules
-//	fun getScheduleList(): Promise<, Exception> {
+	fun getScheduleList(): Promise<ScheduleListPacket, Exception> {
 //		return getState(StateType.SCHEDULE)
-//	}
+//				.then {
+//					val arr = it.getPayload()
+//					if (arr == null) {
+//						return@then Promise.ofFail<ScheduleListPacket, Exception>(Errors.Parse("state payload expected"))
+//					}
+//					val list = ScheduleListPacket()
+//					if (!list.fromArray(arr)) {
+//						return@then Promise.ofFail<ScheduleListPacket, Exception>(Errors.Parse("state payload expected"))
+//					}
+//					return@then Promise.ofSuccess<ScheduleListPacket, Exception>(list)
+//				}.unwrap()
+
+		// TODO: make this a generic function for payload type T (a ScheduleListPacket in this case)
+		val type = StateType.SCHEDULE
+		val writeCommand = fun (): Promise<Unit, Exception> {
+			return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_CONTROL_UUID, StatePacket(type).getArray())
+		}
+		val deferred = deferred<ScheduleListPacket, Exception>()
+		connection.getSingleMergedNotification(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_READ_UUID, writeCommand, BluenetConfig.TIMEOUT_GET_STATE)
+				.success {
+					val scheduleList = ScheduleListPacket()
+					val statePacket = StatePacket(type, scheduleList)
+
+					if (!statePacket.fromArray(it) || statePacket.type != type.num) {
+						deferred.reject(Errors.Parse("can't make a ScheduleListPacket from ${Conversion.bytesToString(it)}"))
+					}
+					deferred.resolve(scheduleList)
+				}
+				.fail {
+					deferred.reject(it)
+				}
+		return deferred.promise
+	}
+
+	fun getAvailableScheduleEntryIndex(): Promise<Int, Exception> {
+		return getScheduleList()
+				.then { scheduleList ->
+					for (i in 0 until scheduleList.list.size) {
+						val entry = scheduleList.list[i]
+						if (!entry.isActive()) {
+							return@then Promise.ofSuccess<Int, Exception>(i)
+						}
+					}
+					return@then Promise.ofFail<Int, Exception>(Errors.Full())
+				}.unwrap()
+	}
 
 	fun getTemperature(): Promise<Int32, Exception> {
 		return getStateValue(StateType.TEMPERATURE)
