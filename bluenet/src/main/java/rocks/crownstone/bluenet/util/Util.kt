@@ -24,11 +24,23 @@ object Util {
 	}
 
 	// Clear the Nth bit in a value
+	fun clearBit(value: Long, bit: Int): Long {
+		return value and (1L shl bit).inv()
+	}
+
 	fun clearBit(value: Int, bit: Int): Int {
 		return value and (1 shl bit).inv()
 	}
 
+	fun clearBit(value: Short, bit: Int): Short {
+		return (value.toInt() and (1 shl bit).inv()).toShort()
+	}
 
+	fun clearBit(value: Byte, bit: Int): Byte {
+		return (value.toInt() and (1 shl bit).inv()).toByte()
+	}
+
+	// Set the Nth bit in a value
 	fun setBit(value: Long, bit: Int): Long {
 		return value or (1L shl bit)
 	}
