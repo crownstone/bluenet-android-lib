@@ -335,6 +335,16 @@ enum class MultiKeepAliveType(val num: Uint8) {
 	}
 }
 
+class KeepAliveActionSwitch {
+	var actionSwitchValue: Uint8 = 255; private set
+	fun setAction(switchValue: Uint8) {
+		actionSwitchValue = switchValue
+	}
+	fun clearAction() {
+		actionSwitchValue = 255
+	}
+}
+
 enum class MeshCommandType(val num: Uint8) {
 	CONTROL(0),
 	BEACON_CONFIG(1),

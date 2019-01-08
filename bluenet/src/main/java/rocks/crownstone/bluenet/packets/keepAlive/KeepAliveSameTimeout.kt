@@ -3,6 +3,7 @@ package rocks.crownstone.bluenet.packets.keepAlive
 import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.KeepAliveActionSwitch
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
@@ -42,7 +43,7 @@ class KeepAliveSameTimeout(val timeout: Uint16): PacketInterface {
 }
 
 
-class KeepAliveSameTimeoutItem(val id: Uint8, val actionSwitchValue: Uint8): PacketInterface {
+class KeepAliveSameTimeoutItem(val id: Uint8, val actionSwitchValue: KeepAliveActionSwitch): PacketInterface {
 	companion object {
 		const val SIZE = 2
 	}
@@ -56,7 +57,7 @@ class KeepAliveSameTimeoutItem(val id: Uint8, val actionSwitchValue: Uint8): Pac
 			return false
 		}
 		bb.put(id.toByte())
-		bb.put(actionSwitchValue.toByte())
+		bb.put(actionSwitchValue.actionSwitchValue.toByte())
 		return true
 	}
 
