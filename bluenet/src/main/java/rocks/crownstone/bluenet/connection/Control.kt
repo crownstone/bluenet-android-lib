@@ -66,8 +66,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlType.RESET)
 	}
 
-	fun keepAliveState(switchValue: Uint8, timeout: Uint16): Promise<Unit, Exception> {
-		val keepAlivePacket = KeepAlivePacket(KeepAliveAction.CHANGE, switchValue, timeout)
+	fun keepAliveState(action: KeepAliveAction, switchValue: Uint8, timeout: Uint16): Promise<Unit, Exception> {
+		val keepAlivePacket = KeepAlivePacket(action, switchValue, timeout)
 		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_STATE, keepAlivePacket))
 	}
 
