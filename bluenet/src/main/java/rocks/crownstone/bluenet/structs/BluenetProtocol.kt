@@ -286,6 +286,35 @@ enum class OperationMode {
 	DFU,
 }
 
+enum class ServiceDataVersion(val num: Uint8) {
+	UNKNOWN(0),
+	V1(1),
+	V3(3),
+	V4(4),
+	V5(5),
+	V6(6);
+	companion object {
+		private val map = ServiceDataVersion.values().associateBy(ServiceDataVersion::num)
+		fun fromNum(action: Uint8): ServiceDataVersion {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class ServiceDataType(val num: Uint8) {
+	STATE(0),
+	ERROR(1),
+	EXT_STATE(2),
+	EXT_ERROR(3),
+	UNKNOWN(255);
+	companion object {
+		private val map = ServiceDataType.values().associateBy(ServiceDataType::num)
+		fun fromNum(action: Uint8): ServiceDataType {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
 enum class KeepAliveAction(val num: Uint8) {
 	NO_CHANGE(0),
 	CHANGE(1),

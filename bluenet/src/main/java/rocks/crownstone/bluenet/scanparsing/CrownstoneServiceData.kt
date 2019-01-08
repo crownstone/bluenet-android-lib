@@ -24,8 +24,8 @@ class CrownstoneServiceData {
 	private lateinit var byteBuffer: ByteBuffer // Cache byte buffer so we can continue parsing after header is done.
 
 	// Header
-	internal var version = 0
-	var type = 0; internal set
+	var version = ServiceDataVersion.UNKNOWN; internal set
+	var type = ServiceDataType.UNKNOWN; internal set
 	internal var serviceUuid: UUID? = null
 	var deviceType = DeviceType.UNKNOWN; internal set
 	internal var operationMode = OperationMode.UNKNOWN
@@ -120,13 +120,13 @@ class CrownstoneServiceData {
 		byteBuffer = ByteBuffer.wrap(bytes)
 		byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
-		version = Conversion.toUint8(byteBuffer.get()).toInt()
+		version = ServiceDataVersion.fromNum(Conversion.toUint8(byteBuffer.get()))
 		when (version) {
-			1 -> return V1.parseHeader(byteBuffer, this)
-			3 -> return V3.parseHeader(byteBuffer, this)
-			4 -> return V4.parseHeader(byteBuffer, this)
-			5 -> return V5.parseHeader(byteBuffer, this)
-			6 -> return V6.parseHeader(byteBuffer, this)
+			ServiceDataVersion.V1 -> return V1.parseHeader(byteBuffer, this)
+			ServiceDataVersion.V3 -> return V3.parseHeader(byteBuffer, this)
+			ServiceDataVersion.V4 -> return V4.parseHeader(byteBuffer, this)
+			ServiceDataVersion.V5 -> return V5.parseHeader(byteBuffer, this)
+			ServiceDataVersion.V6 -> return V6.parseHeader(byteBuffer, this)
 			else -> return false
 		}
 	}
@@ -134,11 +134,11 @@ class CrownstoneServiceData {
 	private fun parseRemaining(key: ByteArray?): Boolean {
 		Log.v(TAG, "parseRemaining version=$version remaining=${byteBuffer.remaining()}")
 		when (version) {
-			1-> return V1.parse(byteBuffer, this, key)
-			3-> return V3.parse(byteBuffer, this, key)
-			4-> return V4.parse(byteBuffer, this, key)
-			5-> return V5.parse(byteBuffer, this, key)
-			6-> return V6.parse(byteBuffer, this, key)
+			ServiceDataVersion.V1-> return V1.parse(byteBuffer, this, key)
+			ServiceDataVersion.V3-> return V3.parse(byteBuffer, this, key)
+			ServiceDataVersion.V4-> return V4.parse(byteBuffer, this, key)
+			ServiceDataVersion.V5-> return V5.parse(byteBuffer, this, key)
+			ServiceDataVersion.V6-> return V6.parse(byteBuffer, this, key)
 			else -> {
 				Log.v(TAG, "invalid version")
 				return false

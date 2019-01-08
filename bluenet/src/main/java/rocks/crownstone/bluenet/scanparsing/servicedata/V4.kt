@@ -2,6 +2,8 @@ package rocks.crownstone.bluenet.scanparsing.servicedata
 
 import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
+import rocks.crownstone.bluenet.structs.ServiceDataType
+import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteBuffer
 
 internal object V4 {
@@ -15,9 +17,9 @@ internal object V4 {
 	}
 
 	fun parse(bb: ByteBuffer, servicedata: CrownstoneServiceData, key: ByteArray?): Boolean {
-		servicedata.type = bb.get().toInt()
+		servicedata.type = ServiceDataType.fromNum(Conversion.toUint8(bb.get()))
 		when (servicedata.type) {
-			0 -> return Shared.parseSetupPacket(bb, servicedata, false, false)
+			ServiceDataType.STATE -> return Shared.parseSetupPacket(bb, servicedata, false, false)
 			else -> return false
 		}
 	}

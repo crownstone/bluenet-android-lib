@@ -4,6 +4,8 @@ import android.util.Log
 import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
+import rocks.crownstone.bluenet.structs.ServiceDataType
+import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -31,12 +33,12 @@ internal object V3 {
 	}
 
 	private fun parseServiceData(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
-		servicedata.type = bb.get().toInt()
+		servicedata.type = ServiceDataType.fromNum(Conversion.toUint8(bb.get()))
 		when (servicedata.type) {
-			0 -> return Shared.parseStatePacket(bb, servicedata, false, false)
-			1 -> return Shared.parseErrorPacket(bb, servicedata, false, false)
-			2 -> return Shared.parseStatePacket(bb, servicedata, true, false)
-			3 -> return Shared.parseErrorPacket(bb, servicedata, true, false)
+			ServiceDataType.STATE -> return Shared.parseStatePacket(bb, servicedata, false, false)
+			ServiceDataType.ERROR -> return Shared.parseErrorPacket(bb, servicedata, false, false)
+			ServiceDataType.EXT_STATE -> return Shared.parseStatePacket(bb, servicedata, true, false)
+			ServiceDataType.EXT_ERROR -> return Shared.parseErrorPacket(bb, servicedata, true, false)
 			else -> {
 				Log.v("V3", "invalid type")
 				return false

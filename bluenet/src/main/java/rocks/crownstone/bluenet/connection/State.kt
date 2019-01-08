@@ -26,7 +26,6 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 		return getStateValue(StateType.SWITCH_STATE)
 	}
 
-	// TODO: schedules
 	fun getScheduleList(): Promise<ScheduleListPacket, Exception> {
 //		return getState(StateType.SCHEDULE)
 //				.then {
