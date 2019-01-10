@@ -20,10 +20,12 @@ class NearestDevices(evtBus: EventBus) {
 	val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 
+	internal val nearestStone = NearestDeviceList()
+	internal val nearestUnvalidated = NearestDeviceList()
 	internal val nearestValidated = NearestDeviceList()
-	internal val nearestNormal = NearestDeviceList()
-	internal val nearestDfu = NearestDeviceList()
-	internal val nearestSetup = NearestDeviceList()
+	internal val nearestValidatedNormal = NearestDeviceList()
+	internal val nearestValidatedDfu = NearestDeviceList()
+	internal val nearestValidatedSetup = NearestDeviceList()
 
 	init {
 		eventBus.subscribe(BluenetEvent.SCAN_RESULT, ::onScan)
@@ -31,25 +33,34 @@ class NearestDevices(evtBus: EventBus) {
 
 	private fun onScan(data: Any) {
 		val device = data as ScannedDevice
+		nearestStone.update(device)
 		if (!device.validated) {
+			if (device.isStone()) {
+				nearestValidated.remove(device)
+				nearestValidatedNormal.remove(device)
+				nearestValidatedDfu.remove(device)
+				nearestValidatedSetup.remove(device)
+				updateAndEmit(device, nearestUnvalidated, BluenetEvent.NEAREST_UNVALIDATED)
+			}
 			return
 		}
+		nearestUnvalidated.remove(device)
 		updateAndEmit(device, nearestValidated, BluenetEvent.NEAREST_VALIDATED)
 		when (device.operationMode) {
 			OperationMode.NORMAL -> {
-				nearestSetup.remove(device)
-				nearestDfu.remove(device)
-				updateAndEmit(device, nearestNormal, BluenetEvent.NEAREST_VALIDATED_NORMAL)
+				nearestValidatedSetup.remove(device)
+				nearestValidatedDfu.remove(device)
+				updateAndEmit(device, nearestValidatedNormal, BluenetEvent.NEAREST_VALIDATED_NORMAL)
 			}
 			OperationMode.SETUP -> {
-				nearestNormal.remove(device)
-				nearestDfu.remove(device)
-				updateAndEmit(device, nearestSetup, BluenetEvent.NEAREST_SETUP)
+				nearestValidatedNormal.remove(device)
+				nearestValidatedDfu.remove(device)
+				updateAndEmit(device, nearestValidatedSetup, BluenetEvent.NEAREST_SETUP)
 			}
 			OperationMode.DFU -> {
-				nearestNormal.remove(device)
-				nearestSetup.remove(device)
-				updateAndEmit(device, nearestDfu, BluenetEvent.NEAREST_DFU)
+				nearestValidatedNormal.remove(device)
+				nearestValidatedSetup.remove(device)
+				updateAndEmit(device, nearestValidatedDfu, BluenetEvent.NEAREST_DFU)
 			}
 			OperationMode.UNKNOWN -> {}
 		}

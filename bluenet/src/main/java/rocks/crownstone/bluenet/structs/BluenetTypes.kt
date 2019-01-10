@@ -29,10 +29,12 @@ enum class BluenetEvent {
 	SCAN_RESULT_VALIDATED,        // Validated device was scanned. ScannedDevice as data.
 	SCAN_RESULT_UNIQUE,           // Device was scanned, with unique service data.  ScannedDevice as data.
 	SCAN_RESULT_VALIDATED_UNIQUE, // Validated device was scanned, with unique service data.  ScannedDevice as data.
-	NEAREST_VALIDATED,        // Validated device (regardless of operation mode) was scanned. NearestDeviceListEntry as data.
-	NEAREST_VALIDATED_NORMAL, // Validated device in normal operation mode was scanned. NearestDeviceListEntry as data.
-	NEAREST_DFU,              // Validated device in dfu operation mode was scanned. NearestDeviceListEntry as data.
-	NEAREST_SETUP,            // Validated device in setup operation mode was scanned. NearestDeviceListEntry as data.
+	NEAREST_STONE,            // Any device that is a stone was scanned.                The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_UNVALIDATED,      // Unvalidated device, that is a stone, was scanned.      The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_VALIDATED,        // Validated device (any operation mode) was scanned.     The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_VALIDATED_NORMAL, // Validated device in normal operation mode was scanned. The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_DFU,              // Validated device in dfu operation mode was scanned.    The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_SETUP,            // Validated device in setup operation mode was scanned.  The current nearest is calculated. NearestDeviceListEntry as data.
 	SETUP_PROGRESS,  // Setup is in progress, Double (progress, where 1.0 is done) as data.
 	IBEACON_SCAN,    // List of iBeacons was scanned. ScannedIbeaconList as data.
 	IBEACON_ENTER_REGION, // Region was entered. IbeaconRegionEventData as data.

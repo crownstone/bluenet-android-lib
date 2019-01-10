@@ -4,9 +4,17 @@ import android.os.SystemClock
 import android.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.DeviceAddress
+import rocks.crownstone.bluenet.structs.OperationMode
 import java.util.*
 
-data class NearestDeviceListEntry(val deviceAddress: DeviceAddress, var rssi: Int, var lastSeenTime: Long)
+data class NearestDeviceListEntry(
+		val deviceAddress: DeviceAddress,
+		val rssi: Int,
+		val lastSeenTime: Long,
+		val isStone: Boolean,
+		val validated: Boolean,
+		val operationMode: OperationMode
+)
 
 /**
  * Class that keeps up the nearest device.
@@ -22,12 +30,12 @@ class NearestDeviceList {
 	}
 	private val map = HashMap<DeviceAddress, NearestDeviceListEntry>()
 
-	private var nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0)
+	private var nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN)
 
 	@Synchronized internal fun update(device: ScannedDevice) {
 		Log.v(TAG, "update ${device.address} ${device.rssi}")
 		val now = SystemClock.elapsedRealtime()
-		val entry = NearestDeviceListEntry(device.address, device.rssi, now)
+		val entry = NearestDeviceListEntry(device.address, device.rssi, now, device.isStone(), device.validated, device.operationMode)
 		map[device.address] = entry
 		if (entry.rssi > nearest.rssi) {
 			nearest = entry
@@ -68,7 +76,7 @@ class NearestDeviceList {
 		}
 
 		// Calc nearest
-		nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0)
+		nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN)
 		for (entry in map.values) {
 			if (entry.rssi > nearest.rssi) {
 				nearest = entry
