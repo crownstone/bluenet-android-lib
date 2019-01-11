@@ -19,14 +19,14 @@ class ScannedDevice(result: ScanResult) {
 	var serviceData: CrownstoneServiceData? = null; internal set
 	var ibeaconData: IbeaconData? = null; internal set
 	val address: DeviceAddress = result.device?.address!! // Can be null?
-	val name = result.device?.name // Can be null
+	val name = result.device?.name ?: ""
 	val rssi = result.rssi
 	var operationMode = OperationMode.UNKNOWN; internal set
 	var validated = false; internal set
 
 	fun isStone(): Boolean {
 		return operationMode != OperationMode.UNKNOWN
-//		// TODO: what about stones in DFU mode?
+//		// But what about stones in DFU mode?
 //		val deviceType = serviceData?.deviceType ?: DeviceType.UNKNOWN
 //		return deviceType != DeviceType.UNKNOWN
 	}

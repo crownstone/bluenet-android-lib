@@ -13,7 +13,8 @@ data class NearestDeviceListEntry(
 		val lastSeenTime: Long,
 		val isStone: Boolean,
 		val validated: Boolean,
-		val operationMode: OperationMode
+		val operationMode: OperationMode,
+		val name: String
 )
 
 /**
@@ -30,12 +31,12 @@ class NearestDeviceList {
 	}
 	private val map = HashMap<DeviceAddress, NearestDeviceListEntry>()
 
-	private var nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN)
+	private var nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN, "")
 
 	@Synchronized internal fun update(device: ScannedDevice) {
 		Log.v(TAG, "update ${device.address} ${device.rssi}")
 		val now = SystemClock.elapsedRealtime()
-		val entry = NearestDeviceListEntry(device.address, device.rssi, now, device.isStone(), device.validated, device.operationMode)
+		val entry = NearestDeviceListEntry(device.address, device.rssi, now, device.isStone(), device.validated, device.operationMode, device.name)
 		map[device.address] = entry
 		if (entry.rssi > nearest.rssi) {
 			nearest = entry
@@ -76,7 +77,7 @@ class NearestDeviceList {
 		}
 
 		// Calc nearest
-		nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN)
+		nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN, "")
 		for (entry in map.values) {
 			if (entry.rssi > nearest.rssi) {
 				nearest = entry
