@@ -34,6 +34,36 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlType.PWM, value)
 	}
 
+	fun toggle(valueOn: Uint8): Promise<Unit, Exception> {
+		val state = State(eventBus, connection)
+		return state.getSwitchState()
+				.then {
+					val switchVal = when (it) {
+						0.toShort() -> valueOn
+						else -> 0.toShort()
+					}
+					 setSwitch(switchVal)
+				}.unwrap()
+	}
+
+	@Deprecated("It's unlikely the value that's set will be returned in the future, use toggle() instead.")
+	fun toggleReturnValueSet(valueOn: Uint8): Promise<Uint8, Exception> {
+		val deferred = deferred<Uint8, Exception>()
+		val state = State(eventBus, connection)
+		var switchVal: Uint8 = 0
+		state.getSwitchState()
+				.then {
+					switchVal = when (it) {
+						0.toShort() -> valueOn
+						else -> 0.toShort()
+					}
+					setSwitch(switchVal)
+				}.unwrap()
+				.success { deferred.resolve(switchVal) }
+				.fail { deferred.reject(it) }
+		return deferred.promise
+	}
+
 	fun multiSwtich(packet: MultiSwitchPacket): Promise<Unit, Exception> {
 		return writeCommand(ControlPacket(ControlType.MULTI_SWITCH, packet))
 	}
