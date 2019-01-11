@@ -1,7 +1,8 @@
 package rocks.crownstone.bluenet.connection
 
+import android.os.Handler
 import android.util.Log
-import nl.komponents.kovenant.Promise
+import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.packets.ControlPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
@@ -13,11 +14,13 @@ import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Util
 
 class Control(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
+	private val handler = Handler()
 
 	fun setSwitch(value: Uint8): Promise<Unit, Exception> {
 		return writeCommand(ControlType.SWITCH, value)
@@ -124,6 +127,34 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlPacket(ControlType.MESH_COMMAND, packet))
 	}
 
+
+	fun recover(address: DeviceAddress): Promise<Unit, Exception> {
+		val packet = Conversion.uint32ToByteArray(BluenetProtocol.RECOVERY_CODE)
+		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED)
+//				.then { Util.waitPromise(500, handler) } // We have to delay the read a bit until the result is written to the characteristic
+				.then { checkRecoveryResult() }.unwrap()
+				.then { connection.disconnect(false) }.unwrap()
+				.then { connection.connect(address) }.unwrap()
+				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
+				.then { checkRecoveryResult() }.unwrap()
+				.then { connection.disconnect(true) }.unwrap()
+				.fail { connection.disconnect(true) }
+	}
+
+	private fun checkRecoveryResult(): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		connection.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, false)
+				.success {
+					val returnCode: Uint32 = Conversion.byteArrayTo(it)
+					when (returnCode) {
+						1L -> deferred.resolve()
+						2L -> deferred.reject(Errors.RecoveryDisabled())
+						else -> deferred.reject(Errors.RecoveryRebootRequired())
+					}
+				}
+				.fail { deferred.reject(it) }
+		return deferred.promise
+	}
 
 
 
