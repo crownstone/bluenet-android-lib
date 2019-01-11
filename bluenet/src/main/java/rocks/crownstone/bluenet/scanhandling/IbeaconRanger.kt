@@ -73,7 +73,9 @@ class IbeaconRanger(val eventBus: EventBus, val handler: Handler) {
 				deviceMap.remove(key)
 			}
 		}
-		pause()
+		if (trackedUuids.isEmpty()) {
+			pause()
+		}
 	}
 
 	/**
