@@ -9,6 +9,7 @@ import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.connection.Config
 import rocks.crownstone.bluenet.connection.Control
+import rocks.crownstone.bluenet.connection.DeviceInfo
 import rocks.crownstone.bluenet.connection.ExtConnection
 import rocks.crownstone.bluenet.connection.Setup
 import rocks.crownstone.bluenet.connection.State
@@ -55,6 +56,7 @@ class Bluenet {
 	lateinit var control: Control; private set
 	lateinit var config: Config; private set
 	lateinit var state: State; private set
+	lateinit var deviceInfo: DeviceInfo; private set
 
 	// Public variables
 	lateinit var iBeaconRanger: IbeaconRanger; private set
@@ -92,6 +94,7 @@ class Bluenet {
 		control = Control(eventBus, connection)
 		config = Config(eventBus, connection)
 		state = State(eventBus, connection)
+		deviceInfo = DeviceInfo(eventBus, connection)
 		iBeaconRanger = IbeaconRanger(eventBus, handler)
 
 		service = BackgroundServiceManager(appContext, eventBus)
