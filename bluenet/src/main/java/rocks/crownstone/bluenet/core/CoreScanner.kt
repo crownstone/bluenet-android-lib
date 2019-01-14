@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Build
+import android.os.Looper
 import android.util.Log
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.util.EventBus
@@ -14,7 +15,7 @@ import rocks.crownstone.bluenet.structs.ScanMode
 /**
  * Class that adds scanning to the bluetooth LE core class.
  */
-open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(appContext, evtBus) {
+open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : CoreConnection(appContext, evtBus, looper) {
 	private var scanFilters: List<ScanFilter> = ArrayList()
 	private var scanSettingsBuilder = ScanSettings.Builder()
 	private var scanSettings: ScanSettings
@@ -38,6 +39,7 @@ open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(a
 	}
 
 	@Synchronized fun startScan() {
+		Log.i(TAG, "startScan")
 		if (!initScanner()) {
 			return
 		}
@@ -49,6 +51,7 @@ open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(a
 	}
 
 	@Synchronized fun stopScan() {
+		Log.i(TAG, "stopScan")
 		if (!initScanner()) {
 			return
 		}
@@ -65,6 +68,7 @@ open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(a
 	 * You need to stop and start scanning again for this to take effect.
 	 */
 	@Synchronized fun setScanMode(mode: ScanMode) {
+		Log.i(TAG, "setScanMode $mode")
 		scanSettingsBuilder.setScanMode(mode.num)
 		scanSettings = scanSettingsBuilder.build()
 	}
@@ -74,10 +78,12 @@ open class CoreScanner(appContext: Context, evtBus: EventBus) : CoreConnection(a
 	 * You need to stop and start scanning again for this to take effect.
 	 */
 	@Synchronized fun setScanFilters(filters: List<ScanFilter>) {
+		Log.i(TAG, "setScanFilters $filters")
 		scanFilters = filters
 	}
 
 	@Synchronized private fun onBleScanResult(callbackType: Int, result: ScanResult?) {
+		Log.v(TAG, "onBleScanResult $result")
 		// Sometimes a scan result is still received after scanning has been stopped.
 		// Sometimes a scan with invalid rssi is received, ignore this result.
 		if (!scanning || result == null || result.rssi >= 0) {

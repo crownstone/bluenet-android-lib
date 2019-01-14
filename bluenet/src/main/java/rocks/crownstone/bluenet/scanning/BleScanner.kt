@@ -2,6 +2,7 @@ package rocks.crownstone.bluenet.scanning
 
 import android.bluetooth.le.ScanFilter
 import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import rocks.crownstone.bluenet.BleCore
@@ -23,12 +24,12 @@ import java.util.*
  * - Set scan filters, via the filterManager.
  * - Set scan interval.
  */
-class BleScanner(evtBus: EventBus, bleCore: BleCore, handler: Handler) {
+class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val core = bleCore
 
-	private val handler = handler
+	private val handler = Handler(looper) // Own handler, as we call removeCallbacksAndMessages(null)
 	val filterManager = ScanFilterManager(::onScanFilterUpdate)
 
 //	private var scanning = false

@@ -5,6 +5,8 @@ import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
+import android.os.HandlerThread
+import android.os.Looper
 import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.connection.Config
@@ -34,10 +36,11 @@ import java.util.*
  *
  * This is the only class a user should use.
  */
-class Bluenet {
+class Bluenet(looper: Looper? = null) {
 	private val TAG = this.javaClass.simpleName
-	private val handler = Handler()
 	private val eventBus = EventBus()
+	private val looper: Looper
+	private val handler: Handler
 	private lateinit var context: Context
 	private lateinit var bleCore: BleCore
 	private lateinit var connection: ExtConnection
@@ -61,6 +64,24 @@ class Bluenet {
 	// Public variables
 	lateinit var iBeaconRanger: IbeaconRanger; private set
 
+	init {
+		if (looper != null) {
+			this.looper = looper
+		}
+		else {
+			// Current thread:
+			this.looper = Looper.myLooper()
+
+//			// Own thread:
+//			val handlerThread = HandlerThread("Bluenet")
+//			handlerThread.start()
+//			this.looper = handlerThread.looper
+
+//			// Mainthread:
+//			this.looper = Looper.getMainLooper()
+		}
+		handler = Handler(this.looper)
+	}
 
 	/**
 	 * Init the library.
@@ -83,11 +104,12 @@ class Bluenet {
 			context = appContext
 		}
 
+
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
 		eventBus.subscribe(BluenetEvent.LOCATION_PERMISSION_GRANTED, ::onPermissionGranted)
 
-		bleCore = BleCore(context, eventBus)
+		bleCore = BleCore(context, eventBus, looper)
 		bleCore.initBle()
 		connection = ExtConnection(eventBus, bleCore, encryptionManager)
 		setup = Setup(eventBus, connection)
@@ -95,7 +117,7 @@ class Bluenet {
 		config = Config(eventBus, connection)
 		state = State(eventBus, connection)
 		deviceInfo = DeviceInfo(eventBus, connection)
-		iBeaconRanger = IbeaconRanger(eventBus, handler)
+		iBeaconRanger = IbeaconRanger(eventBus, looper)
 
 		service = BackgroundServiceManager(appContext, eventBus)
 		return service.runInBackground()
@@ -136,7 +158,7 @@ class Bluenet {
 	@Synchronized private fun initScanner() {
 		bleCore.initScanner()
 		if (bleScanner == null) {
-			bleScanner = BleScanner(eventBus, bleCore, handler)
+			bleScanner = BleScanner(eventBus, bleCore, looper)
 		}
 		if (scanHandler == null) {
 			scanHandler = ScanHandler(eventBus, encryptionManager)

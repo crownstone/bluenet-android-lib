@@ -2,6 +2,8 @@ package rocks.crownstone.bluenet.core
 
 import android.bluetooth.*
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
@@ -15,7 +17,7 @@ import java.util.*
 /**
  * Class that adds connection functions to the bluetooth LE core class.
  */
-open class CoreConnection(appContext: Context, evtBus: EventBus) : CoreInit(appContext, evtBus) {
+open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper) : CoreInit(appContext, evtBus, looper) {
 	private var currentGatt: BluetoothGatt? = null
 	private var services: List<BluetoothGattService>? = null
 

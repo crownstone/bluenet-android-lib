@@ -1,6 +1,7 @@
 package rocks.crownstone.bluenet.scanhandling
 
 import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
@@ -20,8 +21,9 @@ import kotlin.collections.HashSet
  * Once per second a list of of devices with averaged RSSI is sent.
  * Enter and exit region events are sent.
  */
-class IbeaconRanger(val eventBus: EventBus, val handler: Handler) {
+class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
+	private val handler = Handler(looper)
 	private val lastSeenRegion = HashMap<UUID, Long>()
 	private val inRegion = HashSet<UUID>()
 	private val deviceMap = HashMap<DeviceAddress, DeviceData>()

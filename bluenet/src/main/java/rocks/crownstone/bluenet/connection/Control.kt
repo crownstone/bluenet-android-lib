@@ -20,7 +20,6 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
-	private val handler = Handler()
 
 	fun setSwitch(value: Uint8): Promise<Unit, Exception> {
 		return writeCommand(ControlType.SWITCH, value)

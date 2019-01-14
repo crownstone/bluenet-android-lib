@@ -14,6 +14,7 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.util.Log
@@ -24,11 +25,11 @@ import rocks.crownstone.bluenet.util.EventBus
 /**
  * Class that initializes the bluetooth LE core.
  */
-open class CoreInit(appContext: Context, evtBus: EventBus) {
+open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	protected val TAG = "BleCore"
 	protected val eventBus = evtBus
 	protected val context = appContext
-	protected val handler = Handler() // Same thread
+	protected val handler = Handler(looper)
 	protected val promises = CorePromises(handler)
 
 	protected lateinit var bleManager: BluetoothManager
