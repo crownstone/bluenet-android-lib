@@ -9,18 +9,18 @@ import java.util.*
 
 enum class BluenetEvent {
 	INITIALIZED, // Sent when bluenet has been initialized.
-	SCANNER_READY,
-	SCANNER_NOT_READY,
-	NO_LOCATION_SERVICE_PERMISSION, // Sent when permission is required, but not granted.
-	BLE_TURNED_ON,
-	BLE_TURNED_OFF,
-	LOCATION_SERVICE_TURNED_ON,
-	LOCATION_SERVICE_TURNED_OFF,
-	LOCATION_PERMISSION_GRANTED,
+	BLE_TURNED_ON,    // Bluetooth is turned on
+	BLE_TURNED_OFF,   // Bluetooth is turned off
+	NO_LOCATION_SERVICE_PERMISSION, // Sent when location service permission is required, but not granted.
+	LOCATION_PERMISSION_GRANTED,    // Sent when location service permission is granted.
+	LOCATION_SERVICE_TURNED_ON,  // Sent when location service is turned on.
+	LOCATION_SERVICE_TURNED_OFF, // Sent when location service is turned off.
 	BLE_READY,         // BLE is ready to be used (connections).
 	BLE_NOT_READY,     // BLE is no longer ready to be used (connections).
 	CORE_SCANNER_READY,     // Scanner is ready to be used.
 	CORE_SCANNER_NOT_READY, // Scanner is no longer ready to be used.
+	SCANNER_READY,
+	SCANNER_NOT_READY,
 	READY,             // BleCore is ready to be used.
 	NOT_READY,         // BleCore is no longer ready to be used.
 	SCAN_RESULT_RAW, // Device was scanned. ScanResult as data.
