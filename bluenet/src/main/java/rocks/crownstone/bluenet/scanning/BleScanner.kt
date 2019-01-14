@@ -66,7 +66,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	}
 
 	@Synchronized fun startScan(delay: Long = 0) {
-		Log.i(TAG, "startScan")
+		Log.i(TAG, "startScan delay=$delay")
 		if (!running) {
 			running = true
 			handler.removeCallbacksAndMessages(null)
@@ -94,6 +94,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	@Synchronized private fun restart() {
 		// TODO: delay?
 		val wasRunning = running
+		Log.d(TAG, "restart wasRunning=$wasRunning")
 		if (wasRunning) {
 			stopScan()
 			startScan(500)
@@ -116,11 +117,12 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 			lastStartTimes.removeFirst()
 		}
 		// Check if we start too often.
-		if (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD) {
+		if ((lastStartTimes.size >= BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) && (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD)) {
 			// We're starting too often, delay this start.
-//			startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
 			handler.removeCallbacksAndMessages(null)
+			Log.d(TAG, "delay for ${BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now} ms")
 			handler.postDelayed(startScanRunnable, BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
+//			startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
 			return
 		}
 		core.startScan()
