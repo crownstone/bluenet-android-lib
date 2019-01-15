@@ -19,7 +19,7 @@ import kotlin.collections.HashMap
 class EncryptionManager {
 	private val TAG = this.javaClass.simpleName
 
-	private lateinit var keys: Keys
+	private var keys: Keys? = null
 	private var sessionData: SessionData? = null
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
@@ -37,11 +37,19 @@ class EncryptionManager {
 		}
 	}
 
+	// Similar to setting an empty list of keys
+	@Synchronized fun clearKeys() {
+		Log.i(TAG, "clearKeys")
+		keys = null
+		uuids.clear()
+		addresses.clear()
+	}
+
 	@Synchronized fun getKeySet(id: SphereId?): KeySet? {
 		if (id == null) {
 			return null
 		}
-		return keys.get(id)?.keySet
+		return keys?.get(id)?.keySet
 	}
 
 	@Synchronized fun getKeySet(ibeaconData: IbeaconData?): KeySet? {

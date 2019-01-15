@@ -250,6 +250,13 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
+	 * Clear all stored keys for encryption and decryption.
+	 */
+	@Synchronized fun clearKeys() {
+		encryptionManager.clearKeys()
+	}
+
+	/**
 	 * Handles an enable request result.
 	 *
 	 * @return return true if permission result was handled, false otherwise.
