@@ -41,7 +41,9 @@ import java.util.*
 /**
  * The main library class.
  *
- * This is the only class a user should use.
+ * This is the main class a user should use.
+ *
+ * @param looper Optional looper to be used by the library.
  */
 class Bluenet(looper: Looper? = null) {
 	private val TAG = this.javaClass.simpleName
@@ -110,7 +112,6 @@ class Bluenet(looper: Looper? = null) {
 		else {
 			context = appContext
 		}
-
 
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
@@ -194,7 +195,7 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
-	 * @return True when scanner is ready.
+	 * @return True when scanner is ready to start scanning.
 	 */
 	@Synchronized fun isScannerReady(): Boolean {
 		return (initialized) && (bleScanner != null) && (bleCore.isScannerReady())
@@ -287,6 +288,10 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Subscribe on an event.
+	 *
+	 * @param eventType Type of event.
+	 * @param callback  Function be called, see BluenetEvent for the type data.
+	 * @return subscription ID that should be used to unsubscribe.
 	 */
 	@Synchronized fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
@@ -294,6 +299,10 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Subscribe on an event.
+	 *
+	 * @param eventType Type of event.
+	 * @param callback  Function be called, see BluenetEvent for the type data.
+	 * @return subscription ID that should be used to unsubscribe.
 	 */
 	@Synchronized fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
@@ -301,20 +310,28 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Unsubscribe from an event.
+	 *
+	 * @param id: subscription ID that was given when subscribing.
 	 */
 	@Synchronized fun unsubscribe(id: SubscriptionId) {
 		eventBus.unsubscribe(id)
 	}
 
 	/**
-	 * Run bluenet in foreground. This will make the app less likely to get killed for battery saving, but will show an ongoing notification.
+	 * Run bluenet service in foreground. This will show an ongoing notification, which makes it less likely for the app to get killed for battery saving.
+	 *
+	 * @param notificationId Notification ID used as reference to modify the notification later on. Should be a unique number.
+	 * @param notification   The notification.
+	 * @return Promise that resolves when service runs in foreground.
 	 */
 	@Synchronized fun runInForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
 		return service.runInForeground(notificationId, notification)
 	}
 
 	/**
-	 * Run bluenet in background. This will make the app more likely to get killed for battery saving.
+	 * Run bluenet service in background. This will make the app more likely to get killed for battery saving.
+	 *
+	 * @return Promise that resolves when service runs in background.
 	 */
 	@Synchronized fun runInBackground(): Promise<Unit, Exception> {
 		return service.runInBackground()
@@ -322,6 +339,10 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Filter for Crownstones with service data.
+	 *
+	 * Can be combined with other filters.
+	 *
+	 * @param enable Whether to enable this filter.
 	 */
 	@Synchronized fun filterForCrownstones(enable: Boolean) {
 		when (enable) {
@@ -332,6 +353,10 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Filter for iBeacons.
+	 *
+	 * Can be combined with other filters.
+	 *
+	 * @param enable Whether to enable this filter.
 	 */
 	@Synchronized fun filterForIbeacons(enable: Boolean) {
 		when (enable) {
@@ -350,7 +375,7 @@ class Bluenet(looper: Looper? = null) {
 	/**
 	 * Start scanning.
 	 *
-	 * At least one filter is required to be able to scan in the background.
+	 * Note: At least one filter is required to be able to scan in the background.
 	 */
 	@Synchronized fun startScanning() {
 		Log.i(TAG, "startScanning")
@@ -365,6 +390,7 @@ class Bluenet(looper: Looper? = null) {
 		bleScanner?.stopScan()
 	}
 
+	@Deprecated("subscribe to nearest events instead")
 	@Synchronized fun getNearestValidated(): NearestDeviceListEntry? {
 		return nearestDevices.nearestValidated.getNearest()
 	}
@@ -377,20 +403,26 @@ class Bluenet(looper: Looper? = null) {
 //		iBeaconRanger.stopTracking(ibeaconUuid)
 //	}
 
-	@Synchronized fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
-		Log.i(TAG, "setBackground $background")
-		if (!background) {
-			return service.runInBackground()
-		}
-		if (notificationId == null || notification == null) {
-			val deferred = deferred<Unit, Exception>()
-			deferred.reject(Exception("Invalid notification"))
-			return deferred.promise
-		}
-		return service.runInForeground(notificationId, notification)
-	}
+//	@Synchronized fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
+//		Log.i(TAG, "setBackground $background")
+//		if (!background) {
+//			return service.runInBackground()
+//		}
+//		if (notificationId == null || notification == null) {
+//			val deferred = deferred<Unit, Exception>()
+//			deferred.reject(Exception("Invalid notification"))
+//			return deferred.promise
+//		}
+//		return service.runInForeground(notificationId, notification)
+//	}
 
-
+	/**
+	 * Connect to a device.
+	 *
+	 * @param address   MAC address of the device.
+	 * @param timeoutMs Optional: timeout in ms.
+	 * @return Promise that resolves when connected.
+	 */
 	@Synchronized fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		return connection.connect(address, timeoutMs)

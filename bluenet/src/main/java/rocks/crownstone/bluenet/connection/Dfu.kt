@@ -114,14 +114,15 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 	 * Start the dfu process.
 	 *
 	 * Connects, performs dfu, and disconnects.
-	 * Emits events for progress.
+	 * Emits progress events.
 	 *
 	 * @param address  Address of the device.
 	 * @param fileName Filename of the zip with the firmware.
 	 * @param service  Implementation of [DfuBaseService], see https://github.com/NordicSemiconductor/Android-DFU-Library/tree/release/documentation
 	 * @return Promise that resolves when dfu was successful.
 	 */
-	@Synchronized fun startDfu(address: DeviceAddress, fileName: String, service: Class<out DfuBaseService>): Promise<Unit, Exception> {
+	@Synchronized
+	fun startDfu(address: DeviceAddress, fileName: String, service: Class<out DfuBaseService>): Promise<Unit, Exception> {
 		if (dfuDeferred != null) {
 			return Promise.ofFail(Errors.Busy("busy with dfu"))
 		}
@@ -142,23 +143,27 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 		return deferred.promise
 	}
 
-	@Synchronized fun onProgress(percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
+	@Synchronized
+	private fun onProgress(percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
 		// Emit event
 	}
 
-	@Synchronized fun onDfuCompleted() {
+	@Synchronized
+	private fun onDfuCompleted() {
 		val deferred = dfuDeferred ?: return
 		deferred.resolve(Unit)
 		dfuDeferred = null
 	}
 
-	@Synchronized fun onDfuAborted() {
+	@Synchronized
+	private fun onDfuAborted() {
 		val deferred = dfuDeferred ?: return
 		deferred.reject(Errors.Aborted())
 		dfuDeferred = null
 	}
 
-	@Synchronized fun onDfuError(error: Int, errorType: Int, message: String?) {
+	@Synchronized
+	private fun onDfuError(error: Int, errorType: Int, message: String?) {
 		val deferred = dfuDeferred ?: return
 		deferred.resolve(Unit)
 		val type = when (errorType) {

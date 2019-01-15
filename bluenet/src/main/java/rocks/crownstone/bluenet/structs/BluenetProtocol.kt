@@ -322,6 +322,19 @@ enum class ServiceDataType(val num: Uint8) {
 	}
 }
 
+enum class UartMode(val num: Uint8) {
+	NONE(0),
+	RX_ONLY(1),
+	RX_AND_TX(3),
+	UNKNOWN(255);
+	companion object {
+		private val map = UartMode.values().associateBy(UartMode::num)
+		fun fromNum(action: Uint8): UartMode {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
 enum class KeepAliveAction(val num: Uint8) {
 	NO_CHANGE(0),
 	CHANGE(1),
@@ -445,7 +458,11 @@ data class IbeaconData(val uuid: UUID, val major: Uint16, val minor: Uint16, val
 	}
 }
 
-
+class SwitchState(val state: Uint8) {
+	val relay = Util.isBitSet(state,7)
+//	val dimmer = state.toInt() and ((1 shl 7).inv())
+	val dimmer = state.toInt() and 127
+}
 
 class ErrorState() {
 	var bitmask: Uint32 = 0; private set

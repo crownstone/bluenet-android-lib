@@ -15,11 +15,22 @@ import rocks.crownstone.bluenet.structs.CrownstoneMode
 import rocks.crownstone.bluenet.structs.Errors
 import rocks.crownstone.bluenet.util.EventBus
 
+/**
+ * Class to interact with the device information service.
+ *
+ * Most commands assume you are already connected to the crownstone.
+ */
 class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
 
+	/**
+	 * Get the firmware version.
+	 *
+	 * @return Promise with firmware version string as value.
+	 */
+	@Synchronized
 	fun getFirmwareVersion(): Promise<String, Exception> {
 		Log.i(TAG, "getFirmwareVersion")
 		if (connection.mode != CrownstoneMode.NORMAL && connection.mode != CrownstoneMode.SETUP) {
@@ -38,6 +49,12 @@ class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
+	/**
+	 * Get the hardware version.
+	 *
+	 * @return Promise with hardware version string as value.
+	 */
+	@Synchronized
 	fun getHardwareVersion(): Promise<String, Exception> {
 		Log.i(TAG, "getHardwareVersion")
 		// TODO: when in DFU, the hardware version string is shortened.
@@ -53,6 +70,12 @@ class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
+	/**
+	 * Get the bootloader version.
+	 *
+	 * @return Promise with bootloader version string as value.
+	 */
+	@Synchronized
 	fun getBootloaderVersion(): Promise<String, Exception> {
 		Log.i(TAG, "getBootloaderVersion")
 		if (connection.mode != CrownstoneMode.DFU) {

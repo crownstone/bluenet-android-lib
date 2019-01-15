@@ -19,20 +19,48 @@ import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 
+/**
+ * Class to interact with the state characteristics of the crownstone service.
+ *
+ * Most commands assume you are already connected to the crownstone.
+ */
 class State(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
 
+	/**
+	 * Get the reset count.
+	 *
+	 * @return Promise with the reset count as value.
+	 */
+	@Synchronized
 	fun getResetCount(): Promise<Uint16, Exception> {
 		return getStateValue(StateType.RESET_COUNTER)
 	}
 
-	fun getSwitchState(): Promise<Uint8, Exception> {
-		// TODO: class for switchstate
-		return getStateValue(StateType.SWITCH_STATE)
+	/**
+	 * Get the switch state.
+	 *
+	 * @return Promise with SwitchState as value.
+	 */
+	@Synchronized
+	fun getSwitchState(): Promise<SwitchState, Exception> {
+//		val deferred = deferred<SwitchState, Exception>()
+//		getStateValue<Uint8>(StateType.SWITCH_STATE)
+//				.success { deferred.resolve(SwitchState(it)) }
+//				.fail { deferred.reject(it) }
+//		return deferred.promise
+		return getStateValue<Uint8>(StateType.SWITCH_STATE)
+				.then { SwitchState(it) }
 	}
 
+	/**
+	 * Get the list of schedules.
+	 *
+	 * @return Promise with ScheduleListPacket as value.
+	 */
+	@Synchronized
 	fun getScheduleList(): Promise<ScheduleListPacket, Exception> {
 //		return getState(StateType.SCHEDULE)
 //				.then {
@@ -69,6 +97,12 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
+	/**
+	 * Get an empty index in the schedule list.
+	 *
+	 * @return Promise with an empty index as value.
+	 */
+	@Synchronized
 	fun getAvailableScheduleEntryIndex(): Promise<Int, Exception> {
 		return getScheduleList()
 				.then { scheduleList ->
@@ -82,15 +116,33 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 				}.unwrap()
 	}
 
+	/**
+	 * Get the chip temperature.
+	 *
+	 * @return Promise with temperature in °C as value.
+	 */
+	@Synchronized
 	fun getTemperature(): Promise<Int32, Exception> {
 		return getStateValue(StateType.TEMPERATURE)
 	}
 
+	/**
+	 * Get the time of the crownstone.
+	 *
+	 * @return Promise with POSIX time as value.
+	 */
+	@Synchronized
 	fun getTime(): Promise<Uint32, Exception> {
 		// TODO: time conversion
 		return getStateValue(StateType.TIME)
 	}
 
+	/**
+	 * Get the errors of the crownstone.
+	 *
+	 * @return Promise with ErrorState as value.
+	 */
+	@Synchronized
 	fun getErrors(): Promise<ErrorState, Exception> {
 		val promise: Promise<Uint32, Exception> = getStateValue(StateType.ERRORS)
 		return promise.then {

@@ -17,6 +17,11 @@ import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Util
 import kotlin.Exception
 
+/**
+ * Class to perform the setup.
+ *
+ * Assumes you are already connected to the crownstone.
+ */
 class Setup(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
@@ -50,6 +55,18 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		DISCONNECTED(12)
 	}
 
+	/**
+	 * Performs the setup and disconnects.
+	 *
+	 * Emits progress events.
+	 *
+	 * @param id                The crownstone id, should be unique per meshAccessAddress.
+	 * @param keySet            The keys for encryption.
+	 * @param meshAccessAddress A unique value, should comply to rules found ... ??
+	 * @param ibeaconData       iBeacon UUID, major, minor, and calibrated rssi.
+	 * @return Promise
+	 */
+	@Synchronized
 	fun setup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		if (connection.mode != CrownstoneMode.SETUP) {
 			return Promise.ofFail(Errors.NotInMode(CrownstoneMode.SETUP))
