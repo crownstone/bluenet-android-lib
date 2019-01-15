@@ -39,35 +39,35 @@ class CrownstoneServiceData {
 
 	// State
 	var crownstoneId: Uint8 = 0; internal set
-	var switchState: Uint8 = 0; internal set
-	var temperature : Byte = 0; internal set
-	var powerUsageReal = 0.0; internal set
-	var powerUsageApparent = 0.0; internal set
-	var powerFactor = 1.0; internal set
-	var energyUsed = 0L; internal set
-	var externalRssi: Int8 = 0; internal set
-	var timestamp = 0L; internal set
+	var switchState = SwitchState(0); internal set
+	var temperature : Byte = 0; internal set             // Chip temperature in °C.
+	var powerUsageReal = 0.0; internal set               // Real power usage in W.
+	var powerUsageApparent = 0.0; internal set           // Apparent power usage in VA.
+	var powerFactor = 1.0; internal set                  // Power factor.
+	var energyUsed = 0L; internal set                    // Energy used in Joule.
+	var externalRssi: Int8 = 0; internal set             // RSSI to external crownstone, only valid when flagExternalData is true.
+	var timestamp = 0L; internal set                     // POSIX local time, only valid when flagTimeSet is true.
 	internal var validation = false
 	internal var changingData = 0
 
 	// Flags
-	var flagExternalData = false;     internal set
-	var flagSetup = false;            internal set
-	var flagDimmingAvailable = false; internal set
-	var flagDimmable = false;         internal set
-	var flagError = false;            internal set
-	var flagSwitchLocked = false;     internal set
-	var flagTimeSet = false;          internal set
-	var flagSwitchCraft = false;      internal set
+	var flagExternalData = false;     internal set       // True when this service data is from another crownstone.
+	internal var flagSetup = false
+	var flagDimmingAvailable = false; internal set       // True when dimming is available (hardware).
+	var flagDimmable = false;         internal set       // True when dimming is allowed via config.
+	var flagError = false;            internal set       // True when there is an error.
+	var flagSwitchLocked = false;     internal set       // True when the switch is locked via config.
+	var flagTimeSet = false;          internal set       // True when the time is set.
+	var flagSwitchCraft = false;      internal set       // True when switchcraft is enabled via config.
 
 	// Errors
-	var errorOverCurrent = false;       internal set
-	var errorOverCurrentDimmer = false; internal set
-	var errorChipTemperature = false;   internal set
-	var errorDimmerTemperature = false; internal set
-	var errorDimmerFailureOn = false;   internal set
-	var errorDimmerFailureOff = false;  internal set
-	var errorTimestamp = 0L;            internal set
+	var errorOverCurrent = false;       internal set     // Too much current went through the crownstone.
+	var errorOverCurrentDimmer = false; internal set     // Too much current went through the dimmer.
+	var errorChipTemperature = false;   internal set     // The chip temperature was too high.
+	var errorDimmerTemperature = false; internal set     // The dimmer temperature was too high.
+	var errorDimmerFailureOn = false;   internal set     // The dimmer is always (partially) on.
+	var errorDimmerFailureOff = false;  internal set     // The dimmer is always (partially) off.
+	var errorTimestamp = 0L;            internal set     // Timestamp of the first error.
 
 	var unique = false; internal set // Whether this service data was different from the previous.
 

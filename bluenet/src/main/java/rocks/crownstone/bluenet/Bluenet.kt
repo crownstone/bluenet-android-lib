@@ -428,6 +428,12 @@ class Bluenet(looper: Looper? = null) {
 		return connection.connect(address, timeoutMs)
 	}
 
+	/**
+	 * Disconnect from a device.
+	 *
+	 * @param clearCache True to clear the services cache after disconnecting. Handy when you expect them to change.
+	 * @return Promise that resolves when disconnected.
+	 */
 	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
 		return connection.disconnect(clearCache)

@@ -48,14 +48,15 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	}
 
 	companion object {
-		const val IBEACON_SCAN_INTERVAL_MS: Long = 1000
-		const val TICK_INTERVAL_MS: Long = 1000
-		const val REGION_TIMEOUT_MS: Long = 30000
+		const val IBEACON_SCAN_INTERVAL_MS: Long = 1000 // Every interval, the list of iBeacons is sent.
+		const val TICK_INTERVAL_MS: Long = 1000         // Every tick, the region timeout is checked.
+		const val REGION_TIMEOUT_MS: Long = 30000       // After not getting a scan for <timeout> time, the region has been left.
 	}
 
 	internal data class DeviceData(val ibeaconData: IbeaconData, val averager: IbeaconRssiAverager)
 
-	@Synchronized fun destroy() {
+	@Synchronized
+	fun destroy() {
 		eventBus.unsubscribe(subId)
 		handler.removeCallbacks(timeoutRunnable)
 		handler.removeCallbacks(tickRunnable)
@@ -63,16 +64,23 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 
 	/**
 	 * Start tracking a certain iBeacon UUID.
+	 *
+	 * @param ibeaconUuid The UUID to track.
+	 * @param referenceId A reference ID for this UUID, it will be included in events.
 	 */
-	@Synchronized fun track(ibeaconUuid: UUID, referenceId: String) {
+	@Synchronized
+	fun track(ibeaconUuid: UUID, referenceId: String) {
 		trackedUuids.put(ibeaconUuid, referenceId)
 		resume()
 	}
 
 	/**
 	 * Stop tracking a certain iBeacon UUID.
+	 *
+	 * @param ibeaconUuid The UUID to stop tracking.
 	 */
-	@Synchronized fun stopTracking(ibeaconUuid: UUID) {
+	@Synchronized
+	fun stopTracking(ibeaconUuid: UUID) {
 		trackedUuids.remove(ibeaconUuid)
 		lastSeenRegion.remove(ibeaconUuid)
 		inRegion.remove(ibeaconUuid)
@@ -92,7 +100,8 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	 *
 	 * Clears the list of tracked iBeacon UUIDs.
 	 */
-	@Synchronized fun stopTracking() {
+	@Synchronized
+	fun stopTracking() {
 		trackedUuids.clear()
 		lastSeenRegion.clear()
 		inRegion.clear()
@@ -106,7 +115,8 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	 * Assume we are out of all regions.
 	 * Stops sending any tracking events: iBeacon, enter/exit region.
 	 */
-	@Synchronized fun pause() {
+	@Synchronized
+	fun pause() {
 		if (isRunning) {
 			handler.removeCallbacks(timeoutRunnable)
 			handler.removeCallbacks(tickRunnable)
@@ -118,14 +128,16 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	/**
 	 * Start tracking again, with the list that is already there.
 	 */
-	@Synchronized fun resume() {
+	@Synchronized
+	fun resume() {
 		if (!isRunning) {
 			handler.postDelayed(tickRunnable, TICK_INTERVAL_MS)
 		}
 		isRunning = true
 	}
 
-	@Synchronized private fun onScan(data: Any) {
+	@Synchronized
+	private fun onScan(data: Any) {
 		if (!isRunning) {
 			return
 		}
@@ -150,9 +162,11 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 		}
 	}
 
-	@Synchronized private fun onTimeout() {
+	@Synchronized
+	private fun onTimeout() {
 		Log.v(TAG, "onTimeout")
-		val result = ArrayList<ScannedIbeacon>()
+//		val result = ArrayList<ScannedIbeacon>()
+		val result = ScannedIbeaconList()
 		for (entry in deviceMap) {
 			val referenceId = trackedUuids[entry.value.ibeaconData.uuid] ?: ""
 			Log.v(TAG, "    ${entry.key} uuid=${entry.value.ibeaconData.uuid} rssi=${entry.value.averager.getAverage()}")
@@ -163,12 +177,14 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 		eventBus.emit(BluenetEvent.IBEACON_SCAN, result)
 	}
 
-	@Synchronized private fun onTick() {
+	@Synchronized
+	private fun onTick() {
 		checkExitRegions()
 		handler.postDelayed(tickRunnable, TICK_INTERVAL_MS)
 	}
 
-	@Synchronized private fun checkExitRegions() {
+	@Synchronized
+	private fun checkExitRegions() {
 		val currentTime = SystemClock.elapsedRealtime()
 		val pendingExits = ArrayList<UUID>()
 		for (uuid in inRegion) {
@@ -181,19 +197,22 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 		}
 	}
 
-	@Synchronized private fun onEnterRegion(uuid: UUID) {
+	@Synchronized
+	private fun onEnterRegion(uuid: UUID) {
 		Log.i(TAG, "onEnterRegion $uuid")
 		inRegion.add(uuid)
 		eventBus.emit(BluenetEvent.IBEACON_ENTER_REGION, getEventData(uuid))
 	}
 
-	@Synchronized private fun onExitRegion(uuid: UUID) {
+	@Synchronized
+	private fun onExitRegion(uuid: UUID) {
 		Log.i(TAG, "onExitRegion $uuid")
 		inRegion.remove(uuid)
 		eventBus.emit(BluenetEvent.IBEACON_EXIT_REGION, getEventData(uuid))
 	}
 
-	@Synchronized private fun getEventData(changedUuid: UUID): IbeaconRegionEventData {
+	@Synchronized
+	private fun getEventData(changedUuid: UUID): IbeaconRegionEventData {
 		val list = IbeaconRegionList()
 		for (uuid in inRegion) {
 			val referenceId = trackedUuids[uuid] ?: ""

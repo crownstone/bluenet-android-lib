@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
+import rocks.crownstone.bluenet.structs.SwitchState
 import rocks.crownstone.bluenet.util.Util
 import rocks.crownstone.bluenet.util.getUint16
 import rocks.crownstone.bluenet.util.getUint8
@@ -31,7 +32,7 @@ internal object V1 {
 		// Check if it's in setup mode
 		if (servicedata.flagSetup &&
 				servicedata.crownstoneId == 0.toShort() &&
-				servicedata.switchState == 0.toShort() &&
+				servicedata.switchState.state == 0.toShort() &&
 				servicedata.powerUsageReal == 0.0 &&
 				servicedata.energyUsed == 0L) {
 			servicedata.operationMode = OperationMode.SETUP
@@ -70,7 +71,7 @@ internal object V1 {
 
 	private fun parseServiceData(bb: ByteBuffer, servicedata: CrownstoneServiceData) {
 		servicedata.crownstoneId = bb.getUint16().toShort()
-		servicedata.switchState = bb.getUint8()
+		servicedata.switchState = SwitchState(bb.getUint8())
 		val flags = bb.get()
 		servicedata.flagExternalData = (Util.isBitSet(flags, 1))
 		servicedata.flagError = (Util.isBitSet(flags, 2))

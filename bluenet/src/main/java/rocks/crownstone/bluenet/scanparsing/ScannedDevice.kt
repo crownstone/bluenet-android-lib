@@ -21,16 +21,21 @@ class ScannedDevice(result: ScanResult) {
 	private val TAG = this.javaClass.simpleName
 
 	internal val scanResult = result
-	internal var hasServiceData = false // True when there is service data (even if it's invalid data)
+	internal var hasServiceData = false            // True when there is service data (even if it's invalid data)
 //	val serviceData = CrownstoneServiceData()
-	var serviceData: CrownstoneServiceData? = null; internal set
-	var ibeaconData: IbeaconData? = null; internal set
-	val address: DeviceAddress = result.device?.address!! // Can be null?
-	val name = result.device?.name ?: ""
-	val rssi = result.rssi
-	var operationMode = OperationMode.UNKNOWN; internal set
-	var validated = false; internal set
+	var serviceData: CrownstoneServiceData? = null; internal set  // The service data.
+	var ibeaconData: IbeaconData? = null; internal set            // The iBeacon data.
+	val address: DeviceAddress = result.device?.address!!         // Address of the device.
+	val name = result.device?.name ?: ""                          // Name of the device.
+	val rssi = result.rssi                                        // RSSI of the scan.
+	var operationMode = OperationMode.UNKNOWN; internal set       // Operation mode of the device.
+	var validated = false; internal set                           // Whether or not this is a validated device.
 
+	/**
+	 * Check if device is a crownstone.
+	 *
+	 * @return True when the device is a crownstone.
+	 */
 	fun isStone(): Boolean {
 		return operationMode != OperationMode.UNKNOWN
 //		// But what about stones in DFU mode?

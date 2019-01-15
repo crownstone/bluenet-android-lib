@@ -10,6 +10,7 @@ package rocks.crownstone.bluenet.scanparsing.servicedata
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
+import rocks.crownstone.bluenet.structs.SwitchState
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 
@@ -19,7 +20,7 @@ internal object Shared {
 	internal fun parseStatePacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.flagExternalData = external
 		servicedata.crownstoneId = bb.getUint8()
-		servicedata.switchState = bb.getUint8()
+		servicedata.switchState = SwitchState(bb.getUint8())
 		parseFlags(bb.getUint8(), servicedata)
 		servicedata.temperature = bb.get()
 		parsePowerFactor(bb, servicedata)
@@ -62,7 +63,7 @@ internal object Shared {
 	}
 
 	internal fun parseSetupPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
-		servicedata.switchState = bb.getUint8()
+		servicedata.switchState = SwitchState(bb.getUint8())
 		parseFlags(bb.getUint8(), servicedata)
 		servicedata.temperature = bb.get()
 		parsePowerFactor(bb, servicedata)
