@@ -39,7 +39,6 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private val handler = Handler(looper) // Own handler, as we call removeCallbacksAndMessages(null)
 	val filterManager = ScanFilterManager(::onScanFilterUpdate)
 
-//	private var scanning = false
 	private var running = false
 	private var wasRunning = false
 	private var scanPause: Long = 100
@@ -49,13 +48,8 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private var startScanRunnable: Runnable
 	private var stopScanRunnable: Runnable
 
-//	private var lastStartTime: Long = 0
-
 	init {
 		Log.i(TAG, "init")
-//		val handlerThread = HandlerThread("BleScanner")
-//		handlerThread.start()
-//		handler = Handler(handlerThread.looper)
 
 		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any -> onScanFail() })
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
@@ -70,101 +64,128 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 		}
 	}
 
-	@Synchronized fun startScan(delay: Long = 0) {
-		Log.i(TAG, "startScan delay=$delay")
-		if (!running) {
-			running = true
-			handler.removeCallbacksAndMessages(null)
-			handler.postDelayed(startScanRunnable, delay)
+//	@Synchronized
+	fun startScan(delay: Long = 0) {
+		synchronized(this) {
+			Log.i(TAG, "startScan delay=$delay")
+			if (!running) {
+				running = true
+				handler.removeCallbacksAndMessages(null)
+				handler.postDelayed(startScanRunnable, delay)
+			}
 		}
-//		return true
 	}
 
-	@Synchronized fun stopScan() {
+//	@Synchronized
+	fun stopScan() {
 		Log.i(TAG, "stopScan")
-		wasRunning = false
-		if (running) {
-			running = false
-			core.stopScan()
-			handler.removeCallbacksAndMessages(null)
+		synchronized(this) {
+			wasRunning = false
+			if (running) {
+				running = false
+				core.stopScan()
+				handler.removeCallbacksAndMessages(null)
+			}
 		}
-//		return true
 	}
 
-	@Synchronized fun setScanInterval(mode: ScanMode) {
-		val changed = core.setScanMode(mode)
-		if (changed) {
+//	@Synchronized
+	fun setScanInterval(mode: ScanMode) {
+		Log.i(TAG, "setScanInterval $mode")
+		synchronized(this) {
+			val changed = core.setScanMode(mode)
+			if (changed) {
+				restart()
+			}
+		}
+	}
+
+//	@Synchronized
+	private fun restart() {
+		Log.i(TAG, "restart")
+		synchronized(this) {
+			val wasRunning = running
+			Log.d(TAG, "restart wasRunning=$wasRunning")
+			if (wasRunning) {
+				stopScan()
+				startScan(500)
+			}
+		}
+	}
+
+//	@Synchronized
+	private fun onScanFilterUpdate(filters: List<ScanFilter>) {
+		Log.i(TAG, "onScanFilterUpdate: $filters")
+		synchronized(this) {
+			core.setScanFilters(filters)
 			restart()
 		}
 	}
 
-	@Synchronized private fun restart() {
-		val wasRunning = running
-		Log.d(TAG, "restart wasRunning=$wasRunning")
-		if (wasRunning) {
-			stopScan()
-			startScan(500)
-		}
-	}
-
-	@Synchronized private fun onScanFilterUpdate(filters: List<ScanFilter>) {
-		Log.i(TAG, "onScanFilterUpdate: $filters")
-		core.setScanFilters(filters)
-		restart()
-	}
-
-	@Synchronized private fun startInterval() {
+//	@Synchronized
+	private fun startInterval() {
 		Log.i(TAG, "startInterval")
-
-		val now = SystemClock.elapsedRealtime() // See https://developer.android.com/reference/android/os/SystemClock
-		// Check if we start too often.
-		if ((lastStartTimes.size >= BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) && (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD)) {
-			// We're starting too often, delay this start.
-			handler.removeCallbacksAndMessages(null)
-			Log.d(TAG, "delay for ${BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now} ms")
-			handler.postDelayed(startScanRunnable, BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
-//			startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
-			return
-		}
-		// Keep up list of last start times.
-		lastStartTimes.addLast(now)
-		while (lastStartTimes.size > BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) {
-			lastStartTimes.removeFirst()
-		}
-		core.startScan()
-//		scanning = true
-		if (scanPause > 0) {
-			handler.postDelayed(stopScanRunnable, scanDuration)
+		synchronized(this) {
+			val now = SystemClock.elapsedRealtime() // See https://developer.android.com/reference/android/os/SystemClock
+			// Check if we start too often.
+			if ((lastStartTimes.size >= BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) && (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD)) {
+				// We're starting too often, delay this start.
+				handler.removeCallbacksAndMessages(null)
+				Log.d(TAG, "delay for ${BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now} ms")
+				handler.postDelayed(startScanRunnable, BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
+//				startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
+				return
+			}
+			// Keep up list of last start times.
+			lastStartTimes.addLast(now)
+			while (lastStartTimes.size > BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) {
+				lastStartTimes.removeFirst()
+			}
+			core.startScan()
+			if (scanPause > 0) {
+				handler.postDelayed(stopScanRunnable, scanDuration)
+			}
 		}
 	}
 
-	@Synchronized private fun stopInterval() {
+//	@Synchronized
+	private fun stopInterval() {
 		Log.i(TAG, "stopInterval")
-		core.stopScan()
-//		scanning = true
-		if (scanPause > 0) {
-			handler.postDelayed(startScanRunnable, scanPause)
+		synchronized(this) {
+			core.stopScan()
+			if (scanPause > 0) {
+				handler.postDelayed(startScanRunnable, scanPause)
+			}
 		}
 	}
 
-	@Synchronized private fun onCoreScannerReady(data: Any) {
+//	@Synchronized
+	private fun onCoreScannerReady(data: Any) {
 		Log.i(TAG, "onCoreScannerReady")
-		if (wasRunning) {
-			startScan()
+		synchronized(this) {
+			if (wasRunning) {
+				startScan()
+			}
 		}
 	}
 
-	@Synchronized private fun onCoreScannerNotReady(data: Any) {
+//	@Synchronized
+	private fun onCoreScannerNotReady(data: Any) {
 		Log.i(TAG, "onCoreScannerNotReady")
-		if (running) {
-			stopScan()
-			wasRunning = true
+		synchronized(this) {
+			if (running) {
+				stopScan()
+				wasRunning = true
+			}
 		}
 	}
 
-	@Synchronized private fun onScanFail() {
+//	@Synchronized
+	private fun onScanFail() {
 		Log.e(TAG, "onScanFail: TODO")
-		// TODO
+		synchronized(this) {
+			// TODO
+		}
 	}
 
 }
