@@ -64,13 +64,10 @@ class CorePromises(handler: Handler) {
 			Action.CONNECT, Action.DISCONNECT, Action.REFRESH_CACHE, Action.DISCOVER, Action.WRITE, Action.SUBSCRIBE, Action.UNSUBSCRIBE -> {
 				promiseType = PromiseType.UNIT
 				unitPromise = deferred as Deferred<Unit, Exception> // Can't check :(
-				handler.postDelayed(timeoutRunnable, timeoutMs)
-				this.action = action
 			}
 			Action.READ -> {
 				promiseType = PromiseType.BYTE_ARRAY
 				byteArrayPromise = deferred as Deferred<ByteArray, Exception> // Can't check :(
-				this.action = action
 			}
 			else -> {
 				Log.e(TAG, "wrong action or promise type")
@@ -78,6 +75,8 @@ class CorePromises(handler: Handler) {
 				return false
 			}
 		}
+		handler.postDelayed(timeoutRunnable, timeoutMs)
+		this.action = action
 		return true
 	}
 
@@ -181,5 +180,6 @@ class CorePromises(handler: Handler) {
 		promiseType = PromiseType.NONE
 		unitPromise = null
 		byteArrayPromise = null
+		handler.removeCallbacks(timeoutRunnable)
 	}
 }
