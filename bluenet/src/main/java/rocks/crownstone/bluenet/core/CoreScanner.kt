@@ -26,7 +26,10 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 	private var scanFilters: List<ScanFilter> = ArrayList()
 	private var scanSettingsBuilder = ScanSettings.Builder()
 	private var scanSettings: ScanSettings
+	private val lockScanConfig = Any()
+
 	private var scanning = false
+
 
 	init {
 		// Init scan settings
@@ -45,20 +48,29 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 		scanSettings = builder.build()
 	}
 
-	@Synchronized fun startScan() {
+//	@Synchronized
+	fun startScan() {
 		Log.i(TAG, "startScan")
+	synchronized(this) {
 		if (!initScanner()) {
 			return
 		}
 		if (!isScannerReady()) {
 			return
 		}
-		scanner.startScan(scanFilters, scanSettings, scanCallback)
+	}
+		synchronized(lockScanConfig) {
+			scanner.startScan(scanFilters, scanSettings, scanCallback)
+		}
+	synchronized(this) {
 		scanning = true
 	}
+	}
 
-	@Synchronized fun stopScan() {
+//	@Synchronized
+	fun stopScan() {
 		Log.i(TAG, "stopScan")
+	synchronized(this) {
 		if (!initScanner()) {
 			return
 		}
@@ -67,7 +79,7 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 			return
 		}
 		scanner.stopScan(scanCallback)
-
+	}
 	}
 
 	/**
@@ -76,52 +88,70 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 	 *
 	 * @return True when mode was changed.
 	 */
-	@Synchronized fun setScanMode(mode: ScanMode): Boolean {
+//	@Synchronized
+	fun setScanMode(mode: ScanMode): Boolean {
 		Log.i(TAG, "setScanMode $mode")
-		if (scanSettings.scanMode == mode.num) {
-			return false
+//		synchronized(this) {
+		synchronized(lockScanConfig) {
+			if (scanSettings.scanMode == mode.num) {
+				return false
+			}
+			scanSettingsBuilder.setScanMode(mode.num)
+			scanSettings = scanSettingsBuilder.build()
+			return true
 		}
-		scanSettingsBuilder.setScanMode(mode.num)
-		scanSettings = scanSettingsBuilder.build()
-		return true
+//		}
 	}
 
 	/**
 	 * Set new scan filters.
 	 * You need to stop and start scanning again for this to take effect.
 	 */
-	@Synchronized fun setScanFilters(filters: List<ScanFilter>) {
+//	@Synchronized
+	fun setScanFilters(filters: List<ScanFilter>) {
 		Log.i(TAG, "setScanFilters $filters")
-		scanFilters = filters
+//		synchronized(this) {
+		synchronized(lockScanConfig) {
+			scanFilters = filters
+		}
+//		}
 	}
 
-	@Synchronized private fun onBleScanResult(callbackType: Int, result: ScanResult?) {
+//	@Synchronized
+	private fun onBleScanResult(callbackType: Int, result: ScanResult?) {
 		Log.v(TAG, "onBleScanResult $result")
+	synchronized(this) {
 		// Sometimes a scan result is still received after scanning has been stopped.
 		// Sometimes a scan with invalid rssi is received, ignore this result.
 		if (!scanning || result == null || result.rssi >= 0) {
 			return
 		}
-
 		eventBus.emit(BluenetEvent.SCAN_RESULT_RAW, result)
 	}
+	}
 
-	@Synchronized private fun onBleBatchScanResults(results: MutableList<ScanResult>?) {
+//	@Synchronized
+	private fun onBleBatchScanResults(results: MutableList<ScanResult>?) {
+	synchronized(this) {
 		if (results != null) {
 			for (result in results) {
 				onBleScanResult(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, result)
 			}
 		}
 	}
+	}
 
-	@Synchronized private fun onBleScanFailed(errorCode: Int) {
+//	@Synchronized
+	private fun onBleScanFailed(errorCode: Int) {
 		Log.e(TAG, "onScanFailed: $errorCode")
+	synchronized(this) {
 		if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
 			// No problem!
 			return
 		}
 		scanning = false
 		eventBus.emit(BluenetEvent.SCAN_FAILURE)
+	}
 	}
 
 	private val scanCallback = object: ScanCallback() {
