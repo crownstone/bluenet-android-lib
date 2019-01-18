@@ -112,6 +112,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 			receiverRegisteredBle = true
 		}
 
+		Log.i(TAG, "initBle success")
 		bleInitialized = true
 		return true
 	}
@@ -191,6 +192,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * @param activity Activity to be used to ask for requests.
 	 */
 	@Synchronized fun tryMakeScannerReady(activity: Activity) {
+		Log.i(TAG, "tryMakeScannerReady")
 		initBle()
 		getLocationPermission(activity)
 				.success {
