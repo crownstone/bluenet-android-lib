@@ -43,7 +43,8 @@ class CorePromises(handler: Handler) {
 	private var unitPromise: Deferred<Unit, Exception>? = null
 	private var byteArrayPromise: Deferred<ByteArray, Exception>? = null
 
-	@Synchronized fun isBusy(): Boolean {
+	@Synchronized
+	fun isBusy(): Boolean {
 		Log.d(TAG, "isBusy action=${action.name} promiseType=${promiseType.name}")
 		if (action == Action.NONE) {
 			// Extra check, for development
@@ -55,7 +56,8 @@ class CorePromises(handler: Handler) {
 		return true
 	}
 
-	@Synchronized fun <V> setBusy(action: Action, deferred: Deferred<V, Exception>, timeoutMs: Long): Boolean {
+	@Synchronized
+	fun <V> setBusy(action: Action, deferred: Deferred<V, Exception>, timeoutMs: Long): Boolean {
 		if (isBusy()) {
 			return false
 		}
@@ -84,11 +86,13 @@ class CorePromises(handler: Handler) {
 		timeout()
 	}
 
-	@Synchronized fun timeout() {
+	@Synchronized
+	fun timeout() {
 		reject(Errors.Timeout())
 	}
 
-//	@Synchronized fun setBusy(action: Action, deferred: Deferred<Unit, Exception>): Boolean {
+//	@Synchronized
+//	fun setBusy(action: Action, deferred: Deferred<Unit, Exception>): Boolean {
 //		if (isBusy()) {
 //			return false
 //		}
@@ -107,7 +111,8 @@ class CorePromises(handler: Handler) {
 //		return true
 //	}
 //
-//	@Synchronized fun setBusyByteArray(action: Action, deferred: Deferred<ByteArray, Exception>): Boolean {
+//	@Synchronized
+//	fun setBusyByteArray(action: Action, deferred: Deferred<ByteArray, Exception>): Boolean {
 //		if (isBusy()) {
 //			return false
 //		}
@@ -125,7 +130,8 @@ class CorePromises(handler: Handler) {
 //		return true
 //	}
 
-	@Synchronized fun resolve(action: Action) {
+	@Synchronized
+	fun resolve(action: Action) {
 		Log.d(TAG, "resolve unit action=${action.name}")
 		if (action != this.action) {
 			// This shouldn't happen
@@ -143,7 +149,8 @@ class CorePromises(handler: Handler) {
 		cleanupPromises()
 	}
 
-	@Synchronized fun resolve(action: Action, byteArray: ByteArray) {
+	@Synchronized
+	fun resolve(action: Action, byteArray: ByteArray) {
 		Log.d(TAG, "resolve byte array action=${action.name}")
 		if (action != this.action) {
 			// This shouldn't happen
@@ -161,7 +168,8 @@ class CorePromises(handler: Handler) {
 		cleanupPromises()
 	}
 
-	@Synchronized fun reject(error: Exception) {
+	@Synchronized
+	fun reject(error: Exception) {
 		Log.d(TAG, "reject error=${error.message}")
 		when (promiseType) {
 			PromiseType.UNIT -> {
@@ -175,7 +183,8 @@ class CorePromises(handler: Handler) {
 		cleanupPromises()
 	}
 
-	@Synchronized fun cleanupPromises() {
+	@Synchronized
+	fun cleanupPromises() {
 		action = Action.NONE
 		promiseType = PromiseType.NONE
 		unitPromise = null

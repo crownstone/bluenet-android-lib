@@ -44,7 +44,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 * @param timeout Reject promise after this time.
 	 * @return Promise
 	 */
-	@Synchronized fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
+	@Synchronized
+	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		if (!isBleReady()) {
 			return Promise.ofFail(Errors.BleNotReady())
@@ -125,7 +126,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Promise
 	 */
-	@Synchronized fun disconnect(): Promise<Unit, Exception> {
+	@Synchronized
+	fun disconnect(): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect")
 		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
@@ -172,7 +174,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Device, or null when not connected.
 	 */
-	@Synchronized fun getConnectedDevice(): BluetoothDevice? {
+	@Synchronized
+	fun getConnectedDevice(): BluetoothDevice? {
 		if (getConnectionState() == ConnectionState.CONNECTED) {
 			return currentGatt?.device
 		}
@@ -182,7 +185,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	/**
 	 * @return Whether the service is available.
 	 */
-	@Synchronized fun hasService(serviceUuid: UUID): Boolean {
+	@Synchronized
+	fun hasService(serviceUuid: UUID): Boolean {
 		Log.d(TAG, "hasService $serviceUuid")
 		return currentGatt?.getService(serviceUuid) != null
 	}
@@ -190,7 +194,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	/**
 	 * @return Whether the characteristic is available.
 	 */
-	@Synchronized fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
+	@Synchronized
+	fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
 		Log.d(TAG, "hasCharacteristic $characteristicUuid $currentGatt ${currentGatt?.getService(serviceUuid)} ${currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid)}")
 		return currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid) != null
 	}
@@ -200,14 +205,16 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Address of the device, or null when not connected.
 	 */
-	@Synchronized fun getConnectedAddress(): DeviceAddress? {
+	@Synchronized
+	fun getConnectedAddress(): DeviceAddress? {
 		if (getConnectionState() == ConnectionState.CONNECTED) {
 			return currentGatt?.device?.address
 		}
 		return null
 	}
 
-	@Synchronized private fun onGattConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+	@Synchronized
+	private fun onGattConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
 		val address = gatt?.device?.address
 		Log.i(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
 
@@ -253,7 +260,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 * @param clearCache Whether to clear the cache, this is useful when you expect the services to change next time you connect.
 	 * @return Promise
 	 */
-	@Synchronized fun close(clearCache: Boolean): Promise<Unit, Exception> {
+	@Synchronized
+	fun close(clearCache: Boolean): Promise<Unit, Exception> {
 		Log.i(TAG, "close")
 //		if (!isBleReady()) {
 //			return Promise.ofSuccess(Unit) // Always closed when BLE is off?? // TODO: check this
@@ -286,7 +294,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 	}
 
-	@Synchronized private fun closeFinal(clearCache: Boolean) {
+	@Synchronized
+	private fun closeFinal(clearCache: Boolean) {
 		if (clearCache) {
 			refreshGatt()
 		}
@@ -300,7 +309,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Promise
 	 */
-	@Synchronized fun refreshDeviceCache(): Promise<Unit, Exception> {
+	@Synchronized
+	fun refreshDeviceCache(): Promise<Unit, Exception> {
 		Log.i(TAG, "refreshDeviceCache")
 		if (promises.isBusy()) {
 			return Promise.ofFail(Errors.Busy())
@@ -317,7 +327,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 	}
 
-	@Synchronized private fun resolveRefreshDeviceCache() {
+	@Synchronized
+	private fun resolveRefreshDeviceCache() {
 		promises.resolve(Action.REFRESH_CACHE)
 	}
 
@@ -327,7 +338,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	// If you are bonded, shortly after you get state connected the device may receive the Service Changed indication and may refresh services automatically.
 	// See https://devzone.nordicsemi.com/f/nordic-q-a/10146/refresh-services-in-nrf-master-control-panel/37626#37626
 	// See https://devzone.nordicsemi.com/f/nordic-q-a/4783/nrftoobox-on-android-not-recognizing-changes-in-application-type-running-on-nordic-pcb
-	@Synchronized private fun refreshGatt(): Boolean {
+	@Synchronized
+	private fun refreshGatt(): Boolean {
 		Log.i(TAG, "refreshDeviceCache")
 		var success = false
 		try {
@@ -350,7 +362,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 * @param forceDiscover When set to false, the cache can be used.
 	 * @return Promise
 	 */
-	@Synchronized fun discoverServices(forceDiscover: Boolean): Promise<Unit, Exception> {
+	@Synchronized
+	fun discoverServices(forceDiscover: Boolean): Promise<Unit, Exception> {
 		Log.i(TAG, "discoverServices")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
@@ -380,7 +393,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 //				}.unwrap()
 	}
 
-	@Synchronized private fun onGattServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+	@Synchronized
+	private fun onGattServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
 		Log.i(TAG, "onServicesDiscovered status=$status")
 		if (gatt == null || gatt != currentGatt) {
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt")
@@ -397,7 +411,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		promises.resolve(Action.DISCOVER)
 	}
 
-	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray): Promise<Unit, Exception> {
+	@Synchronized
+	fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray): Promise<Unit, Exception> {
 		Log.i(TAG, "write serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid data=${Conversion.bytesToString(data)}")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
@@ -427,7 +442,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 	}
 
-	@Synchronized private fun onGattCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+	@Synchronized
+	private fun onGattCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
 		Log.i(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
 		if (gatt == null || gatt != currentGatt || characteristic == null) {
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=${characteristic?.uuid}")
@@ -444,7 +460,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		promises.resolve(Action.WRITE)
 	}
 
-	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID): Promise<ByteArray, Exception> {
+	@Synchronized
+	fun read(serviceUuid: UUID, characteristicUuid: UUID): Promise<ByteArray, Exception> {
 		Log.i(TAG, "read serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
@@ -473,7 +490,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 	}
 
-	@Synchronized private fun onGattCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+	@Synchronized
+	private fun onGattCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
 		Log.i(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
 		if (gatt == null || gatt != currentGatt || characteristic == null) {
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=${characteristic?.uuid}")
@@ -497,7 +515,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Promise that resolves when subscription succeeded. Value should be used to unsubscribe.
 	 */
-	@Synchronized fun subscribe(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
+	@Synchronized
+	fun subscribe(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
 		Log.i(TAG, "subscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid callback=$callback")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
@@ -548,7 +567,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Promise that resolves when unsubscribe was successful.
 	 */
-	@Synchronized fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID, subscriptionId: SubscriptionId): Promise<Unit, Exception> {
+	@Synchronized
+	fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID, subscriptionId: SubscriptionId): Promise<Unit, Exception> {
 		Log.i(TAG, "unsubscribe serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid subscriptionId=$subscriptionId")
 //		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
@@ -586,7 +606,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 	}
 
-	@Synchronized private fun onGattDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
+	@Synchronized
+	private fun onGattDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
 		Log.i(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
 		if (gatt == null || gatt != currentGatt || descriptor == null || descriptor.uuid != BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID) {
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt descriptor=$descriptor")
@@ -614,7 +635,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 	}
 
-	@Synchronized private fun onGattCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
+	@Synchronized
+	private fun onGattCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
 		Log.i(TAG, "onCharacteristicChanged characteristic=$characteristic")
 		if (gatt == null || gatt != currentGatt || characteristic == null || characteristic.value == null) {
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
@@ -628,7 +650,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Promise that resolves when subscription succeeded. Value should be used to unsubscribe.
 	 */
-	@Synchronized fun subscribeMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
+	@Synchronized
+	fun subscribeMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
 		Log.i(TAG, "subscribeMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val notificationMerger = MultipartNotificationMerger(callback)
 		val notificationCallback = fun(data: ByteArray) {
@@ -646,7 +669,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Promise with multipart notification when resolved.
 	 */
-	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long): Promise<ByteArray, Exception> {
+	@Synchronized
+	fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long): Promise<ByteArray, Exception> {
 		Log.i(TAG, "getSingleMergedNotification serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val deferred = deferred<ByteArray, Exception>()
 		var unsubId = UUID(0,0)
@@ -720,7 +744,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 *
 	 * @return Promise that resolves when the caller is done receiving merged notifications.
 	 */
-	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
+	@Synchronized
+	fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
 		Log.i(TAG, "getMultipleMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val deferred = deferred<Unit, Exception>()
 		var unsubId = UUID(0,0)
@@ -786,13 +811,15 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 	}
 
-	@Synchronized fun wait(timeMs: Long): Promise<Unit, Exception> {
+	@Synchronized
+	fun wait(timeMs: Long): Promise<Unit, Exception> {
 		return waitPromise(timeMs, handler)
 	}
 
 
 
-	@Synchronized private fun onBleTurnedOff(data: Any?) {
+	@Synchronized
+	private fun onBleTurnedOff(data: Any?) {
 		// //TODO: When bluetooth is turned off, we should close the gatt?
 		// Reject current action before closing.
 		promises.reject(Errors.BleNotReady())
@@ -830,7 +857,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 	}
 
-	@Synchronized private fun getConnectionState(): ConnectionState {
+	@Synchronized
+	private fun getConnectionState(): ConnectionState {
 		val gatt = this.currentGatt
 		if (gatt == null) {
 			Log.d(TAG, "gatt is null")
@@ -847,7 +875,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 	}
 
-	@Synchronized private fun getNotConnectedError(state: ConnectionState): Exception {
+	@Synchronized
+	private fun getNotConnectedError(state: ConnectionState): Exception {
 		return when (state) {
 			ConnectionState.CLOSED -> Errors.NotConnected()
 			ConnectionState.DISCONNECTED -> Errors.NotConnected()

@@ -41,7 +41,8 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { result: Any -> onRawScan(result as ScanResult) })
 	}
 
-	@Synchronized private fun onRawScan(result: ScanResult) {
+	@Synchronized
+	private fun onRawScan(result: ScanResult) {
 		Log.v(TAG, "onRawScan")
 
 		if (result.device.address == null) {
@@ -97,7 +98,8 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		}
 	}
 
-	@Synchronized private fun getValidator(device: ScannedDevice): Validator {
+	@Synchronized
+	private fun getValidator(device: ScannedDevice): Validator {
 		var validator: Validator?
 		validator = validators.get(device.address)
 		if (validator == null) {

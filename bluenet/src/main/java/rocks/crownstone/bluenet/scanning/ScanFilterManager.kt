@@ -30,7 +30,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 
 	private data class Filter(val filter: ScanFilter)
 
-	@Synchronized fun getFilters(): List<ScanFilter> {
+	@Synchronized
+	fun getFilters(): List<ScanFilter> {
 		val scanFilters = ArrayList<ScanFilter>()
 		for (entry in filters) {
 			scanFilters.add(entry.value.filter)
@@ -41,7 +42,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 	/**
 	 * Adds filter for any iBeacon.
 	 */
-	@Synchronized fun addIbeaconFilter() {
+	@Synchronized
+	fun addIbeaconFilter() {
 		val id = "ibeacons"
 		Log.i(TAG, "addIbeaconFilter id=$id")
 		if (filters.containsKey(id)) {
@@ -63,7 +65,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 	/**
 	 * Remove the any iBeacon filter.
 	 */
-	@Synchronized fun remIbeaconFilter() {
+	@Synchronized
+	fun remIbeaconFilter() {
 		val id = "ibeacon"
 		Log.i(TAG, "remIbeaconFilter id=$id")
 		if (!filters.containsKey(id)) {
@@ -76,7 +79,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 	/**
 	 * Adds filter for iBeacons with certain UUID.
 	 */
-	@Synchronized fun addIbeaconFilter(ibeaconUuid: UUID) {
+	@Synchronized
+	fun addIbeaconFilter(ibeaconUuid: UUID) {
 		val id = "ibeacon $ibeaconUuid"
 		Log.i(TAG, "addIbeaconFilter id=$id")
 		if (filters.containsKey(id)) {
@@ -107,7 +111,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 	/**
 	 * Remove filter for iBeacons with certain UUID.
 	 */
-	@Synchronized fun remIbeaconFilter(ibeaconUuid: UUID) {
+	@Synchronized
+	fun remIbeaconFilter(ibeaconUuid: UUID) {
 		val id = "ibeacons $ibeaconUuid"
 		Log.i(TAG, "remIbeaconFilter id=$id")
 		if (!filters.containsKey(id)) {
@@ -117,7 +122,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		updateCallback(getFilters())
 	}
 
-	@Synchronized fun addCrownstoneFilter() {
+	@Synchronized
+	fun addCrownstoneFilter() {
 		Log.i(TAG, "addCrownstoneFilter")
 		var update = false
 		if (addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG, false)) {
@@ -137,7 +143,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		}
 	}
 
-	@Synchronized fun remCrownstoneFilter() {
+	@Synchronized
+	fun remCrownstoneFilter() {
 		Log.i(TAG, "remCrownstoneFilter")
 		var update = false
 		if (remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_CROWNSTONE_PLUG, false)) {
@@ -157,11 +164,13 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		}
 	}
 
-	@Synchronized fun addServiceDataFilter(serviceUuid: UUID) {
+	@Synchronized
+	fun addServiceDataFilter(serviceUuid: UUID) {
 		addServiceDataFilter(serviceUuid, true)
 	}
 
-	@Synchronized private fun addServiceDataFilter(serviceUuid: UUID, update: Boolean): Boolean {
+	@Synchronized
+	private fun addServiceDataFilter(serviceUuid: UUID, update: Boolean): Boolean {
 		val id = "serviceData $serviceUuid"
 		Log.i(TAG, "addServiceDataFilter id=$id update=$update")
 		if (filters.containsKey(id)) {
@@ -178,11 +187,13 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		return true
 	}
 
-	@Synchronized fun remServiceDataFilter(serviceUuid: UUID) {
+	@Synchronized
+	fun remServiceDataFilter(serviceUuid: UUID) {
 		remServiceDataFilter(serviceUuid, true)
 	}
 
-	@Synchronized fun remServiceDataFilter(serviceUuid: UUID, update: Boolean): Boolean {
+	@Synchronized
+	fun remServiceDataFilter(serviceUuid: UUID, update: Boolean): Boolean {
 		val id = "serviceData $serviceUuid"
 		Log.i(TAG, "remServiceDataFilter id=$id update=$update")
 		if (!filters.containsKey(id)) {

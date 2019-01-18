@@ -24,7 +24,8 @@ class EncryptionManager {
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
 
-	@Synchronized fun setKeys(keys: Keys) {
+	@Synchronized
+	fun setKeys(keys: Keys) {
 		Log.i(TAG, "setKeys")
 		this.keys = keys
 		uuids.clear()
@@ -38,21 +39,24 @@ class EncryptionManager {
 	}
 
 	// Similar to setting an empty list of keys
-	@Synchronized fun clearKeys() {
+	@Synchronized
+	fun clearKeys() {
 		Log.i(TAG, "clearKeys")
 		keys = null
 		uuids.clear()
 		addresses.clear()
 	}
 
-	@Synchronized fun getKeySet(id: SphereId?): KeySet? {
+	@Synchronized
+	fun getKeySet(id: SphereId?): KeySet? {
 		if (id == null) {
 			return null
 		}
 		return keys?.get(id)?.keySet
 	}
 
-	@Synchronized fun getKeySet(ibeaconData: IbeaconData?): KeySet? {
+	@Synchronized
+	fun getKeySet(ibeaconData: IbeaconData?): KeySet? {
 		val uuid = ibeaconData?.uuid
 		if (uuid != null) {
 			val sphereId = uuids.get(uuid)
@@ -63,11 +67,13 @@ class EncryptionManager {
 		return null
 	}
 
-	@Synchronized fun getKeySetFromAddress(address: DeviceAddress): KeySet? {
+	@Synchronized
+	fun getKeySetFromAddress(address: DeviceAddress): KeySet? {
 		return getKeySet(addresses.get(address))
 	}
 
-	@Synchronized fun getKeySet(device: ScannedDevice): KeySet? {
+	@Synchronized
+	fun getKeySet(device: ScannedDevice): KeySet? {
 		val uuid = device.ibeaconData?.uuid
 		if (uuid != null) {
 			val sphereId = uuids.get(uuid)
@@ -81,7 +87,8 @@ class EncryptionManager {
 		return getKeySetFromAddress(device.address)
 	}
 
-	@Synchronized fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Promise<Unit, Exception> {
+	@Synchronized
+	fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Promise<Unit, Exception> {
 		val sessionData = if (isEncrypted) {
 			val key = getKeySetFromAddress(address)?.guestKeyBytes
 			if (key == null) {
@@ -106,7 +113,8 @@ class EncryptionManager {
 		return Promise.ofSuccess(Unit)
 	}
 
-	@Synchronized fun parseSessionKey(address: DeviceAddress, data: ByteArray): Promise<Unit, Exception> {
+	@Synchronized
+	fun parseSessionKey(address: DeviceAddress, data: ByteArray): Promise<Unit, Exception> {
 		val sessionData = this.sessionData
 		if (sessionData == null) {
 			return Promise.ofFail(Errors.SessionDataMissing())
@@ -116,7 +124,8 @@ class EncryptionManager {
 		return Promise.ofSuccess(Unit)
 	}
 
-	@Synchronized fun encrypt(address: DeviceAddress, data: ByteArray, accessLevel: AccessLevel): ByteArray? {
+	@Synchronized
+	fun encrypt(address: DeviceAddress, data: ByteArray, accessLevel: AccessLevel): ByteArray? {
 		when(accessLevel) {
 			AccessLevel.ENCRYPTION_DISABLED -> return data
 			AccessLevel.UNKNOWN -> return null
@@ -145,7 +154,8 @@ class EncryptionManager {
 	}
 
 	// TODO: use throw instead of promise?
-	@Synchronized fun decryptPromise(address: DeviceAddress, data: ByteArray): Promise<ByteArray, Exception> {
+	@Synchronized
+	fun decryptPromise(address: DeviceAddress, data: ByteArray): Promise<ByteArray, Exception> {
 		val sessionData = this.sessionData
 		if (sessionData == null) {
 			return Promise.ofFail(Errors.SessionDataMissing())
@@ -171,7 +181,8 @@ class EncryptionManager {
 	}
 
 	// TODO: use throw instead
-	@Synchronized fun decrypt(address: DeviceAddress, data: ByteArray): ByteArray? {
+	@Synchronized
+	fun decrypt(address: DeviceAddress, data: ByteArray): ByteArray? {
 		val sessionData = this.sessionData
 		if (sessionData == null) {
 			Log.e(TAG, Errors.SessionDataMissing().message)

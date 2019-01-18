@@ -93,7 +93,8 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 	/**
 	 * Reset the device, which will make it go out of DFU mode.
 	 */
-	@Synchronized fun reset(): Promise<Unit, Exception> {
+	@Synchronized
+	fun reset(): Promise<Unit, Exception> {
 		return connection.subscribe(BluenetProtocol.DFU_SERVICE_UUID, BluenetProtocol.CHAR_DFU_CONTROL_UUID, {})
 				.then {
 					Util.recoverableUnitPromise(

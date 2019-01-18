@@ -44,11 +44,13 @@ class EventBus {
 	init {
 	}
 
-	@Synchronized fun emit(eventType: BluenetEvent, data: Any = Unit) {
+	@Synchronized
+	fun emit(eventType: BluenetEvent, data: Any = Unit) {
 		emit(eventType.name, data)
 	}
 
-	@Synchronized fun emit(eventType: EventType, data: Any = Unit) {
+	@Synchronized
+	fun emit(eventType: EventType, data: Any = Unit) {
 		when (eventType) {
 			BluenetEvent.SCAN_RESULT.name,
 			BluenetEvent.SCAN_RESULT_RAW.name,
@@ -85,11 +87,13 @@ class EventBus {
 		pendingUnsubscriptions.clear()
 	}
 
-	@Synchronized fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
+	@Synchronized
+	fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
 		return subscribe(eventType.name, callback)
 	}
 
-	@Synchronized fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
+	@Synchronized
+	fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
 		val id : SubscriptionId = randomUUID()
 		if (emitting) {
 			Log.i(TAG, "add pending subscription $eventType $id")
@@ -101,7 +105,8 @@ class EventBus {
 		return id
 	}
 
-	@Synchronized fun unsubscribe(id: SubscriptionId) {
+	@Synchronized
+	fun unsubscribe(id: SubscriptionId) {
 		if (emitting) {
 			Log.i(TAG, "add pending unsubscription $id")
 			pendingUnsubscriptions.add(id)
@@ -111,15 +116,18 @@ class EventBus {
 		}
 	}
 
-	@Synchronized fun hasListeners(eventType: BluenetEvent): Boolean {
+	@Synchronized
+	fun hasListeners(eventType: BluenetEvent): Boolean {
 		return hasListeners(eventType.name)
 	}
 
-	@Synchronized fun hasListeners(eventType: EventType): Boolean {
+	@Synchronized
+	fun hasListeners(eventType: EventType): Boolean {
 		return eventSubscriptions.containsKey(eventType)
 	}
 
-	@Synchronized fun reset() {
+	@Synchronized
+	fun reset() {
 		Log.i(TAG, "reset")
 		subscribers.clear()
 		eventSubscriptions.clear()
@@ -127,7 +135,8 @@ class EventBus {
 		pendingUnsubscriptions.clear()
 	}
 
-	@Synchronized private fun subscribe(eventType: EventType, callback: EventCallback, id: SubscriptionId) {
+	@Synchronized
+	private fun subscribe(eventType: EventType, callback: EventCallback, id: SubscriptionId) {
 		Log.i(TAG, "subscribe $eventType $id")
 		if (!eventSubscriptions.containsKey(eventType)) {
 			eventSubscriptions[eventType] = ArrayList()
@@ -136,7 +145,8 @@ class EventBus {
 		eventSubscriptions[eventType]?.add(EventCallbackWithId(id, callback))
 	}
 
-	@Synchronized private fun _unsubscribe(id: SubscriptionId) {
+	@Synchronized
+	private fun _unsubscribe(id: SubscriptionId) {
 		Log.i(TAG, "unsubscribe $id")
 		val eventType = subscribers[id]
 		if (eventType == null) {

@@ -37,7 +37,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	/**
 	 * Connect, discover service and get session data
 	 */
-	@Synchronized fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
+	@Synchronized
+	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		return bleCore.connect(address, timeoutMs)
 				.then {
@@ -52,7 +53,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}
 	}
 
-	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
+	@Synchronized
+	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
 		if (clearCache) {
 			val deferred = deferred<Unit, Exception>()
@@ -74,7 +76,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	/**
 	 * Encrypt and write data.
 	 */
-	@Synchronized fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel=AccessLevel.HIGHEST_AVAILABLE): Promise<Unit, Exception> {
+	@Synchronized
+	fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel=AccessLevel.HIGHEST_AVAILABLE): Promise<Unit, Exception> {
 		Log.i(TAG, "write to $characteristicUuid accessLevel=${accessLevel.name} data=${Conversion.bytesToString(data)}")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
@@ -94,7 +97,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		return bleCore.write(serviceUuid, characteristicUuid, encryptedData)
 	}
 
-	@Synchronized fun read(serviceUuid: UUID, characteristicUuid: UUID, decrypt: Boolean=true): Promise<ByteArray, Exception> {
+	@Synchronized
+	fun read(serviceUuid: UUID, characteristicUuid: UUID, decrypt: Boolean=true): Promise<ByteArray, Exception> {
 		Log.i(TAG, "read $characteristicUuid decrypt=$decrypt")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
@@ -109,15 +113,18 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}.unwrap()
 	}
 
-	@Synchronized fun subscribe(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
+	@Synchronized
+	fun subscribe(serviceUuid: UUID, characteristicUuid: UUID, callback: (ByteArray) -> Unit): Promise<SubscriptionId, Exception> {
 		return bleCore.subscribe(serviceUuid, characteristicUuid, callback)
 	}
 
-	@Synchronized fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID, subscriptionId: SubscriptionId): Promise<Unit, Exception> {
+	@Synchronized
+	fun unsubscribe(serviceUuid: UUID, characteristicUuid: UUID, subscriptionId: SubscriptionId): Promise<Unit, Exception> {
 		return bleCore.unsubscribe(serviceUuid, characteristicUuid, subscriptionId)
 	}
 
-	@Synchronized fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long): Promise<ByteArray, Exception> {
+	@Synchronized
+	fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long): Promise<ByteArray, Exception> {
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
@@ -131,7 +138,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}
 	}
 
-	@Synchronized fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
+	@Synchronized
+	fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
@@ -151,22 +159,26 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	/**
 	 * @return Whether the service is available.
 	 */
-	@Synchronized fun hasService(serviceUuid: UUID): Boolean {
+	@Synchronized
+	fun hasService(serviceUuid: UUID): Boolean {
 		return bleCore.hasService(serviceUuid)
 	}
 
 	/**
 	 * @return Whether the characteristic is available.
 	 */
-	@Synchronized fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
+	@Synchronized
+	fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
 		return bleCore.hasCharacteristic(serviceUuid, characteristicUuid)
 	}
 
-	@Synchronized fun wait(timeMs: Long): Promise<Unit, Exception> {
+	@Synchronized
+	fun wait(timeMs: Long): Promise<Unit, Exception> {
 		return bleCore.wait(timeMs)
 	}
 
-	@Synchronized private fun postConnect(address: DeviceAddress): Promise<Unit, Exception> {
+	@Synchronized
+	private fun postConnect(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "postConnect $address")
 		checkMode()
 		when (mode) {
@@ -201,7 +213,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	}
 
 
-	@Synchronized private fun checkMode() {
+	@Synchronized
+	private fun checkMode() {
 		Log.i(TAG, "checkMode")
 		if (hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
 			mode = CrownstoneMode.SETUP

@@ -89,7 +89,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return True on success.
 	 */
-	@Synchronized fun initBle(): Boolean {
+	@Synchronized
+	fun initBle(): Boolean {
 		Log.i(TAG, "initBle")
 		if (bleInitialized) {
 			return true
@@ -126,7 +127,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return True on success.
 	 */
-	@Synchronized fun initScanner(): Boolean {
+	@Synchronized
+	fun initScanner(): Boolean {
 		if (scannerInitialized) {
 			return true
 		}
@@ -172,7 +174,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * Try to make BLE ready to connect.
 	 * @param activity Optional activity to be used for requests.
 	 */
-	@Synchronized fun tryMakeBleReady(activity: Activity?) {
+	@Synchronized
+	fun tryMakeBleReady(activity: Activity?) {
 		initBle()
 		requestEnableBle(activity)
 	}
@@ -182,7 +185,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * @param activity Optional activity to be used for requests.
 	 * @return Promise that resolves when ready to connect.
 	 */
-	@Synchronized fun makeBleReady(activity: Activity?): Promise<Unit, Exception> {
+	@Synchronized
+	fun makeBleReady(activity: Activity?): Promise<Unit, Exception> {
 		initBle()
 		return enableBle(activity)
 	}
@@ -191,7 +195,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * Try to make the scanner ready to scan.
 	 * @param activity Activity to be used to ask for requests.
 	 */
-	@Synchronized fun tryMakeScannerReady(activity: Activity) {
+	@Synchronized
+	fun tryMakeScannerReady(activity: Activity) {
 		Log.i(TAG, "tryMakeScannerReady")
 		initBle()
 		getLocationPermission(activity)
@@ -212,7 +217,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *                 and from there call BleCore.handleActivityResult().
 	 * @return Promise that resolves when ready to scan.
 	 */
-	@Synchronized fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
+	@Synchronized
+	fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "makeScannerReady")
 		Log.i(TAG, "makeScannerReady - initBle")
 		initBle()
@@ -243,7 +249,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *                 The request code will be BleCore.REQ_CODE_PERMISSIONS_LOCATION
 	 * @return False when unable to make the request
 	 */
-	@Synchronized fun requestLocationPermission(activity: Activity): Boolean {
+	@Synchronized
+	fun requestLocationPermission(activity: Activity): Boolean {
 		Log.i(TAG, "requestLocationPermission activity=$activity")
 
 		if (isLocationPermissionGranted()) {
@@ -274,7 +281,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *                 and from there calls BleCore.handlePermissionResult().
 	 * @return Promise that will be resolved when permissions are granted.
 	 */
-	@Synchronized fun getLocationPermission(activity: Activity): Promise<Unit, Exception> {
+	@Synchronized
+	fun getLocationPermission(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "getLocationPermission activity=$activity")
 		val deferred = deferred<Unit, Exception>()
 		val promise = deferred.promise
@@ -310,7 +318,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		onLocationPermissionTimeout()
 	}
 
-	@Synchronized fun onLocationPermissionTimeout() {
+	@Synchronized
+	fun onLocationPermissionTimeout() {
 		Log.i(TAG, "onLocationPermissionTimeout")
 		if (isLocationPermissionGranted()) {
 			locationPermissionPromise?.resolve()
@@ -326,7 +335,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
+	@Synchronized
+	fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
 		when (requestCode) {
 			REQ_CODE_PERMISSIONS_LOCATION -> {
 				handler.removeCallbacks(getLocationPermissionTimeout)
@@ -357,7 +367,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *                 The request code will be BleCore.REQ_CODE_ENABLE_BLUETOOOTH
 	 * @return False when unable to make the request
 	 */
-	@Synchronized fun requestEnableBle(activity: Activity?): Boolean {
+	@Synchronized
+	fun requestEnableBle(activity: Activity?): Boolean {
 		Log.i(TAG, "requestEnableBle activity=$activity")
 		if (isBleEnabled()) {
 			Log.i(TAG, "no need to request")
@@ -384,7 +395,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *                 and from there call BleCore.handleActivityResult().
 	 * @return Promise that will resolve when BLE was enabled, or rejected when user cancels or on timeout.
 	 */
-	@Synchronized fun enableBle(activity: Activity?): Promise<Unit, Exception> {
+	@Synchronized
+	fun enableBle(activity: Activity?): Promise<Unit, Exception> {
 		Log.i(TAG, "enableBle")
 		val deferred = deferred<Unit, Exception>()
 		val promise = deferred.promise
@@ -415,7 +427,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		onEnableBleResult(isBleEnabled(), "timeout")
 	}
 
-	@Synchronized private fun onEnableBleResult(enabled: Boolean, reason: String? = null) {
+	@Synchronized
+	private fun onEnableBleResult(enabled: Boolean, reason: String? = null) {
 		Log.i(TAG, "onEnableBleResult $enabled ($reason)")
 		handler.removeCallbacks(enableBleTimeout)
 		if (enabled) {
@@ -436,7 +449,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *                 The request code will be BleCore.REQ_CODE_ENABLE_LOCATION_SERVICE
 	 * @return False when unable to make the request
 	 */
-	@Synchronized fun requestEnableLocationService(activity: Activity?): Boolean {
+	@Synchronized
+	fun requestEnableLocationService(activity: Activity?): Boolean {
 		Log.i(TAG, "requestEnableLocationService activity=$activity")
 		if (isLocationServiceEnabled()) {
 			Log.i(TAG, "no need to request")
@@ -463,7 +477,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *                 and from there call BleCore.handleActivityResult().
 	 * @return Promise that will resolve when location service was enabled, or rejected when user cancels or on timeout.
 	 */
-	@Synchronized fun enableLocationService(activity: Activity?): Promise<Unit, Exception> {
+	@Synchronized
+	fun enableLocationService(activity: Activity?): Promise<Unit, Exception> {
 		Log.i(TAG, "enableLocationService")
 		val deferred = deferred<Unit, Exception>()
 		val promise = deferred.promise
@@ -494,7 +509,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		onEnableLocationServiceResult(isLocationServiceEnabled(), "timeout")
 	}
 
-	@Synchronized private fun onEnableLocationServiceResult(enabled: Boolean, reason: String? = null) {
+	@Synchronized
+	private fun onEnableLocationServiceResult(enabled: Boolean, reason: String? = null) {
 		Log.i(TAG, "onEnableLocationServiceResult $enabled ($reason)")
 		handler.removeCallbacks(enableLocationServiceTimeout)
 		if (enabled) {
@@ -512,7 +528,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+	@Synchronized
+	fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		when (requestCode) {
 			REQ_CODE_ENABLE_BLUETOOOTH -> {
 				Log.i(TAG, "bluetooth enable result: $resultCode")
@@ -533,11 +550,13 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	}
 
 
-	@Synchronized fun isBleReady(): Boolean {
+	@Synchronized
+	fun isBleReady(): Boolean {
 		return (bleInitialized && isBleEnabled())
 	}
 
-	@Synchronized fun isScannerReady(): Boolean {
+	@Synchronized
+	fun isScannerReady(): Boolean {
 //		return (scannerInitialized && isBleReady() && isLocationPermissionGranted() && isLocationServiceEnabled())
 		if (scannerInitialized && scannerSet && isBleReady() && isLocationServiceEnabled()) {
 //			scannerReady = true
@@ -591,7 +610,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * @param activity The activity to check
 	 * @return True when valid.
 	 */
-	@Synchronized private fun isActivityValid(activity: Activity?): Boolean {
+	@Synchronized
+	private fun isActivityValid(activity: Activity?): Boolean {
 		return (activity != null && !activity.isDestroyed)
 	}
 
@@ -600,7 +620,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return True if bluetooth is enabled.
 	 */
-	@Synchronized fun isBleEnabled(): Boolean {
+	@Synchronized
+	fun isBleEnabled(): Boolean {
 		val result = bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON
 		Log.i(TAG, "isBleEnabled: $result (enabled=${bleAdapter.isEnabled}, state=${bleAdapter.state}, STATE_ON=${BluetoothAdapter.STATE_ON})")
 		return result
@@ -611,7 +632,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return True when location service is enabled.
 	 */
-	@Synchronized fun isLocationServiceEnabled(): Boolean {
+	@Synchronized
+	fun isLocationServiceEnabled(): Boolean {
 		if (Build.VERSION.SDK_INT < 23) {
 			Log.i(TAG, "isLocationServiceEnabled true")
 			return true
@@ -627,7 +649,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	/**
 	 * Check if location permissions are granted.
 	 */
-	@Synchronized fun isLocationPermissionGranted(): Boolean {
+	@Synchronized
+	fun isLocationPermissionGranted(): Boolean {
 		if (Build.VERSION.SDK_INT < 23) {
 			Log.i(TAG, "isLocationPermissionGranted true")
 			return true
@@ -638,7 +661,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		return result
 	}
 
-	@Synchronized private fun checkScannerReady() {
+	@Synchronized
+	private fun checkScannerReady() {
 		val wasReady = scannerReady
 		scannerReady = isScannerReady()
 		if (scannerReady && !wasReady) {
@@ -653,7 +677,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * Broadcast receiver used to handle bluetooth events, i.e. turning bluetooth on/off
 	 */
 	private val receiverBle = object : BroadcastReceiver() {
-		@Synchronized override fun onReceive(context: Context, intent: Intent) {
+		@Synchronized
+		override fun onReceive(context: Context, intent: Intent) {
 			if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
 				when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
 					BluetoothAdapter.STATE_ON -> {
@@ -693,7 +718,8 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * Broadcast receiver used to handle location events, i.e. turning location services on/off.
 	 */
 	private val receiverLocation = object : BroadcastReceiver() {
-		@Synchronized override fun onReceive(context: Context, intent: Intent) {
+		@Synchronized
+		override fun onReceive(context: Context, intent: Intent) {
 			if (intent.action == LocationManager.PROVIDERS_CHANGED_ACTION) {
 				// PROVIDERS_CHANGED_ACTION  are also triggered if mode is changed, so only
 				// create events if the _locationsServicesReady flag changes

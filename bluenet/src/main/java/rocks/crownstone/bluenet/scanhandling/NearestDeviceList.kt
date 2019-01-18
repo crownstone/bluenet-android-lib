@@ -40,7 +40,8 @@ class NearestDeviceList {
 
 	private var nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN, "")
 
-	@Synchronized internal fun update(device: ScannedDevice) {
+	@Synchronized
+	internal fun update(device: ScannedDevice) {
 		Log.v(TAG, "update ${device.address} ${device.rssi}")
 		val now = SystemClock.elapsedRealtime()
 		val entry = NearestDeviceListEntry(device.address, device.rssi, now, device.isStone(), device.validated, device.operationMode, device.name)
@@ -54,7 +55,8 @@ class NearestDeviceList {
 		}
 	}
 
-	@Synchronized internal fun remove(device: ScannedDevice) {
+	@Synchronized
+	internal fun remove(device: ScannedDevice) {
 		Log.v(TAG, "remove ${device.address}")
 		val entry = map.remove(device.address)
 		if (entry != null && entry.deviceAddress == nearest.deviceAddress) {
@@ -63,14 +65,16 @@ class NearestDeviceList {
 		}
 	}
 
-	@Synchronized fun getNearest(): NearestDeviceListEntry? {
+	@Synchronized
+	fun getNearest(): NearestDeviceListEntry? {
 		if (nearest.deviceAddress == "") {
 			return null
 		}
 		return nearest
 	}
 
-	@Synchronized private fun calcNearest(now: Long) {
+	@Synchronized
+	private fun calcNearest(now: Long) {
 		Log.d(TAG, "calcNearest")
 		// Remove old items
 //		map.entries.removeIf()

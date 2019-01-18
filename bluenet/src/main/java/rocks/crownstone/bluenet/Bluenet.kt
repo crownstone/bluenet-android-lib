@@ -92,7 +92,8 @@ class Bluenet(looper: Looper? = null) {
 	 * @param appContext Context of the app
 	 * @return Promise that resolves when initialized.
 	 */
-	@Synchronized fun init(appContext: Context): Promise<Unit, Exception> {
+	@Synchronized
+	fun init(appContext: Context): Promise<Unit, Exception> {
 		Log.i(TAG, "init")
 		if (initialized) {
 			return Promise.ofSuccess(Unit)
@@ -136,7 +137,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * Cleans up everything that isn't automatically cleaned.
 	 */
-	@Synchronized fun destroy() {
+	@Synchronized
+	fun destroy() {
 		iBeaconRanger.destroy()
 		service.destroy()
 		// TODO: more?
@@ -151,7 +153,8 @@ class Bluenet(looper: Looper? = null) {
 	 * @return Promise that resolves when initialized (rejected when BLE hardware or location permission is missing).
 	 *         When resolved, you can already call startScanning(), but it will give no result until scanner is ready.
 	 */
-	@Synchronized fun initScanner(activity: Activity): Promise<Unit, Exception> {
+	@Synchronized
+	fun initScanner(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "initScanner")
 		return bleCore.getLocationPermission(activity)
 				.success {
@@ -159,7 +162,8 @@ class Bluenet(looper: Looper? = null) {
 				}
 	}
 
-	@Synchronized private fun initScanner() {
+	@Synchronized
+	private fun initScanner() {
 		bleCore.initScanner()
 		if (bleScanner == null) {
 			bleScanner = BleScanner(eventBus, bleCore, looper)
@@ -172,28 +176,32 @@ class Bluenet(looper: Looper? = null) {
 	/**
 	 * @return True when location permission is granted.
 	 */
-	@Synchronized fun isLocationPermissionGranted(): Boolean {
+	@Synchronized
+	fun isLocationPermissionGranted(): Boolean {
 		return bleCore.isLocationPermissionGranted()
 	}
 
 	/**
 	 * @return True when bluetooth is enabled.
 	 */
-	@Synchronized fun isBleEnabled(): Boolean {
+	@Synchronized
+	fun isBleEnabled(): Boolean {
 		return bleCore.isBleEnabled()
 	}
 
 	/**
 	 * @return True when location service is enabled.
 	 */
-	@Synchronized fun isLocationServiceEnabled(): Boolean {
+	@Synchronized
+	fun isLocationServiceEnabled(): Boolean {
 		return bleCore.isLocationServiceEnabled()
 	}
 
 	/**
 	 * @return True when scanner is ready to start scanning.
 	 */
-	@Synchronized fun isScannerReady(): Boolean {
+	@Synchronized
+	fun isScannerReady(): Boolean {
 		return (initialized) && (bleScanner != null) && (bleCore.isScannerReady())
 	}
 
@@ -206,7 +214,8 @@ class Bluenet(looper: Looper? = null) {
 	 *                 The activity should implement Activity.onActivityResult(),
 	 *                 and from there call Bluenet.handleActivityResult().
 	 */
-	@Synchronized fun tryMakeScannerReady(activity: Activity) {
+	@Synchronized
+	fun tryMakeScannerReady(activity: Activity) {
 		initScanner(activity)
 		bleCore.tryMakeScannerReady(activity)
 	}
@@ -220,7 +229,8 @@ class Bluenet(looper: Looper? = null) {
 	 *                 and from there call Bluenet.handleActivityResult().
 	 * @return Promise that resolves when ready to scan, never rejected.
 	 */
-	@Synchronized fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
+	@Synchronized
+	fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "makeScannerReady")
 
 		if (isScannerReady()) {
@@ -242,14 +252,16 @@ class Bluenet(looper: Looper? = null) {
 	 * Currently, the iBeacon UUID is used to select which KeySet should be used,
 	 * so that should match with the iBeacon UUID that is used for setup.
 	 */
-	@Synchronized fun loadKeys(keys: Keys) {
+	@Synchronized
+	fun loadKeys(keys: Keys) {
 		encryptionManager.setKeys(keys)
 	}
 
 	/**
 	 * Clear all stored keys for encryption and decryption.
 	 */
-	@Synchronized fun clearKeys() {
+	@Synchronized
+	fun clearKeys() {
 		encryptionManager.clearKeys()
 	}
 
@@ -258,7 +270,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+	@Synchronized
+	fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		return bleCore.handleActivityResult(requestCode, resultCode, data)
 	}
 
@@ -269,7 +282,8 @@ class Bluenet(looper: Looper? = null) {
 	 *                 The activity can implement Activity.onRequestPermissionsResult() to see if the user canceled.
 	 *                 The request code will be BleCore.REQ_CODE_PERMISSIONS_LOCATION
 	 */
-	@Synchronized fun requestLocationPermission(activity: Activity) {
+	@Synchronized
+	fun requestLocationPermission(activity: Activity) {
 		bleCore.requestLocationPermission(activity)
 	}
 
@@ -278,7 +292,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
+	@Synchronized
+	fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
 		return bleCore.handlePermissionResult(requestCode, permissions, grantResults)
 	}
 
@@ -289,7 +304,8 @@ class Bluenet(looper: Looper? = null) {
 	 * @param callback  Function be called, see BluenetEvent for the type data.
 	 * @return subscription ID that should be used to unsubscribe.
 	 */
-	@Synchronized fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
+	@Synchronized
+	fun subscribe(eventType: BluenetEvent, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
 	}
 
@@ -300,7 +316,8 @@ class Bluenet(looper: Looper? = null) {
 	 * @param callback  Function be called, see BluenetEvent for the type data.
 	 * @return subscription ID that should be used to unsubscribe.
 	 */
-	@Synchronized fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
+	@Synchronized
+	fun subscribe(eventType: EventType, callback: EventCallback) : SubscriptionId {
 		return eventBus.subscribe(eventType, callback)
 	}
 
@@ -309,7 +326,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * @param id: subscription ID that was given when subscribing.
 	 */
-	@Synchronized fun unsubscribe(id: SubscriptionId) {
+	@Synchronized
+	fun unsubscribe(id: SubscriptionId) {
 		eventBus.unsubscribe(id)
 	}
 
@@ -320,7 +338,8 @@ class Bluenet(looper: Looper? = null) {
 	 * @param notification   The notification.
 	 * @return Promise that resolves when service runs in foreground.
 	 */
-	@Synchronized fun runInForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
+	@Synchronized
+	fun runInForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
 		return service.runInForeground(notificationId, notification)
 	}
 
@@ -329,7 +348,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * @return Promise that resolves when service runs in background.
 	 */
-	@Synchronized fun runInBackground(): Promise<Unit, Exception> {
+	@Synchronized
+	fun runInBackground(): Promise<Unit, Exception> {
 		return service.runInBackground()
 	}
 
@@ -340,7 +360,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * @param enable Whether to enable this filter.
 	 */
-	@Synchronized fun filterForCrownstones(enable: Boolean) {
+	@Synchronized
+	fun filterForCrownstones(enable: Boolean) {
 		when (enable) {
 			true ->  bleScanner?.filterManager?.addCrownstoneFilter()
 			false -> bleScanner?.filterManager?.remCrownstoneFilter()
@@ -354,7 +375,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * @param enable Whether to enable this filter.
 	 */
-	@Synchronized fun filterForIbeacons(enable: Boolean) {
+	@Synchronized
+	fun filterForIbeacons(enable: Boolean) {
 		when (enable) {
 			true ->  bleScanner?.filterManager?.addIbeaconFilter()
 			false -> bleScanner?.filterManager?.remIbeaconFilter()
@@ -364,7 +386,8 @@ class Bluenet(looper: Looper? = null) {
 	/**
 	 * Set scan interval: trade off between battery usage and response time.
 	 */
-	@Synchronized fun setScanInterval(scanMode: ScanMode) {
+	@Synchronized
+	fun setScanInterval(scanMode: ScanMode) {
 		bleScanner?.setScanInterval(scanMode)
 	}
 
@@ -373,7 +396,8 @@ class Bluenet(looper: Looper? = null) {
 	 *
 	 * Note: At least one filter is required to be able to scan in the background.
 	 */
-	@Synchronized fun startScanning() {
+	@Synchronized
+	fun startScanning() {
 		Log.i(TAG, "startScanning")
 		bleScanner?.startScan()
 	}
@@ -381,25 +405,30 @@ class Bluenet(looper: Looper? = null) {
 	/**
 	 * Stop scanning.
 	 */
-	@Synchronized fun stopScanning() {
+	@Synchronized
+	fun stopScanning() {
 		Log.i(TAG, "stopScanning")
 		bleScanner?.stopScan()
 	}
 
 //	@Deprecated("subscribe to nearest events instead")
-//	@Synchronized fun getNearestValidated(): NearestDeviceListEntry? {
+//	@Synchronized
+//	fun getNearestValidated(): NearestDeviceListEntry? {
 //		return nearestDevices.nearestValidated.getNearest()
 //	}
 
-//	@Synchronized fun trackIbeacon(ibeaconUuid: UUID, referenceId: String) {
+//	@Synchronized
+//	fun trackIbeacon(ibeaconUuid: UUID, referenceId: String) {
 //		iBeaconRanger.track(ibeaconUuid, referenceId)
 //	}
 //
-//	@Synchronized fun stopTrackingIbeacon(ibeaconUuid: UUID) {
+//	@Synchronized
+//	fun stopTrackingIbeacon(ibeaconUuid: UUID) {
 //		iBeaconRanger.stopTracking(ibeaconUuid)
 //	}
 
-//	@Synchronized fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
+//	@Synchronized
+//	fun setBackground(background: Boolean, notificationId: Int?, notification: Notification?) : Promise<Unit, Exception> {
 //		Log.i(TAG, "setBackground $background")
 //		if (!background) {
 //			return service.runInBackground()
@@ -419,7 +448,8 @@ class Bluenet(looper: Looper? = null) {
 	 * @param timeoutMs Optional: timeout in ms.
 	 * @return Promise that resolves when connected.
 	 */
-	@Synchronized fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
+	@Synchronized
+	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		return connection.connect(address, timeoutMs)
 	}
@@ -430,12 +460,14 @@ class Bluenet(looper: Looper? = null) {
 	 * @param clearCache True to clear the services cache after disconnecting. Handy when you expect them to change.
 	 * @return Promise that resolves when disconnected.
 	 */
-	@Synchronized fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
+	@Synchronized
+	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
 		return connection.disconnect(clearCache)
 	}
 
-	@Synchronized private fun onCoreScannerReady(data: Any) {
+	@Synchronized
+	private fun onCoreScannerReady(data: Any) {
 		initScanner()
 		eventBus.emit(BluenetEvent.SCANNER_READY)
 		for (deferred in scannerReadyPromises) {
@@ -444,11 +476,13 @@ class Bluenet(looper: Looper? = null) {
 		scannerReadyPromises.clear()
 	}
 
-	@Synchronized private fun onCoreScannerNotReady(data: Any) {
+	@Synchronized
+	private fun onCoreScannerNotReady(data: Any) {
 		eventBus.emit(BluenetEvent.SCANNER_NOT_READY)
 	}
 
-	@Synchronized private fun onPermissionGranted(data: Any) {
+	@Synchronized
+	private fun onPermissionGranted(data: Any) {
 		initScanner()
 	}
 }
