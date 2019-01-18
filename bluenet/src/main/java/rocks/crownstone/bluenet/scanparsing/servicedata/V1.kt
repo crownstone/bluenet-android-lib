@@ -32,7 +32,7 @@ internal object V1 {
 		// Check if it's in setup mode
 		if (servicedata.flagSetup &&
 				servicedata.crownstoneId == 0.toShort() &&
-				servicedata.switchState.state == 0.toShort() &&
+				servicedata.switchState.value == 0 &&
 				servicedata.powerUsageReal == 0.0 &&
 				servicedata.energyUsed == 0L) {
 			servicedata.operationMode = OperationMode.SETUP

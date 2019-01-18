@@ -77,8 +77,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		val state = State(eventBus, connection)
 		return state.getSwitchState()
 				.then {
-					val switchVal = when (it.state) {
-						0.toShort() -> valueOn
+					val switchVal = when (it.value) {
+						0 -> valueOn
 						else -> 0.toShort()
 					}
 					 setSwitch(switchVal)
@@ -99,8 +99,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		var switchVal: Uint8 = 0
 		state.getSwitchState()
 				.then {
-					switchVal = when (it.state) {
-						0.toShort() -> valueOn
+					switchVal = when (it.value) {
+						0 -> valueOn
 						else -> 0.toShort()
 					}
 					setSwitch(switchVal)

@@ -458,10 +458,11 @@ data class IbeaconData(val uuid: UUID, val major: Uint16, val minor: Uint16, val
 	}
 }
 
-class SwitchState(val state: Uint8) {
-	val relay = Util.isBitSet(state,7)
+class SwitchState(state: Uint8) {
+	val relay = Util.isBitSet(state,7) // State of the relay, true when on.
 //	val dimmer = state.toInt() and ((1 shl 7).inv())
-	val dimmer = state.toInt() and 127
+	val dimmer = state.toInt() and 127 // State of the dimmer: 0 (off) - 100 (on)
+	val value = if (state.toInt() > 100) 100 else state.toInt() // State of the switch: 0 (off) - 100 (on)
 }
 
 class ErrorState() {
