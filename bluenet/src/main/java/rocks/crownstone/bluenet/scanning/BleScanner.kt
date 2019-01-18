@@ -117,11 +117,6 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 		Log.i(TAG, "startInterval")
 
 		val now = SystemClock.elapsedRealtime() // See https://developer.android.com/reference/android/os/SystemClock
-		// Keep up list of last start times.
-		lastStartTimes.addLast(now)
-		while (lastStartTimes.size > BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) {
-			lastStartTimes.removeFirst()
-		}
 		// Check if we start too often.
 		if ((lastStartTimes.size >= BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) && (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD)) {
 			// We're starting too often, delay this start.
@@ -130,6 +125,11 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 			handler.postDelayed(startScanRunnable, BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
 //			startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
 			return
+		}
+		// Keep up list of last start times.
+		lastStartTimes.addLast(now)
+		while (lastStartTimes.size > BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) {
+			lastStartTimes.removeFirst()
 		}
 		core.startScan()
 //		scanning = true
