@@ -12,20 +12,13 @@ import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
 import nl.komponents.kovenant.*
-import rocks.crownstone.bluenet.connection.Config
-import rocks.crownstone.bluenet.connection.Control
-import rocks.crownstone.bluenet.connection.DeviceInfo
-import rocks.crownstone.bluenet.connection.ExtConnection
-import rocks.crownstone.bluenet.connection.Setup
-import rocks.crownstone.bluenet.connection.State
+import rocks.crownstone.bluenet.connection.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.scanning.BleScanner
 import rocks.crownstone.bluenet.scanhandling.IbeaconRanger
-import rocks.crownstone.bluenet.scanhandling.NearestDeviceListEntry
 import rocks.crownstone.bluenet.scanhandling.NearestDevices
 import rocks.crownstone.bluenet.scanhandling.ScanHandler
 import rocks.crownstone.bluenet.structs.BluenetEvent
@@ -69,6 +62,7 @@ class Bluenet(looper: Looper? = null) {
 	lateinit var config: Config; private set
 	lateinit var state: State; private set
 	lateinit var deviceInfo: DeviceInfo; private set
+	lateinit var dfu: Dfu; private set
 
 	// Public variables
 	lateinit var iBeaconRanger: IbeaconRanger; private set
@@ -125,11 +119,13 @@ class Bluenet(looper: Looper? = null) {
 		config = Config(eventBus, connection)
 		state = State(eventBus, connection)
 		deviceInfo = DeviceInfo(eventBus, connection)
+		dfu = Dfu(eventBus, connection, context)
 		iBeaconRanger = IbeaconRanger(eventBus, looper)
 
 		service = BackgroundServiceManager(appContext, eventBus)
 		return service.runInBackground()
 				.success {
+					Log.i(TAG, "init success")
 					initialized = true
 					eventBus.emit(BluenetEvent.INITIALIZED)
 				}
@@ -390,10 +386,10 @@ class Bluenet(looper: Looper? = null) {
 		bleScanner?.stopScan()
 	}
 
-	@Deprecated("subscribe to nearest events instead")
-	@Synchronized fun getNearestValidated(): NearestDeviceListEntry? {
-		return nearestDevices.nearestValidated.getNearest()
-	}
+//	@Deprecated("subscribe to nearest events instead")
+//	@Synchronized fun getNearestValidated(): NearestDeviceListEntry? {
+//		return nearestDevices.nearestValidated.getNearest()
+//	}
 
 //	@Synchronized fun trackIbeacon(ibeaconUuid: UUID, referenceId: String) {
 //		iBeaconRanger.track(ibeaconUuid, referenceId)
