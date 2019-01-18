@@ -57,8 +57,6 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 //		handlerThread.start()
 //		handler = Handler(handlerThread.looper)
 
-//		val onScan = { result: Any -> onScan(result as ScanResult) }
-//		val subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW.name, onScan)
 		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any -> onScanFail() })
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
@@ -94,12 +92,13 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	}
 
 	@Synchronized fun setScanInterval(mode: ScanMode) {
-		core.setScanMode(mode)
-		restart()
+		val changed = core.setScanMode(mode)
+		if (changed) {
+			restart()
+		}
 	}
 
 	@Synchronized private fun restart() {
-		// TODO: delay?
 		val wasRunning = running
 		Log.d(TAG, "restart wasRunning=$wasRunning")
 		if (wasRunning) {

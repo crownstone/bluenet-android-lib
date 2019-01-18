@@ -73,11 +73,17 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 	/**
 	 * Change the scan mode used to scan for devices. See [ScanSettings] for the different scan modes.
 	 * You need to stop and start scanning again for this to take effect.
+	 *
+	 * @return True when mode was changed.
 	 */
-	@Synchronized fun setScanMode(mode: ScanMode) {
+	@Synchronized fun setScanMode(mode: ScanMode): Boolean {
 		Log.i(TAG, "setScanMode $mode")
+		if (scanSettings.scanMode == mode.num) {
+			return false
+		}
 		scanSettingsBuilder.setScanMode(mode.num)
 		scanSettings = scanSettingsBuilder.build()
+		return true
 	}
 
 	/**
