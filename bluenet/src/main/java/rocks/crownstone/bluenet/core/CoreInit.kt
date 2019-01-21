@@ -129,6 +129,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 */
 	@Synchronized
 	fun initScanner(): Boolean {
+		Log.i(TAG, "initScanner")
 		if (scannerInitialized) {
 			return true
 		}
@@ -153,7 +154,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 		setScanner()
 		scannerInitialized = true
-		handler.post { checkScannerReady() } // Execute this a bit later to avoid timing issues?
+		handler.post { checkScannerReady() } // Execute this a bit later to avoid sending/handling event before this function returns to caller.
 		return true
 	}
 
@@ -220,23 +221,18 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	@Synchronized
 	fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "makeScannerReady")
-		Log.i(TAG, "makeScannerReady - initBle")
 		initBle()
 		return getLocationPermission(activity)
 				.then {
-					Log.i(TAG, "makeScannerReady - initScanner")
 					initScanner()
 				}
 				.then {
-					Log.i(TAG, "makeScannerReady - enableBle")
 					enableBle(activity)
 				}.unwrap()
 				.then {
-					Log.i(TAG, "makeScannerReady - enableLocationService")
 					enableLocationService(activity)
 				}.unwrap()
 				.then {
-					Log.i(TAG, "makeScannerReady - setScanner")
 					setScanner()
 				}
 	}
@@ -552,11 +548,13 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 	@Synchronized
 	fun isBleReady(): Boolean {
+		Log.i(TAG, "isBleReady")
 		return (bleInitialized && isBleEnabled())
 	}
 
 	@Synchronized
 	fun isScannerReady(): Boolean {
+		Log.i(TAG, "isScannerReady")
 //		return (scannerInitialized && isBleReady() && isLocationPermissionGranted() && isLocationServiceEnabled())
 		if (scannerInitialized && scannerSet && isBleReady() && isLocationServiceEnabled()) {
 //			scannerReady = true
@@ -663,6 +661,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 	@Synchronized
 	private fun checkScannerReady() {
+		Log.i(TAG, "checkScannerReady")
 		val wasReady = scannerReady
 		scannerReady = isScannerReady()
 		if (scannerReady && !wasReady) {

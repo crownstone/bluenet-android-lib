@@ -123,7 +123,7 @@ class Bluenet(looper: Looper? = null) {
 		dfu = Dfu(eventBus, connection, context)
 		iBeaconRanger = IbeaconRanger(eventBus, looper)
 
-		service = BackgroundServiceManager(appContext, eventBus)
+		service = BackgroundServiceManager(appContext, eventBus, looper)
 		return service.runInBackground()
 				.success {
 					Log.i(TAG, "init success")

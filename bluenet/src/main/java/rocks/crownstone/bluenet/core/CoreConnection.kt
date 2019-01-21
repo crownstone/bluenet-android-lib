@@ -26,7 +26,6 @@ import java.util.*
  */
 open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper) : CoreInit(appContext, evtBus, looper) {
 	private var currentGatt: BluetoothGatt? = null
-	private var services: List<BluetoothGattService>? = null
 
 	// The notification callbacks are stored in a dedicated eventbus.
 	// An eventbus is used so that we can later subscribe to notifications multiple times, and so it can be cleaned up easily.
@@ -377,10 +376,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 		val deferred = deferred<Unit, Exception>()
 		val gatt = this.currentGatt!! // Already checked in getConnectionState()
-		if (!forceDiscover && services != null) {
-			// Use cached results
-			return Promise.ofSuccess(Unit)
-		}
+		gatt.services
+		// TODO: no need to discoverServices() when it has been done before: check gatt.services (though that makes a copy of all services), or keep up a bool.
 		promises.setBusy(Action.DISCOVER, deferred, BluenetConfig.TIMEOUT_DISCOVER) // Resolve later in onGattServicesDiscovered
 		Log.d(TAG, "gatt.discoverServices")
 		val result = gatt.discoverServices()
@@ -407,7 +404,6 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			promises.reject(Errors.Gatt(status))
 			return
 		}
-		services = gatt.services
 		promises.resolve(Action.DISCOVER)
 	}
 
@@ -828,28 +824,29 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	}
 
 	private val gattCallback = object: BluetoothGattCallback() {
+		// These are called from a different thread.
 		override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-			onGattConnectionStateChange(gatt, status, newState)
+			handler.post { onGattConnectionStateChange(gatt, status, newState) }
 		}
 
 		override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-			onGattServicesDiscovered(gatt, status)
+			handler.post { onGattServicesDiscovered(gatt, status) }
 		}
 
 		override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-			onGattCharacteristicRead(gatt, characteristic, status)
+			handler.post { onGattCharacteristicRead(gatt, characteristic, status) }
 		}
 
 		override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-			onGattCharacteristicWrite(gatt, characteristic, status)
+			handler.post { onGattCharacteristicWrite(gatt, characteristic, status) }
 		}
 
 		override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-			onGattCharacteristicChanged(gatt, characteristic)
+			handler.post { onGattCharacteristicChanged(gatt, characteristic) }
 		}
 
 		override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
-			onGattDescriptorWrite(gatt, descriptor, status)
+			handler.post { onGattDescriptorWrite(gatt, descriptor, status) }
 		}
 
 		override fun onDescriptorRead(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {

@@ -69,7 +69,7 @@ class EventBus {
 //
 //		}
 
-		emitting = true
+		emitting = true // This actually works, because things can subscribe as a result of a callback, so then "emitting" is true.
 		for (it in eventSubscriptions.getValue(eventType)) {
 //		for (it in eventSubscriptions.get(event)!) {
 			it.callback(data)

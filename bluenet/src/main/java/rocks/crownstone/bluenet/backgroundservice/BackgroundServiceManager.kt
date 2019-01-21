@@ -13,7 +13,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.util.EventBus
@@ -21,10 +23,11 @@ import rocks.crownstone.bluenet.util.EventBus
 /**
  * Service that can run in foreground.
  */
-class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
+class BackgroundServiceManager(appContext: Context, evtBus: EventBus, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val context = appContext
+	private val handler = Handler(looper)
 
 	private var foreground = false
 	private var startServiceDeferred: Deferred<Unit, Exception>? = null
@@ -32,17 +35,20 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 	private var service: BackgroundService? = null
 	private var serviceConnection: ServiceConnection = object : ServiceConnection {
 		override fun onServiceConnected(name: ComponentName, binder: IBinder) {
+			// This is called from the service thread.
 			Log.i(TAG, "service connected")
-			service = (binder as BackgroundService.ServiceBinder).getService()
-			service?.setEventBus(eventBus)
-			val deferred = startServiceDeferred
-			startServiceDeferred = null
-			deferred?.resolve()
+			handler.post {
+				// Decouple from service thread.
+				onBackgroundServiceConnected(name, binder)
+			}
 		}
 
 		override fun onServiceDisconnected(name: ComponentName) {
 			Log.i(TAG, "service disconnected")
-			service = null
+			handler.post {
+				// Decouple from service thread.
+				onBackgroundServiceDisconnected(name)
+			}
 		}
 	}
 
@@ -71,6 +77,7 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 	fun runInBackground(): Promise<Unit, Exception> {
 		Log.i(TAG, "runInBackground")
 		return startService(false).then {
+			// This is called from a new thread.. why?
 			startBackground()
 		}.unwrap()
 	}
@@ -115,7 +122,21 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus) {
 		return deferred.promise
 	}
 
+	@Synchronized
+	private fun onBackgroundServiceConnected(name: ComponentName, binder: IBinder) {
+		Log.i(TAG, "onBackgroundServiceConnected")
+		service = (binder as BackgroundService.ServiceBinder).getService()
+		service?.setEventBus(eventBus)
+		val deferred = startServiceDeferred
+		startServiceDeferred = null
+		deferred?.resolve()
+	}
 
+	@Synchronized
+	private fun onBackgroundServiceDisconnected(name: ComponentName) {
+		Log.i(TAG, "onBackgroundServiceDisconnected")
+		service = null
+	}
 
 	private fun startForeground(notificationId: Int, notification: Notification): Promise<Unit, Exception> {
 		Log.i(TAG, "startForeground")

@@ -155,14 +155,21 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 	}
 
 	private val scanCallback = object: ScanCallback() {
+		// These are called from a different thread.
 		override fun onScanResult(callbackType: Int, result: ScanResult?) {
-			onBleScanResult(callbackType, result)
+			handler.post {
+				onBleScanResult(callbackType, result)
+			}
 		}
 		override fun onBatchScanResults(results: MutableList<ScanResult>?) {
-			onBleBatchScanResults(results)
+			handler.post {
+				onBleBatchScanResults(results)
+			}
 		}
 		override fun onScanFailed(errorCode: Int) {
-			onBleScanFailed(errorCode)
+			handler.post {
+				onBleScanFailed(errorCode)
+			}
 		}
 	}
 
