@@ -809,6 +809,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 
 	@Synchronized
 	fun wait(timeMs: Long): Promise<Unit, Exception> {
+		Log.i(TAG, "wait $timeMs ms")
 		return waitPromise(timeMs, handler)
 	}
 

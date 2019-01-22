@@ -39,6 +39,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setSwitch(value: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "setSwitch $value")
 		return writeCommand(ControlType.SWITCH, value)
 	}
 
@@ -51,6 +52,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Use setSwitch instead.")
 	@Synchronized
 	fun setRelay(value: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "setRelay $value")
 		return writeCommand(ControlType.RELAY, value)
 	}
 
@@ -63,6 +65,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Use setSwitch instead.")
 	@Synchronized
 	fun setDimmer(value: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "setDimmer $value")
 		return writeCommand(ControlType.PWM, value)
 	}
 
@@ -74,6 +77,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun toggleSwitch(valueOn: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "toggleSwitch $valueOn")
 		val state = State(eventBus, connection)
 		return state.getSwitchState()
 				.then {
@@ -94,6 +98,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("It's unlikely the value that's set will be returned in the future, use toggleSwitch() instead.")
 	@Synchronized
 	fun toggleSwitchReturnValueSet(valueOn: Uint8): Promise<Uint8, Exception> {
+		Log.i(TAG, "toggleSwitchReturnValueSet $valueOn")
 		val deferred = deferred<Uint8, Exception>()
 		val state = State(eventBus, connection)
 		var switchVal: Uint8 = 0
@@ -118,6 +123,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun multiSwtich(packet: MultiSwitchPacket): Promise<Unit, Exception> {
+		Log.i(TAG, "multiSwtich $packet")
 		return writeCommand(ControlPacket(ControlType.MULTI_SWITCH, packet))
 	}
 
@@ -129,6 +135,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setTime(timestamp: Uint32): Promise<Unit, Exception> {
+		Log.i(TAG, "setTime $timestamp")
 		return writeCommand(ControlType.SET_TIME, timestamp)
 	}
 
@@ -140,6 +147,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun allowDimming(allow: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "allowDimming $allow")
 		return writeCommand(ControlType.ALLOW_DIMMING, allow)
 	}
 
@@ -151,6 +159,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun lockSwitch(lock: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "lockSwitch $lock")
 		return writeCommand(ControlType.LOCK_SWITCH, lock)
 	}
 
@@ -162,6 +171,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun enableSwitchCraft(enable: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "enableSwitchCraft $enable")
 		return writeCommand(ControlType.ENABLE_SWITCHCRAFT, enable)
 	}
 
@@ -173,6 +183,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setUart(mode: UartMode): Promise<Unit, Exception> {
+		Log.i(TAG, "setUart $mode")
 		return writeCommand(ControlType.UART_ENABLE, mode)
 	}
 
@@ -186,6 +197,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun goToDfu(): Promise<Unit, Exception> {
+		Log.i(TAG, "goToDfu")
 		return writeCommand(ControlType.GOTO_DFU)
 	}
 
@@ -196,6 +208,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun reset(): Promise<Unit, Exception> {
+		Log.i(TAG, "reset")
 		return writeCommand(ControlType.RESET)
 	}
 
@@ -209,6 +222,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun keepAliveAction(action: KeepAliveAction, switchValue: Uint8, timeout: Uint16): Promise<Unit, Exception> {
+		Log.i(TAG, "keepAliveAction action=$action switchValue=$switchValue timeout=$timeout")
 		val keepAlivePacket = KeepAlivePacket(action, switchValue, timeout)
 		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_STATE, keepAlivePacket))
 	}
@@ -221,6 +235,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun keepAlive(): Promise<Unit, Exception> {
+		Log.i(TAG, "keepAlive")
 		return writeCommand(ControlType.KEEP_ALIVE)
 	}
 
@@ -234,6 +249,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setSchedule(packet: ScheduleCommandPacket): Promise<Unit, Exception> {
+		Log.i(TAG, "setSchedule $packet")
 		return writeCommand(ControlPacket(ControlType.SCHEDULE_ENTRY_SET, packet))
 	}
 
@@ -245,6 +261,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun removeSchedule(id: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "removeSchedule $id")
 		return writeCommand(ControlType.SCHEDULE_ENTRY_REMOVE, id)
 	}
 
@@ -255,6 +272,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun disconnect(): Promise<Unit, Exception> {
+		Log.i(TAG, "disconnect")
 		return writeCommand(ControlType.DISCONNECT)
 	}
 
@@ -265,6 +283,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun noop(): Promise<Unit, Exception> {
+		Log.i(TAG, "noop")
 		return writeCommand(ControlType.NOOP)
 	}
 
@@ -275,6 +294,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun increaseTx(): Promise<Unit, Exception> {
+		Log.i(TAG, "increaseTx")
 		return writeCommand(ControlType.INCREASE_TX)
 	}
 
@@ -300,6 +320,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	private fun resetErrors(bitmask: Uint32): Promise<Unit, Exception> {
+		Log.i(TAG, "resetErrors $bitmask")
 		return writeCommand(ControlType.RESET_STATE_ERRORS, bitmask)
 	}
 
@@ -312,6 +333,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun factoryReset(): Promise<Unit, Exception> {
+		Log.i(TAG, "factoryReset")
 		return writeCommand(ControlType.FACTORY_RESET, BluenetProtocol.FACTORY_RESET_CODE)
 	}
 
@@ -324,6 +346,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun keepAliveMeshRepeat(): Promise<Unit, Exception> {
+		Log.i(TAG, "keepAliveMeshRepeat")
 		return writeCommand(ControlType.KEEP_ALIVE_REPEAT_LAST)
 	}
 
@@ -335,6 +358,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun keepAliveMeshAction(packet: MultiKeepAlivePacket): Promise<Unit, Exception> {
+		Log.i(TAG, "keepAliveMeshAction $packet")
 		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_MESH, packet))
 	}
 
@@ -346,6 +370,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun meshCommand(packet: MeshCommandPacket): Promise<Unit, Exception> {
+		Log.i(TAG, "meshCommand $packet")
 		return writeCommand(ControlPacket(ControlType.MESH_COMMAND, packet))
 	}
 
@@ -359,6 +384,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun recover(address: DeviceAddress): Promise<Unit, Exception> {
+		Log.i(TAG, "recover $address")
 		val packet = Conversion.uint32ToByteArray(BluenetProtocol.RECOVERY_CODE)
 		// TODO: check if already in setup mode, resolve in that case.
 		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED)

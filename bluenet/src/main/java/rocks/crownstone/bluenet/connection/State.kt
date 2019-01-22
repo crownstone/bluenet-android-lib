@@ -7,6 +7,7 @@
 
 package rocks.crownstone.bluenet.connection
 
+import android.util.Log
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
@@ -36,6 +37,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getResetCount(): Promise<Uint16, Exception> {
+		Log.i(TAG, "getResetCount")
 		return getStateValue(StateType.RESET_COUNTER)
 	}
 
@@ -46,6 +48,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getSwitchState(): Promise<SwitchState, Exception> {
+		Log.i(TAG, "getSwitchState")
 //		val deferred = deferred<SwitchState, Exception>()
 //		getStateValue<Uint8>(StateType.SWITCH_STATE)
 //				.success { deferred.resolve(SwitchState(it)) }
@@ -62,6 +65,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getScheduleList(): Promise<ScheduleListPacket, Exception> {
+		Log.i(TAG, "getScheduleList")
 //		return getState(StateType.SCHEDULE)
 //				.then {
 //					val arr = it.getPayload()
@@ -104,6 +108,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getAvailableScheduleEntryIndex(): Promise<Int, Exception> {
+		Log.i(TAG, "getAvailableScheduleEntryIndex")
 		return getScheduleList()
 				.then { scheduleList ->
 					for (i in 0 until scheduleList.list.size) {
@@ -123,6 +128,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getTemperature(): Promise<Int32, Exception> {
+		Log.i(TAG, "getTemperature")
 		return getStateValue(StateType.TEMPERATURE)
 	}
 
@@ -133,6 +139,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getTime(): Promise<Uint32, Exception> {
+		Log.i(TAG, "getTime")
 		// TODO: time conversion
 		return getStateValue(StateType.TIME)
 	}
@@ -144,6 +151,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getErrors(): Promise<ErrorState, Exception> {
+		Log.i(TAG, "getErrors")
 		val promise: Promise<Uint32, Exception> = getStateValue(StateType.ERRORS)
 		return promise.then {
 			ErrorState(it)

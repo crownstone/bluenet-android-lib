@@ -68,6 +68,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		Log.i(TAG, "setup id=$id keySet=$keySet meshAccessAddress=$meshAccessAddress ibeaconData=$ibeaconData")
 		if (connection.mode != CrownstoneMode.SETUP) {
 			return Promise.ofFail(Errors.NotInMode(CrownstoneMode.SETUP))
 		}

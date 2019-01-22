@@ -24,6 +24,7 @@ class MultipartNotificationMerger(callback: (ByteArray) -> Unit) {
 	private var buffer = ByteBuffer.allocate(BluenetProtocol.MULTIPART_NOTIFICATION_MAX_SIZE)
 
 	fun onData(data: ByteArray) {
+		Log.d(TAG, "onData data=${Conversion.bytesToString(data)}")
 		if (data.isEmpty()) {
 			Log.e(TAG, "empty data")
 			return

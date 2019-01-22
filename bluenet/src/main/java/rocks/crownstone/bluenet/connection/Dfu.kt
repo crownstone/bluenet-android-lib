@@ -95,6 +95,7 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 	 */
 	@Synchronized
 	fun reset(): Promise<Unit, Exception> {
+		Log.i(TAG, "reset")
 		return connection.subscribe(BluenetProtocol.DFU_SERVICE_UUID, BluenetProtocol.CHAR_DFU_CONTROL_UUID, {})
 				.then {
 					Util.recoverableUnitPromise(
@@ -124,6 +125,7 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 	 */
 	@Synchronized
 	fun startDfu(address: DeviceAddress, fileName: String, service: Class<out DfuBaseService>): Promise<Unit, Exception> {
+		Log.i(TAG, "startDfu address=$address fileName=$fileName")
 		if (dfuDeferred != null) {
 			return Promise.ofFail(Errors.Busy("busy with dfu"))
 		}
@@ -146,7 +148,7 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 
 	@Synchronized
 	private fun onProgress(percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
-		// Emit event
+		// TODO: Emit event
 	}
 
 	@Synchronized

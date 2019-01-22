@@ -43,6 +43,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setCrownstoneId(id: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "setCrownstoneId $id")
 		val stoneId = Conversion.toUint16(id) // Is still uint16
 		return setConfigValue(ConfigType.CROWNSTONE_ID, stoneId)
 	}
@@ -56,6 +57,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setAdminKey(key: ByteArray): Promise<Unit, Exception> {
+		Log.i(TAG, "setAdminKey $key")
 		return setConfig(ConfigPacket(ConfigType.KEY_ADMIN, key))
 	}
 
@@ -68,6 +70,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setMemberKey(key: ByteArray): Promise<Unit, Exception> {
+		Log.i(TAG, "setMemberKey $key")
 		return setConfig(ConfigPacket(ConfigType.KEY_MEMBER, key))
 	}
 
@@ -80,6 +83,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setGuestKey(key: ByteArray): Promise<Unit, Exception> {
+		Log.i(TAG, "setGuestKey $key")
 		return setConfig(ConfigPacket(ConfigType.KEY_GUEST, key))
 	}
 
@@ -92,6 +96,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setIbeaconUuid(uuid: UUID): Promise<Unit, Exception> {
+		Log.i(TAG, "setIbeaconUuid $uuid")
 		return setConfig(ConfigPacket(ConfigType.IBEACON_PROXIMITY_UUID, Conversion.uuidToBytes(uuid)))
 	}
 
@@ -104,6 +109,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setIbeaconMajor(major: Uint16): Promise<Unit, Exception> {
+		Log.i(TAG, "setIbeaconMajor $major")
 		return setConfigValue(ConfigType.IBEACON_MAJOR, major)
 	}
 
@@ -116,6 +122,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setIbeaconMinor(minor: Uint16): Promise<Unit, Exception> {
+		Log.i(TAG, "setIbeaconMinor $minor")
 		return setConfigValue(ConfigType.IBEACON_MINOR, minor)
 	}
 
@@ -133,6 +140,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setMeshAccessAddress(address: Uint32): Promise<Unit, Exception> {
+		Log.i(TAG, "setMeshAccessAddress $address")
 		return setConfigValue(ConfigType.MESH_ACCESS_ADDRESS, address)
 	}
 
@@ -143,6 +151,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getMeshAccessAddress(): Promise<Uint32, Exception> {
+		Log.i(TAG, "getMeshAccessAddress")
 		return getConfigValue(ConfigType.MESH_ACCESS_ADDRESS)
 	}
 
@@ -154,6 +163,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setMeshChannel(channel: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "setMeshChannel $channel")
 		return when (channel.toInt()) {
 			37, 38, 39 -> setConfigValue(ConfigType.MESH_CHANNEL, channel)
 			else -> Promise.ofFail(Errors.ValueWrong())
@@ -167,6 +177,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getMeshChannel(): Promise<Uint8, Exception> {
+		Log.i(TAG, "getMeshChannel")
 		return getConfigValue(ConfigType.MESH_CHANNEL)
 	}
 
@@ -178,6 +189,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setTxPower(power: Int8): Promise<Unit, Exception> {
+		Log.i(TAG, "setTxPower $power")
 		return when (power.toInt()) {
 			-40, -20, -16, -12, -8, -4, 0, 4 -> setConfigValue(ConfigType.TX_POWER, power)
 			else -> Promise.ofFail(Errors.ValueWrong())
@@ -191,6 +203,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getTxPower(): Promise<Int8, Exception> {
+		Log.i(TAG, "getTxPower")
 		return getConfigValue(ConfigType.TX_POWER)
 	}
 
@@ -202,6 +215,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setUartEnabled(mode: UartMode): Promise<Unit, Exception> {
+		Log.i(TAG, "setUartEnabled $mode")
 		return when (mode) {
 			UartMode.UNKNOWN -> Promise.ofFail(Errors.ValueWrong())
 			else -> setConfigValue(ConfigType.UART_ENABLED, mode.num)
@@ -215,6 +229,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getUartEnabled(): Promise<UartMode, Exception> {
+		Log.i(TAG, "getUartEnabled")
 		return getConfigValue<Uint8>(ConfigType.UART_ENABLED)
 				.then { UartMode.fromNum(it) }
 	}
@@ -227,6 +242,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setSwitchCraftThreshold(value: Float): Promise<Unit, Exception> {
+		Log.i(TAG, "setSwitchCraftThreshold $value")
 		return setConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, value)
 	}
 
@@ -237,6 +253,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getSwitchCraftThreshold(): Promise<Unit, Exception> {
+		Log.i(TAG, "getSwitchCraftThreshold")
 		return setConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, Float)
 	}
 
@@ -249,6 +266,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setRelayHigh(timeMs: Uint16): Promise<Unit, Exception> {
+		Log.i(TAG, "setRelayHigh $timeMs")
 		return setConfigValue(ConfigType.RELAY_HIGH_DURATION, timeMs)
 	}
 
@@ -259,6 +277,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getRelayHigh(): Promise<Uint16, Exception> {
+		Log.i(TAG, "getRelayHigh")
 		return getConfigValue(ConfigType.RELAY_HIGH_DURATION)
 	}
 
@@ -271,6 +290,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setPwmPeriod(timeUs: Uint32): Promise<Unit, Exception> {
+		Log.i(TAG, "setPwmPeriod $timeUs")
 		return setConfigValue(ConfigType.PWM_PERIOD, timeUs)
 	}
 
@@ -281,6 +301,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getPwmPeriod(): Promise<Uint32, Exception> {
+		Log.i(TAG, "getPwmPeriod")
 		return getConfigValue(ConfigType.PWM_PERIOD)
 	}
 
@@ -293,6 +314,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setBootDelay(timeMs: Uint16): Promise<Unit, Exception> {
+		Log.i(TAG, "setBootDelay $timeMs")
 		return setConfigValue(ConfigType.BOOT_DELAY, timeMs)
 	}
 
@@ -303,6 +325,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getBootDelay(): Promise<Uint16, Exception> {
+		Log.i(TAG, "getBootDelay")
 		return getConfigValue(ConfigType.BOOT_DELAY)
 	}
 
@@ -315,6 +338,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setCurrentThreshold(value: Uint16): Promise<Unit, Exception> {
+		Log.i(TAG, "setCurrentThreshold $value")
 		return setConfigValue(ConfigType.CURRENT_THRESHOLD, value)
 	}
 
@@ -325,6 +349,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getCurrentThreshold(): Promise<Uint16, Exception> {
+		Log.i(TAG, "getCurrentThreshold")
 		return getConfigValue(ConfigType.CURRENT_THRESHOLD)
 	}
 
@@ -336,6 +361,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setCurrentThresholdDimmer(value: Uint16): Promise<Unit, Exception> {
+		Log.i(TAG, "setCurrentThresholdDimmer $value")
 		return setConfigValue(ConfigType.CURRENT_THRESHOLD_DIMMER, value)
 	}
 
@@ -346,6 +372,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getCurrentThresholdDimmer(): Promise<Uint16, Exception> {
+		Log.i(TAG, "getCurrentThresholdDimmer")
 		return getConfigValue(ConfigType.CURRENT_THRESHOLD_DIMMER)
 	}
 
@@ -358,6 +385,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setMaxChipTemp(celcius: Int8): Promise<Unit, Exception> {
+		Log.i(TAG, "setMaxChipTemp $celcius")
 		return setConfigValue(ConfigType.MAX_CHIP_TEMP, celcius)
 	}
 
@@ -368,6 +396,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getMaxChipTemp(): Promise<Int8, Exception> {
+		Log.i(TAG, "getMaxChipTemp")
 		return getConfigValue(ConfigType.MAX_CHIP_TEMP)
 	}
 
@@ -379,6 +408,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setDimmerTempUpThreshold(value: Float): Promise<Unit, Exception> {
+		Log.i(TAG, "setDimmerTempUpThreshold $value")
 		return setConfigValue(ConfigType.DIMMER_TEMP_UP, value)
 	}
 
@@ -389,6 +419,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getDimmerTempUpThreshold(): Promise<Float, Exception> {
+		Log.i(TAG, "getDimmerTempUpThreshold")
 		return getConfigValue(ConfigType.DIMMER_TEMP_UP)
 	}
 
@@ -400,6 +431,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setDimmerTempDownThreshold(value: Float): Promise<Unit, Exception> {
+		Log.i(TAG, "setDimmerTempDownThreshold $value")
 		return setConfigValue(ConfigType.DIMMER_TEMP_DOWN, value)
 	}
 
@@ -410,6 +442,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getDimmerTempDownThreshold(): Promise<Float, Exception> {
+		Log.i(TAG, "getDimmerTempDownThreshold")
 		return getConfigValue(ConfigType.DIMMER_TEMP_DOWN)
 	}
 
@@ -421,6 +454,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setVoltageMultiplier(value: Float): Promise<Unit, Exception> {
+		Log.i(TAG, "setVoltageMultiplier $value")
 		return setConfigValue(ConfigType.VOLTAGE_MULTIPLIER, value)
 	}
 
@@ -431,6 +465,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getVoltageMultiplier(): Promise<Float, Exception> {
+		Log.i(TAG, "getVoltageMultiplier")
 		return getConfigValue(ConfigType.VOLTAGE_MULTIPLIER)
 	}
 
@@ -442,6 +477,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setCurrentMultiplier(value: Float): Promise<Unit, Exception> {
+		Log.i(TAG, "setCurrentMultiplier $value")
 		return setConfigValue(ConfigType.CURRENT_MULTIPLIER, value)
 	}
 
@@ -452,6 +488,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getCurrentMultiplier(): Promise<Float, Exception> {
+		Log.i(TAG, "getCurrentMultiplier")
 		return getConfigValue(ConfigType.CURRENT_MULTIPLIER)
 	}
 
@@ -463,6 +500,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setPowerZero(milliWatt: Int32): Promise<Unit, Exception> {
+		Log.i(TAG, "setPowerZero $milliWatt")
 		return setConfigValue(ConfigType.POWER_ZERO, milliWatt)
 	}
 
@@ -473,6 +511,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun getPowerZero(): Promise<Int32, Exception> {
+		Log.i(TAG, "getPowerZero")
 		return getConfigValue(ConfigType.POWER_ZERO)
 	}
 
