@@ -234,7 +234,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setSchedule(packet: ScheduleCommandPacket): Promise<Unit, Exception> {
-		return writeCommand(ControlType.SCHEDULE_ENTRY_SET, packet)
+		return writeCommand(ControlPacket(ControlType.SCHEDULE_ENTRY_SET, packet))
 	}
 
 	/**
