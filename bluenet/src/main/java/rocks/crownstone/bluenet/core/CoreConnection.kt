@@ -215,7 +215,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	@Synchronized
 	private fun onGattConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
 		val address = gatt?.device?.address
-		Log.i(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
+		Log.i(TAG, "onGattConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
 
 		if (status != BluetoothGatt.GATT_SUCCESS) {
 			Log.e(TAG, "onConnectionStateChange address=$address status=$status newState=$newState=${getStateString(newState)}")
@@ -391,9 +391,9 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	}
 
 	@Synchronized
-	private fun onGattServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-		Log.i(TAG, "onServicesDiscovered status=$status")
-		if (gatt == null || gatt != currentGatt) {
+	private fun onGattServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+		Log.i(TAG, "onGattServicesDiscovered status=$status")
+		if (gatt != currentGatt) {
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt")
 			return
 		}
@@ -439,14 +439,14 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	}
 
 	@Synchronized
-	private fun onGattCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-		Log.i(TAG, "onCharacteristicWrite characteristic=$characteristic status=$status")
-		if (gatt == null || gatt != currentGatt || characteristic == null) {
-			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=${characteristic?.uuid}")
+	private fun onGattCharacteristicWrite(gatt: BluetoothGatt, uuid: UUID, status: Int) {
+		Log.i(TAG, "onGattCharacteristicWrite uuid=$uuid status=$status")
+		if (gatt != currentGatt) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$uuid")
 			return
 		}
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onCharacteristicWrite characteristic=${characteristic.uuid} status=$status")
+			Log.e(TAG, "onCharacteristicWrite characteristic=$uuid status=$status")
 			// TODO: handle error
 			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
 			promises.reject(Errors.Gatt(status))
@@ -487,21 +487,21 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	}
 
 	@Synchronized
-	private fun onGattCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-		Log.i(TAG, "onCharacteristicRead characteristic=$characteristic status=$status")
-		if (gatt == null || gatt != currentGatt || characteristic == null) {
-			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=${characteristic?.uuid}")
+	private fun onGattCharacteristicRead(gatt: BluetoothGatt, uuid: UUID, value: ByteArray, status: Int) {
+		Log.i(TAG, "onGattCharacteristicRead characteristic=$uuid status=$status value=value=${Conversion.bytesToString(value)}")
+		if (gatt != currentGatt) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$uuid")
 			return
 		}
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onCharacteristicRead characteristic=${characteristic.uuid} status=$status")
+			Log.e(TAG, "onCharacteristicRead characteristic=$uuid status=$status")
 			// TODO: handle error
 			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
 			promises.reject(Errors.Gatt(status))
 			return
 		}
 		// TODO: check if correct characteristic was read
-		promises.resolve(Action.READ, characteristic.value)
+		promises.resolve(Action.READ, value)
 	}
 
 	/**
@@ -554,7 +554,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 				.then {
 					// Store the callback in the event bus, return unsub id
-					return@then notificationEventBus.subscribe("${descriptor.characteristic.uuid}", { data: Any -> callback(data as ByteArray) })
+					notificationEventBus.subscribe("${descriptor.characteristic.uuid}", { data: Any -> callback(data as ByteArray) })
 				}
 	}
 
@@ -603,42 +603,42 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	}
 
 	@Synchronized
-	private fun onGattDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
-		Log.i(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
-		if (gatt == null || gatt != currentGatt || descriptor == null || descriptor.uuid != BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID) {
-			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt descriptor=$descriptor")
+	private fun onGattDescriptorWrite(gatt: BluetoothGatt, uuid: UUID, value: ByteArray, status: Int) {
+		Log.i(TAG, "onGattDescriptorWrite descriptor=$uuid status=$status")
+		if (gatt != currentGatt) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt descriptor=$uuid")
 			return
 		}
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onDescriptorWrite descriptor=$descriptor status=$status")
+			Log.e(TAG, "onDescriptorWrite descriptor=$uuid status=$status")
 			// TODO: handle error
 			promises.reject(Errors.Gatt(status))
 		}
-		Log.i(TAG, "value=${Conversion.bytesToString(descriptor.value)}")
-		when (descriptor.value) {
-			BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE -> {
+		Log.i(TAG, "value=${Conversion.bytesToString(value)}")
+		when {
+			value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) -> {
 				// Subscribed
 				promises.resolve(Action.SUBSCRIBE)
 			}
-			BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE -> {
+			value.contentEquals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) -> {
 				// Unsubscribed
 				promises.resolve(Action.UNSUBSCRIBE)
 			}
 			else -> {
-				Log.e(TAG, "value=${Conversion.bytesToString(descriptor.value)}")
+				Log.e(TAG, "unexpected value: ${Conversion.bytesToString(value)}")
 				promises.reject(Errors.Parse("unexpected value"))
 			}
 		}
 	}
 
 	@Synchronized
-	private fun onGattCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-		Log.i(TAG, "onCharacteristicChanged characteristic=$characteristic")
-		if (gatt == null || gatt != currentGatt || characteristic == null || characteristic.value == null) {
-			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt characteristic=$characteristic")
+	private fun onGattCharacteristicChanged(gatt: BluetoothGatt, uuid: UUID, value: ByteArray) {
+		Log.i(TAG, "onGattCharacteristicChanged uuid=$uuid value=${Conversion.bytesToString(value)}")
+		if (gatt != currentGatt) {
+			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt uuid=$uuid")
 			return
 		}
-		notificationEventBus.emit("${characteristic.uuid}", characteristic.value)
+		notificationEventBus.emit("$uuid", value)
 	}
 
 	/**
@@ -830,27 +830,60 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 
 		override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+			// Called from a different thread, don't use any state variables. Copy data, as data is overwritten.
+			Log.d(TAG, "onServicesDiscovered status=$status")
+			if (gatt == null) {
+				Log.e(TAG, "gatt=$gatt")
+				return
+			}
 			handler.post { onGattServicesDiscovered(gatt, status) }
 		}
 
 		override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-			handler.post { onGattCharacteristicRead(gatt, characteristic, status) }
+			// Called from a different thread, don't use any state variables. Copy data, as data is overwritten.
+			Log.d(TAG, "onCharacteristicRead uuid=${characteristic?.uuid} status=$status value=${Conversion.bytesToString(characteristic?.value)}")
+			if (gatt == null || characteristic == null || characteristic.value == null) {
+				Log.e(TAG, "gatt=$gatt characteristic=$characteristic value=${characteristic?.value}")
+				return
+			}
+			val value = characteristic.value.copyOf()
+			handler.post { onGattCharacteristicRead(gatt, characteristic.uuid, value, status) }
 		}
 
 		override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-			handler.post { onGattCharacteristicWrite(gatt, characteristic, status) }
+			// Called from a different thread, don't use any state variables. Copy data, as data is overwritten.
+			Log.d(TAG, "onCharacteristicWrite uuid=${characteristic?.uuid} status=$status")
+			if (gatt == null || characteristic == null) {
+				Log.e(TAG, "gatt=$gatt characteristic=$characteristic")
+				return
+			}
+			handler.post { onGattCharacteristicWrite(gatt, characteristic.uuid, status) }
 		}
 
 		override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
-			handler.post { onGattCharacteristicChanged(gatt, characteristic) }
+			// Called from a different thread, don't use any state variables. Copy data, as data is overwritten.
+			Log.d(TAG, "onCharacteristicChanged uuid=${characteristic?.uuid} value=${Conversion.bytesToString(characteristic?.value)}")
+			if (gatt == null || characteristic == null || characteristic.value == null) {
+				Log.e(TAG, "gatt=$gatt characteristic=${characteristic?.uuid}")
+				return
+			}
+			val value = characteristic.value.copyOf()
+			handler.post { onGattCharacteristicChanged(gatt, characteristic.uuid, value) }
 		}
 
 		override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
-			handler.post { onGattDescriptorWrite(gatt, descriptor, status) }
+			// Called from a different thread, don't use any state variables. Copy data, as data is overwritten.
+			Log.d(TAG, "onDescriptorWrite uuid=${descriptor?.uuid} status=$status")
+			if (gatt == null || descriptor == null || descriptor.uuid != BluenetProtocol.DESCRIPTOR_CHAR_CONFIG_UUID) {
+				Log.e(TAG, "gatt=$gatt descriptor=$descriptor")
+				return
+			}
+			val value = descriptor.value.copyOf()
+			handler.post { onGattDescriptorWrite(gatt, descriptor.uuid, value, status) }
 		}
 
 		override fun onDescriptorRead(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor?, status: Int) {
-			Log.i(TAG, "onDescriptorRead descriptor=$descriptor status=$status")
+			Log.d(TAG, "onDescriptorRead uuid=${descriptor?.uuid} status=$status")
 		}
 	}
 
