@@ -52,8 +52,13 @@ class EventBus {
 	@Synchronized
 	fun emit(eventType: EventType, data: Any = Unit) {
 		when (eventType) {
-			BluenetEvent.SCAN_RESULT.name,
 			BluenetEvent.SCAN_RESULT_RAW.name,
+			BluenetEvent.SCAN_RESULT.name,
+			BluenetEvent.SCAN_RESULT_UNIQUE.name,
+			BluenetEvent.SCAN_RESULT_VALIDATED.name,
+			BluenetEvent.SCAN_RESULT_VALIDATED_UNIQUE.name,
+			BluenetEvent.NEAREST_STONE.name,
+			BluenetEvent.NEAREST_UNVALIDATED.name,
 			BluenetEvent.NEAREST_VALIDATED.name,
 			BluenetEvent.NEAREST_VALIDATED_NORMAL.name,
 			BluenetEvent.NEAREST_SETUP.name,
