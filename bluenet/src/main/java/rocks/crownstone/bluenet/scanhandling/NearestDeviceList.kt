@@ -36,8 +36,10 @@ class NearestDeviceList {
 		const val TIMEOUT_MS = 20000
 		const val RSSI_LOWEST = -1000
 	}
+	// Map of all addresses.
 	private val map = HashMap<DeviceAddress, NearestDeviceListEntry>()
 
+	// The current nearest.
 	private var nearest = NearestDeviceListEntry("", RSSI_LOWEST, 0, false, false, OperationMode.UNKNOWN, "")
 
 	@Synchronized
@@ -75,14 +77,14 @@ class NearestDeviceList {
 
 	@Synchronized
 	private fun calcNearest(now: Long) {
-		Log.d(TAG, "calcNearest")
+		Log.v(TAG, "calcNearest")
 		// Remove old items
 //		map.entries.removeIf()
 		val it = map.entries.iterator()
 		while (it.hasNext()) {
 			val entry = it.next().value
 			if (now - entry.lastSeenTime > TIMEOUT_MS) {
-				Log.d(TAG, "remove $entry")
+				Log.v(TAG, "remove $entry")
 				it.remove()
 			}
 		}
@@ -94,6 +96,6 @@ class NearestDeviceList {
 				nearest = entry
 			}
 		}
-		Log.d(TAG, "nearest=$nearest")
+		Log.d(TAG, "calcNearest nearest=$nearest")
 	}
 }

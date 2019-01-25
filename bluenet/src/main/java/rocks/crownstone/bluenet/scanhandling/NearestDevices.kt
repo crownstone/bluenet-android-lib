@@ -40,15 +40,17 @@ class NearestDevices(evtBus: EventBus) {
 
 	private fun onScan(data: Any) {
 		val device = data as ScannedDevice
+		if (!device.isStone()) {
+			return
+		}
 		nearestStone.update(device)
+		updateAndEmit(device, nearestStone, BluenetEvent.NEAREST_STONE)
 		if (!device.validated) {
-			if (device.isStone()) {
-				nearestValidated.remove(device)
-				nearestValidatedNormal.remove(device)
-				nearestValidatedDfu.remove(device)
-				nearestValidatedSetup.remove(device)
-				updateAndEmit(device, nearestUnvalidated, BluenetEvent.NEAREST_UNVALIDATED)
-			}
+			nearestValidated.remove(device)
+			nearestValidatedNormal.remove(device)
+			nearestValidatedDfu.remove(device)
+			nearestValidatedSetup.remove(device)
+			updateAndEmit(device, nearestUnvalidated, BluenetEvent.NEAREST_UNVALIDATED)
 			return
 		}
 		nearestUnvalidated.remove(device)
