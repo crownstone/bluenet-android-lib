@@ -17,8 +17,33 @@ object Errors {
 	class BusyWrongState: Busy("wrong state: busy")
 	class BusyOtherDevice: Busy("busy with another device")
 
-	// gatt errors
-	open class Gatt(status: Int): Exception("gatt error $status") // Make a class per error?
+	// BluetoothGatt errors, see https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
+	open class Gatt(status: Int, type: String = ""): Exception("gatt error $status: $type") // Make a class per error?
+	class GattDisconnected(status: Int): Gatt(status)
+	class GattDisconnectedByTimeout: Gatt(8, "timeout")
+	class GattDisconnectedByPeer: Gatt(19, "disconnected by peer")
+	class GattDisconnectedByHost: Gatt(22, "disconnected by host")
+
+	class GattNoResources: Gatt(128)
+	class GattInternal: Gatt(129)
+	class GattWrongState: Gatt(130)
+	class GattDbFull: Gatt(131)
+	class GattBusy: Gatt(132)
+	class GattError133: Gatt(133, "error")
+	class GattCmdStarted: Gatt(134)
+	class GattIllegalParameter: Gatt(135)
+	class GattPending: Gatt(136)
+	class GattAuthFail: Gatt(137)
+	class GattMore: Gatt(138)
+	class GattInvalidCfg: Gatt(139)
+	class GattServiceStarted: Gatt(140)
+	class GattEncryptedNoMitm: Gatt(141)
+	class GattNotEncrypted: Gatt(142)
+	class GattCongested: Gatt(143)
+	class GattCccCfg: Gatt(253)
+	class GattPrcInProgress: Gatt(254)
+	class GattOutOfRange: Gatt(255)
+
 
 	// connection issues
 	class WriteFailed: Exception("write failed")
@@ -63,5 +88,41 @@ object Errors {
 	open class Encryption(msg: String="encryption failed"): Exception(msg)
 	class EncryptionKeyMissing: Encryption("missing key")
 
+	fun gattConnectionError(status: Int): Gatt {
+		return when (status) {
+			8 -> GattDisconnectedByTimeout()
+			19 -> GattDisconnectedByPeer()
+			22 -> GattDisconnectedByHost()
+			else -> GattDisconnected(status)
+		}
+	}
+
+	fun gattError(status: Int): Gatt {
+		return when (status) {
+			8 -> GattDisconnectedByTimeout()
+			19 -> GattDisconnectedByPeer()
+			22 -> GattDisconnectedByHost()
+			128 -> GattNoResources()
+			129 -> GattInternal()
+			130 -> GattWrongState()
+			131 -> GattDbFull()
+			132 -> GattBusy()
+			133 -> GattError133()
+			134 -> GattCmdStarted()
+			135 -> GattIllegalParameter()
+			136 -> GattPending()
+			137 -> GattAuthFail()
+			138 -> GattMore()
+			139 -> GattInvalidCfg()
+			140 -> GattServiceStarted()
+			141 -> GattEncryptedNoMitm()
+			142 -> GattNotEncrypted()
+			143 -> GattCongested()
+			253 -> GattCccCfg()
+			254 -> GattPrcInProgress()
+			255 -> GattOutOfRange()
+			else -> Gatt(status)
+		}
+	}
 
 }
