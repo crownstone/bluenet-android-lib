@@ -241,10 +241,19 @@ object Conversion {
 		return result
 	}
 
+	/**
+	 * Convert byte array to MAC address string.
+	 *
+	 * Inverses the byte array.
+	 */
 	fun bytesToAddress(bytes: ByteArray): String {
+		if (bytes.size != 6) {
+			return ""
+		}
 		val sb = StringBuilder()
 		for (b in bytes) {
-			sb.append(String.format("%02X:", b))
+//			sb.append(String.format("%02X:", b))
+			sb.insert(0, String.format("%02X:", b))
 		}
 		sb.deleteCharAt(sb.length - 1) // remove last semicolon
 		return sb.toString()
