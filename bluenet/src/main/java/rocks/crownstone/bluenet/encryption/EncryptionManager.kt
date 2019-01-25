@@ -89,6 +89,7 @@ class EncryptionManager {
 
 	@Synchronized
 	fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Promise<Unit, Exception> {
+		this.sessionData = null // Make sure it's null when parsing fails.
 		val sessionData = if (isEncrypted) {
 			val key = getKeySetFromAddress(address)?.guestKeyBytes
 			if (key == null) {
