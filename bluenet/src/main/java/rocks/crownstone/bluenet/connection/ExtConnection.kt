@@ -16,6 +16,7 @@ import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.SubscriptionId
+import rocks.crownstone.bluenet.util.Util
 import java.util.*
 
 /**
@@ -200,9 +201,16 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 						}.unwrap()
 			}
 			CrownstoneMode.NORMAL -> {
+				if (encryptionManager.getKeySetFromAddress(address) == null) {
+					Log.i(TAG, "No keys, don't read session data")
+					return Promise.ofSuccess(Unit)
+				}
 				Log.i(TAG, "get session data")
 				return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_NONCE_UUID)
 						.then {
+//							// TODO: is it ok to ignore any error in the session data parsing?
+//							// Ignore errors in parsing of session data: in case we have no keys for this crownstone, but want to write/read unencrypted data.
+//							Util.recoverableUnitPromise(encryptionManager.parseSessionData(address, it, true), { true })
 							encryptionManager.parseSessionData(address, it, true)
 						}.unwrap()
 			}
