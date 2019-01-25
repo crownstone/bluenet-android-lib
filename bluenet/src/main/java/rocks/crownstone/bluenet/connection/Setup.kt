@@ -13,6 +13,7 @@ import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.packets.CommandResultPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
 import rocks.crownstone.bluenet.structs.*
+import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Util
 import kotlin.Exception
@@ -56,13 +57,25 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	/**
+	 * Reads the MAC address from the characteristic.
+	 *
+	 * @return Promise with address as value.
+	 */
+	@Synchronized
+	fun getAddress(): Promise<DeviceAddress, Exception> {
+		Log.i(TAG, "getAddress")
+		return connection.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_MAC_ADDRESS_UUID, false)
+				.then { Conversion.bytesToAddress(it) }
+	}
+
+	/**
 	 * Performs the setup and disconnects.
 	 *
 	 * Emits progress events.
 	 *
 	 * @param id                The crownstone id, should be unique per meshAccessAddress.
 	 * @param keySet            The keys for encryption.
-	 * @param meshAccessAddress A unique value, should comply to rules found ... ??
+	 * @param meshAccessAddress A unique value, should comply to rules found ... where ??
 	 * @param ibeaconData       iBeacon UUID, major, minor, and calibrated rssi.
 	 * @return Promise
 	 */
