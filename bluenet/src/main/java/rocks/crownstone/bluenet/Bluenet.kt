@@ -30,7 +30,7 @@ import java.util.*
  *
  * This is the main class a user should use.
  *
- * @param looper Optional looper to be used by the library.
+ * @param looper Optional looperblecore to be used by the library.
  */
 class Bluenet(looper: Looper? = null) {
 	private val TAG = this.javaClass.simpleName
@@ -48,7 +48,8 @@ class Bluenet(looper: Looper? = null) {
 
 	// State
 	private var initialized = false
-	private var scannerReadyPromises = ArrayList<Deferred<Unit, Exception>>()
+//	private var scannerReadyPromises = ArrayList<Deferred<Unit, Exception>>()
+	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
 
 	// Public variables, used to write and read services.
 	lateinit var setup: Setup; private set
@@ -202,6 +203,30 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
+	 * Check if ready to scan and connect.
+	 *
+	 * Can safely be called multiple times without waiting for the result.
+	 *
+	 * @return Promise that resolves when ready to scan and connect, never rejected.
+	 */
+	@Synchronized
+	fun isReadyPromise(): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		checkReady(deferred)
+		return deferred.promise
+	}
+
+	@Synchronized
+	private fun checkReady(deferred: Deferred<Unit, Exception>) {
+		if (isScannerReady()) {
+			deferred.resolve()
+			return
+		}
+		Util.waitPromise(100, handler)
+				.success { checkReady(deferred) }
+	}
+
+	/**
 	 * Try to make the scanner ready to scan.
 	 * You can wait for the event SCANNER_READY.
 	 * @param activity Activity to be used to ask for requests.
@@ -218,23 +243,26 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Make the scanner ready to scan.
+	 *
 	 * @param activity Activity that will be used to for requests (if needed).
 	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
 	 *                 and from there calls Bluenet.handlePermissionResult().
 	 *                 The activity should implement Activity.onActivityResult(),
 	 *                 and from there call Bluenet.handleActivityResult().
-	 * @return Promise that resolves when ready to scan, never rejected.
+	 * @return Promise that resolves when ready to scan, never rejected, except when this function has not been resolved yet.
 	 */
 	@Synchronized
 	fun makeScannerReady(activity: Activity): Promise<Unit, Exception> {
 		Log.i(TAG, "makeScannerReady")
-
 		if (isScannerReady()) {
 			return Promise.ofSuccess(Unit)
 		}
-
+		if (scannerReadyPromise != null) {
+			return Promise.ofFail(Errors.Busy())
+		}
 		val deferred = deferred<Unit, Exception>()
-		scannerReadyPromises.add(deferred)
+//		scannerReadyPromises.add(deferred)
+		scannerReadyPromise = deferred
 
 		bleCore.tryMakeScannerReady(activity)
 		return deferred.promise
@@ -466,10 +494,11 @@ class Bluenet(looper: Looper? = null) {
 	private fun onCoreScannerReady(data: Any) {
 		initScanner()
 		eventBus.emit(BluenetEvent.SCANNER_READY)
-		for (deferred in scannerReadyPromises) {
-			deferred.resolve()
-		}
-		scannerReadyPromises.clear()
+//		for (deferred in scannerReadyPromises) {
+//			deferred.resolve()
+//		}
+//		scannerReadyPromises.clear()
+		scannerReadyPromise?.resolve()
 	}
 
 	@Synchronized
