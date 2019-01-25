@@ -401,7 +401,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			Log.e(TAG, "onServicesDiscovered status=$status")
 			// TODO: handle error
 			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
-			promises.reject(Errors.Gatt(status))
+			promises.reject(Errors.gattError(status))
 			return
 		}
 		promises.resolve(Action.DISCOVER)
@@ -446,10 +446,10 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			return
 		}
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onCharacteristicWrite characteristic=$uuid status=$status")
-			// TODO: handle error
-			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
-			promises.reject(Errors.Gatt(status))
+			Log.e(TAG, "onGattCharacteristicWrite characteristic=$uuid status=$status")
+			// TODO: handle error, maybe wait for connection state change status
+			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange, which contains more info.
+			promises.reject(Errors.gattError(status))
 			return
 		}
 		// TODO: check if correct characteristic was written
@@ -494,10 +494,10 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			return
 		}
 		if (status != BluetoothGatt.GATT_SUCCESS) {
-			Log.e(TAG, "onCharacteristicRead characteristic=$uuid status=$status")
-			// TODO: handle error
-			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange
-			promises.reject(Errors.Gatt(status))
+			Log.e(TAG, "onGattCharacteristicRead characteristic=$uuid status=$status")
+			// TODO: handle error, maybe wait for connection state change status
+			// [05-10-2018] It seems like this error is always followed by an onConnectionStateChange, which contains more info.
+			promises.reject(Errors.gattError(status))
 			return
 		}
 		// TODO: check if correct characteristic was read
@@ -612,7 +612,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		if (status != BluetoothGatt.GATT_SUCCESS) {
 			Log.e(TAG, "onDescriptorWrite descriptor=$uuid status=$status")
 			// TODO: handle error
-			promises.reject(Errors.Gatt(status))
+			promises.reject(Errors.gattError(status))
 		}
 		Log.i(TAG, "value=${Conversion.bytesToString(value)}")
 		when {
