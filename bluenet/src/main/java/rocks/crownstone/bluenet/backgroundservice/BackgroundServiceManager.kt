@@ -80,6 +80,27 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus, looper: Lo
 			// This is called from a new thread.. why?
 			startBackground()
 		}.unwrap()
+
+//		val deferred = deferred<Unit, Exception>()
+//		startService(false)
+//				.success {
+//					Log.d(TAG, "runInBackground startservice success")
+//					handler.post {
+//						Log.d(TAG, "runInBackground startbackground")
+//						startBackground()
+//								.success {
+//									Log.d(TAG, "runInBackground success")
+//									handler.post { deferred.resolve() }
+//								}
+//								.fail {
+//									handler.post { deferred.reject(it) }
+//								}
+//					}
+//				}
+//				.fail {
+//					handler.post { deferred.reject(it) }
+//				}
+//		return deferred.promise
 	}
 
 

@@ -21,14 +21,8 @@ import rocks.crownstone.bluenet.scanning.BleScanner
 import rocks.crownstone.bluenet.scanhandling.IbeaconRanger
 import rocks.crownstone.bluenet.scanhandling.NearestDevices
 import rocks.crownstone.bluenet.scanhandling.ScanHandler
-import rocks.crownstone.bluenet.structs.BluenetEvent
-import rocks.crownstone.bluenet.structs.DeviceAddress
-import rocks.crownstone.bluenet.structs.Keys
-import rocks.crownstone.bluenet.structs.ScanMode
-import rocks.crownstone.bluenet.util.EventBus
-import rocks.crownstone.bluenet.util.EventCallback
-import rocks.crownstone.bluenet.util.EventType
-import rocks.crownstone.bluenet.util.SubscriptionId
+import rocks.crownstone.bluenet.structs.*
+import rocks.crownstone.bluenet.util.*
 import java.util.*
 
 /**
@@ -126,9 +120,11 @@ class Bluenet(looper: Looper? = null) {
 		service = BackgroundServiceManager(appContext, eventBus, looper)
 		return service.runInBackground()
 				.success {
-					Log.i(TAG, "init success")
-					initialized = true
-					eventBus.emit(BluenetEvent.INITIALIZED)
+//					handler.post {
+						Log.i(TAG, "init success")
+						initialized = true
+						eventBus.emit(BluenetEvent.INITIALIZED)
+//					}
 				}
 	}
 
