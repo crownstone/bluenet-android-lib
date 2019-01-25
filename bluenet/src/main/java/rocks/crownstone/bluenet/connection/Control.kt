@@ -20,6 +20,7 @@ import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Util
 
 /**
  * Class to interact with the control characteristic of the crownstone service.
@@ -387,7 +388,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "recover $address")
 		val packet = Conversion.uint32ToByteArray(BluenetProtocol.RECOVERY_CODE)
 		// TODO: check if already in setup mode, resolve in that case.
-		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED)
+		return connection.connect(address)
+				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
 //				.then { connection.wait(500) }.unwrap() // We have to delay the read a bit until the result is written to the characteristic
 				.then { checkRecoveryResult() }.unwrap()
 				.then { connection.disconnect(false) }.unwrap()
@@ -409,7 +411,13 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 						else -> deferred.reject(Errors.RecoveryRebootRequired())
 					}
 				}
-				.fail { deferred.reject(it) }
+				.fail {
+					when (it) {
+						is Errors.GattDisconnectedByPeer -> deferred.resolve() // The crownstone disconnected us, assume that this was a result of the write.
+						is Errors.GattError133 -> deferred.resolve() // Currently, the read promise returns error 133, even when disconnected by peer, see TODO in CoreConnection.onGattCharacteristicRead()
+						else -> deferred.reject(it)
+					}
+				}
 		return deferred.promise
 	}
 
