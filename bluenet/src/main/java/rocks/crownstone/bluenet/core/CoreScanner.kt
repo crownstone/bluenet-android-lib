@@ -28,7 +28,7 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 	private var scanSettings: ScanSettings
 	private val lockScanConfig = Any()
 
-	private var scanning = false
+//	private var scanning = false
 
 
 	init {
@@ -51,35 +51,35 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 //	@Synchronized
 	fun startScan() {
 		Log.i(TAG, "startScan")
-	synchronized(this) {
-		if (!initScanner()) {
-			return
+		synchronized(this) {
+			if (!initScanner()) {
+				return
+			}
+			if (!isScannerReady()) {
+				return
+			}
 		}
-		if (!isScannerReady()) {
-			return
-		}
-	}
 		synchronized(lockScanConfig) {
 			scanner.startScan(scanFilters, scanSettings, scanCallback)
 		}
-	synchronized(this) {
-		scanning = true
-	}
+//		synchronized(this) {
+//			scanning = true
+//		}
 	}
 
 //	@Synchronized
 	fun stopScan() {
 		Log.i(TAG, "stopScan")
-	synchronized(this) {
-		if (!initScanner()) {
-			return
+		synchronized(this) {
+			if (!initScanner()) {
+				return
+			}
+//			scanning = false
+			if (!isScannerReady()) {
+				return
+			}
+			scanner.stopScan(scanCallback)
 		}
-		scanning = false
-		if (!isScannerReady()) {
-			return
-		}
-		scanner.stopScan(scanCallback)
-	}
 	}
 
 	/**
@@ -120,43 +120,45 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 //	@Synchronized
 	private fun onBleScanResult(callbackType: Int, result: ScanResult?) {
 		Log.v(TAG, "onBleScanResult $result")
-	synchronized(this) {
-		// Sometimes a scan result is still received after scanning has been stopped.
-		// Sometimes a scan with invalid rssi is received, ignore this result.
-		if (!scanning || result == null || result.rssi >= 0) {
-			return
+		synchronized(this) {
+			// Sometimes a scan result is still received after scanning has been stopped.
+			// Sometimes a scan with invalid rssi is received, ignore this result.
+//			if (!scanning || result == null || result.rssi >= 0) {
+			if (result == null || result.rssi >= 0) {
+				return
+			}
+			eventBus.emit(BluenetEvent.SCAN_RESULT_RAW, result)
 		}
-		eventBus.emit(BluenetEvent.SCAN_RESULT_RAW, result)
-	}
 	}
 
 //	@Synchronized
 	private fun onBleBatchScanResults(results: MutableList<ScanResult>?) {
-	synchronized(this) {
-		if (results != null) {
-			for (result in results) {
-				onBleScanResult(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, result)
+		synchronized(this) {
+			if (results != null) {
+				for (result in results) {
+					onBleScanResult(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, result)
+				}
 			}
 		}
-	}
 	}
 
 //	@Synchronized
 	private fun onBleScanFailed(errorCode: Int) {
 		Log.e(TAG, "onScanFailed: $errorCode")
-	synchronized(this) {
-		if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
-			// No problem!
-			return
+		synchronized(this) {
+			if (errorCode == ScanCallback.SCAN_FAILED_ALREADY_STARTED) {
+				// No problem!
+				return
+			}
+//			scanning = false
+			eventBus.emit(BluenetEvent.SCAN_FAILURE)
 		}
-		scanning = false
-		eventBus.emit(BluenetEvent.SCAN_FAILURE)
-	}
 	}
 
 	private val scanCallback = object: ScanCallback() {
 		// These are called from a different thread.
 		override fun onScanResult(callbackType: Int, result: ScanResult?) {
+			Log.v(TAG, "onScanResult $result")
 			handler.post {
 				onBleScanResult(callbackType, result)
 			}
@@ -172,10 +174,4 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 			}
 		}
 	}
-
-	// Filters:
-	// - scan mode - low level
-	// - ibeacon uuid - low level
-	// - service data header? - not available in every scan -> high level
-	// - unique only - requires decryption -> high level
 }
