@@ -46,9 +46,10 @@ class CrownstoneServiceData {
 	var powerFactor = 1.0; internal set                  // Power factor.
 	var energyUsed = 0L; internal set                    // Energy used in Joule.
 	var externalRssi: Int8 = 0; internal set             // RSSI to external crownstone, only valid when flagExternalData is true.
-	var timestamp = 0L; internal set                     // POSIX local time, only valid when flagTimeSet is true.
+	var timestamp = 0L; internal set                     // POSIX local time. Only valid when flagTimeSet is true.
+	var count: Uint16 = 0; internal set                  // Sequence number of the service data. Only valid when flagTimeSet is false. Will overflow.
+	var changingData = 0; internal set                   // Data that always changes for each new service data. Is a partial timestamp when time is set, counter when time is not set, or random value for old firmware.
 	internal var validation = false
-	internal var changingData = 0
 
 	// Flags
 	var flagExternalData = false;     internal set       // True when this service data is from another crownstone.
