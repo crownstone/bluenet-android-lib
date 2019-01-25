@@ -31,11 +31,20 @@ import kotlin.collections.HashSet
 class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
 	private val handler = Handler(looper)
+	// TODO: this class has state variables that are used by both commands and scans. This makes concurrency issues likely.
+
+	// Map with iBeacon UUID -> timestamp last seen.
 	private val lastSeenRegion = HashMap<UUID, Long>()
+
+	// Map with iBeacon UUIDs that we are in.
 	private val inRegion = HashSet<UUID>()
+
+	// Map with address -> iBeacon and RSSI data.
 	private val deviceMap = HashMap<DeviceAddress, DeviceData>()
-//	private val trackedUuids = HashSet<UUID>()
+
+	// Map with iBeacon UUID -> reference ID.
 	private val trackedUuids = HashMap<UUID, String>()
+
 	private var isRunning = false
 	private var isTimeoutRunning = false
 	private val timeoutRunnable = Runnable { onTimeout() }
