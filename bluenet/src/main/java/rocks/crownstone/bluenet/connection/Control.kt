@@ -269,12 +269,29 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	/**
 	 * Make the crownstone break the connection.
 	 *
+	 * Resolves also when already disconnected.
+	 *
 	 * @return Promise
 	 */
 	@Synchronized
 	fun disconnect(): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect")
-		return writeCommand(ControlType.DISCONNECT)
+
+		return Util.recoverableUnitPromise(
+				writeCommand(ControlType.DISCONNECT),
+//				{ error ->
+//					when(error) {
+//						is Errors.NotConnected -> true
+//						else -> false
+//					}
+//				}
+				fun (error: Exception): Boolean {
+					return when(error) {
+						is Errors.NotConnected -> true
+						else -> false
+					}
+				}
+		)
 	}
 
 	/**
@@ -329,6 +346,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * Factory reset the crownstone.
 	 *
 	 * Clears all configurations and makes the crownstone go into setup mode.
+	 * Disconnects afterwards.
 	 *
 	 * @return Promise
 	 */
@@ -336,6 +354,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun factoryReset(): Promise<Unit, Exception> {
 		Log.i(TAG, "factoryReset")
 		return writeCommand(ControlType.FACTORY_RESET, BluenetProtocol.FACTORY_RESET_CODE)
+				.then { connection.disconnect(true) }.unwrap()
 	}
 
 	/**
