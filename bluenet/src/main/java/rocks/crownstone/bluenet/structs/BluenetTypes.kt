@@ -46,7 +46,7 @@ enum class BluenetEvent {
 	IBEACON_SCAN,    // List of iBeacons was scanned. ScannedIbeaconList as data.
 	IBEACON_ENTER_REGION, // Region was entered. IbeaconRegionEventData as data.
 	IBEACON_EXIT_REGION,  // Region was exited. IbeaconRegionEventData as data.
-	DFU_PROGRESS,
+	DFU_PROGRESS,    // DfuProgress as data.
 }
 
 typealias Int8 = Byte
@@ -107,3 +107,5 @@ data class ScannedIbeacon(val address: DeviceAddress, val ibeaconData: IbeaconDa
 typealias ScannedIbeaconList = ArrayList<ScannedIbeacon>
 typealias IbeaconRegionList = HashMap<UUID, String> // Map with list of entered region UUIDs with reference ID as value.
 data class IbeaconRegionEventData(val changedRegion: UUID, val list: IbeaconRegionList) // Changed region is the UUID that was entered or exited.
+
+data class DfuProgress(val percentage: Int, val currentSpeed: Float, val avgSpeed: Float, val currentPart: Int, val totalParts: Int)

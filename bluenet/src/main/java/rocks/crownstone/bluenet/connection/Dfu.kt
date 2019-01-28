@@ -15,9 +15,7 @@ import no.nordicsemi.android.dfu.DfuBaseService
 import no.nordicsemi.android.dfu.DfuProgressListener
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper
 import rocks.crownstone.bluenet.encryption.AccessLevel
-import rocks.crownstone.bluenet.structs.BluenetProtocol
-import rocks.crownstone.bluenet.structs.DeviceAddress
-import rocks.crownstone.bluenet.structs.Errors
+import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Util
 
@@ -148,7 +146,7 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 
 	@Synchronized
 	private fun onProgress(percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
-		// TODO: Emit event
+		eventBus.emit(BluenetEvent.DFU_PROGRESS, DfuProgress(percent, speed, avgSpeed, currentPart, partsTotal))
 	}
 
 	@Synchronized
