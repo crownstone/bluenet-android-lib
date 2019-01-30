@@ -54,7 +54,8 @@ class BackgroundServiceManager(appContext: Context, evtBus: EventBus, looper: Lo
 
 	@Synchronized
 	fun destroy() {
-		// TODO: check if this actually works well
+		Log.i(TAG, "destroy")
+		context.unbindService(serviceConnection)
 		val intent = Intent(context, BackgroundService::class.java)
 		context.stopService(intent)
 		foreground = false

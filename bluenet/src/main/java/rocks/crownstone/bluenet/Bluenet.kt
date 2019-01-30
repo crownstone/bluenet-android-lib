@@ -82,13 +82,33 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
-	 * Init the library.
+	 * Init the library with background service.
 	 *
 	 * @param appContext Context of the app
 	 * @return Promise that resolves when initialized.
 	 */
 	@Synchronized
 	fun init(appContext: Context): Promise<Unit, Exception> {
+		return initBluenet(appContext, null, null)
+	}
+
+	/**
+	 * Init the library with foreground service.
+	 *
+	 * This will show an ongoing notification, which makes it less likely for the app to get killed for battery saving.
+	 *
+	 * @param appContext Context of the app
+	 * @param notificationId Notification ID used as reference to modify the notification later on. Should be a unique number.
+	 * @param notification   The notification.
+	 * @return Promise that resolves when initialized.
+	 */
+	@Synchronized
+	fun init(appContext: Context, notificationId: Int, notification: Notification): Promise<Unit, Exception> {
+		return initBluenet(appContext, notificationId, notification)
+	}
+
+	@Synchronized
+	private fun initBluenet(appContext: Context, notificationId: Int?, notification: Notification?): Promise<Unit, Exception> {
 		Log.i(TAG, "init")
 		if (initialized) {
 			return Promise.ofSuccess(Unit)
@@ -119,13 +139,19 @@ class Bluenet(looper: Looper? = null) {
 		iBeaconRanger = IbeaconRanger(eventBus, looper)
 
 		service = BackgroundServiceManager(appContext, eventBus, looper)
-		return service.runInBackground()
-				.success {
-//					handler.post {
+		if (notificationId == null || notification == null) {
+			return service.runInBackground()
+					.success {
 						Log.i(TAG, "init success")
 						initialized = true
 						eventBus.emit(BluenetEvent.INITIALIZED)
-//					}
+					}
+		}
+		return service.runInForeground(notificationId, notification)
+				.success {
+					Log.i(TAG, "init success")
+					initialized = true
+					eventBus.emit(BluenetEvent.INITIALIZED)
 				}
 	}
 
@@ -136,6 +162,10 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun destroy() {
+		bleScanner?.stopScan()
+		connection.disconnect()
+
+
 		iBeaconRanger.destroy()
 		service.destroy()
 		// TODO: more?

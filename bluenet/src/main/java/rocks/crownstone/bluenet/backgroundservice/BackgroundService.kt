@@ -63,6 +63,10 @@ class BackgroundService: Service() {
 		val bla = intent.getIntExtra("bla", 0)
 	}
 
+	override fun onDestroy() {
+		Log.i(TAG, "onDestroy")
+		super.onDestroy()
+	}
 
 	fun setEventBus(eventBus: EventBus) {
 		Log.i(TAG, "setEventBus")
