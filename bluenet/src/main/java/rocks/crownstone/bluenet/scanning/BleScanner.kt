@@ -11,10 +11,10 @@ import android.bluetooth.le.ScanFilter
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
 import rocks.crownstone.bluenet.BleCore
 import rocks.crownstone.bluenet.BluenetConfig
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.structs.ScanMode
 import java.util.*

@@ -24,10 +24,10 @@ import android.os.Handler
 import android.os.Looper
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 
 /**
  * Class that initializes the bluetooth LE core.

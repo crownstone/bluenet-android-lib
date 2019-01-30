@@ -7,7 +7,6 @@
 
 package rocks.crownstone.bluenet.connection
 
-import android.util.Log
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
@@ -19,6 +18,7 @@ import rocks.crownstone.bluenet.packets.schedule.ScheduleListPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 
 /**
  * Class to interact with the state characteristics of the crownstone service.

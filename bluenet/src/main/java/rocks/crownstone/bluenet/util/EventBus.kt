@@ -7,7 +7,6 @@
 
 package rocks.crownstone.bluenet.util
 
-import android.util.Log
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import java.util.*
 import java.util.UUID.randomUUID

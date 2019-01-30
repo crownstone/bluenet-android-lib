@@ -7,13 +7,13 @@
 
 package rocks.crownstone.bluenet.connection
 
-import android.util.Log
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.structs.CrownstoneMode
 import rocks.crownstone.bluenet.structs.Errors
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 
 /**
  * Class to interact with the device information service.

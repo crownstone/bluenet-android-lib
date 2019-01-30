@@ -13,7 +13,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.connection.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
@@ -30,7 +29,7 @@ import java.util.*
  *
  * This is the main class a user should use.
  *
- * @param looper Optional looperblecore to be used by the library.
+ * @param looper Optional looper to be used by the library.
  */
 class Bluenet(looper: Looper? = null) {
 	private val TAG = this.javaClass.simpleName

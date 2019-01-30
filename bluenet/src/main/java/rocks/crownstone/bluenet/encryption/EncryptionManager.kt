@@ -7,8 +7,8 @@
 
 package rocks.crownstone.bluenet.encryption
 
-import android.util.Log
 import nl.komponents.kovenant.Promise
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.*
 import java.lang.Exception

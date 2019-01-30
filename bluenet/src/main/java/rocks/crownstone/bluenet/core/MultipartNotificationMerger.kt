@@ -7,9 +7,9 @@
 
 package rocks.crownstone.bluenet.core
 
-import android.util.Log
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Log
 import java.nio.ByteBuffer
 
 /**

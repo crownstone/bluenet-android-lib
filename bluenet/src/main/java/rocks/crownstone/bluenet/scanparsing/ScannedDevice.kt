@@ -8,9 +8,9 @@
 package rocks.crownstone.bluenet.scanparsing
 
 import android.bluetooth.le.ScanResult
-import android.util.Log
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Log
 
 
 // Class that contains scan data of a single ble device.

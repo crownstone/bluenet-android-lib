@@ -7,11 +7,11 @@
 
 package rocks.crownstone.bluenet.encryption
 
-import android.util.Log
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.structs.BluenetProtocol.SESSION_NONCE_LENGTH
 import rocks.crownstone.bluenet.structs.BluenetProtocol.VALIDATION_KEY_LENGTH
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Log
 
 data class SessionData(val sessionNonce: ByteArray, val validationKey: ByteArray, var tempKey: ByteArray? = null)
 

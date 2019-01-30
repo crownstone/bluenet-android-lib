@@ -7,7 +7,6 @@
 
 package rocks.crownstone.bluenet.packets
 
-import android.util.Log
 import rocks.crownstone.bluenet.structs.OpcodeType
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.*

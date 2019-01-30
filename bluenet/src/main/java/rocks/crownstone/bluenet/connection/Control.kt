@@ -7,7 +7,6 @@
 
 package rocks.crownstone.bluenet.connection
 
-import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.packets.ControlPacket
@@ -20,6 +19,7 @@ import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.Util
 
 /**

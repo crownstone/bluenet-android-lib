@@ -11,9 +11,9 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import rocks.crownstone.bluenet.scanning.BleScanner
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 
 
 class BackgroundService: Service() {

@@ -10,10 +10,10 @@ package rocks.crownstone.bluenet.scanhandling
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.SubscriptionId
 import java.util.*
 import kotlin.collections.ArrayList

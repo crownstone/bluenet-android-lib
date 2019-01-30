@@ -8,10 +8,10 @@
 package rocks.crownstone.bluenet.scanhandling
 
 import android.os.SystemClock
-import android.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.DeviceAddress
 import rocks.crownstone.bluenet.structs.OperationMode
+import rocks.crownstone.bluenet.util.Log
 import java.util.*
 
 data class NearestDeviceListEntry(

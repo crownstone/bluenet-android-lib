@@ -14,9 +14,9 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Build
 import android.os.Looper
-import android.util.Log
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.structs.ScanMode
 
 /**

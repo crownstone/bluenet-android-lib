@@ -7,7 +7,6 @@
 
 package rocks.crownstone.bluenet.scanparsing.servicedata
 
-import android.util.Log
 import rocks.crownstone.bluenet.structs.DeviceType
 import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.encryption.Encryption
@@ -15,6 +14,7 @@ import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.structs.ServiceDataType
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.getUint8
+import rocks.crownstone.bluenet.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 

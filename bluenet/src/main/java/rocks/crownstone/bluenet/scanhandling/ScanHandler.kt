@@ -8,7 +8,6 @@
 package rocks.crownstone.bluenet.scanhandling
 
 import android.bluetooth.le.ScanResult
-import android.util.Log
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
@@ -16,6 +15,7 @@ import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.structs.DeviceAddress
 import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 
 /**
  * Class that parses scans.

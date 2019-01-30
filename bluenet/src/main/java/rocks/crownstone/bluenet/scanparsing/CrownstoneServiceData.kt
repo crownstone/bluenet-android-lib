@@ -7,8 +7,8 @@
 
 package rocks.crownstone.bluenet.scanparsing
 
-import android.util.Log
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.servicedata.*
 import rocks.crownstone.bluenet.structs.*
 import java.nio.ByteBuffer

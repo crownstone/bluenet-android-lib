@@ -11,12 +11,12 @@ import android.bluetooth.*
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.SubscriptionId
 import rocks.crownstone.bluenet.util.Util.waitPromise
 import java.util.*
@@ -349,7 +349,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 		}
 		catch (e: Exception) {
-			Log.e(TAG, "Refreshing failed: an exception occurred while refreshing device", e)
+			Log.e(TAG, "Refreshing failed: an exception occurred while refreshing device $e")
 			return false
 		}
 		return success

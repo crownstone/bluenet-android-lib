@@ -7,7 +7,7 @@
 
 package rocks.crownstone.bluenet.scanhandling
 
-import android.util.Log
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.structs.Uint8

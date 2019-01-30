@@ -9,9 +9,9 @@ package rocks.crownstone.bluenet.scanning
 
 import android.bluetooth.le.ScanFilter
 import android.os.ParcelUuid
-import android.util.Log
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Log
 import java.nio.ByteOrder
 import java.util.*
 

@@ -8,9 +8,9 @@
 package rocks.crownstone.bluenet.core
 
 import android.os.Handler
-import android.util.Log
 import nl.komponents.kovenant.Deferred
 import nl.komponents.kovenant.resolve
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.structs.Errors
 
 enum class Action {

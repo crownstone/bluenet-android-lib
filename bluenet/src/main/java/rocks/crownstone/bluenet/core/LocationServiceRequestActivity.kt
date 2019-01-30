@@ -12,7 +12,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
+import rocks.crownstone.bluenet.util.Log
 
 class LocationServiceRequestActivity : AppCompatActivity() {
 	private val TAG = this.javaClass.simpleName
