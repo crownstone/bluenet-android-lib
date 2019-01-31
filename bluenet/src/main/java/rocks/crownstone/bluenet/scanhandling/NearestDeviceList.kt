@@ -48,7 +48,12 @@ class NearestDeviceList {
 		val now = SystemClock.elapsedRealtime()
 		val entry = NearestDeviceListEntry(device.address, device.rssi, now, device.isStone(), device.validated, device.operationMode, device.name)
 		map[device.address] = entry
+		if (entry.deviceAddress == nearest.deviceAddress) {
+			// Update the nearest
+			nearest = entry
+		}
 		if (entry.rssi > nearest.rssi) {
+			// Overwrite nearest
 			nearest = entry
 		}
 		else if (now - nearest.lastSeenTime > TIMEOUT_MS) {
