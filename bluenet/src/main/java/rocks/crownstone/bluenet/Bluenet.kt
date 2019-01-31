@@ -44,6 +44,7 @@ class Bluenet(looper: Looper? = null) {
 	private lateinit var service: BackgroundServiceManager
 	private val encryptionManager = EncryptionManager()
 	private val nearestDevices = NearestDevices(eventBus)
+	private lateinit var fileLogger: FileLogger // Only initialized when required.
 
 	// State
 	private var initialized = false
@@ -346,8 +347,15 @@ class Bluenet(looper: Looper? = null) {
 	 * @return return true if permission result was handled, false otherwise.
 	 */
 	@Synchronized
-	fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
-		return bleCore.handlePermissionResult(requestCode, permissions, grantResults)
+	fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
+		var result = false
+		if (bleCore.handlePermissionResult(requestCode, permissions, grantResults)) {
+			result = true
+		}
+		if (FileLogger.handlePermissionResult(requestCode, permissions, grantResults)) {
+			result = true
+		}
+		return result
 	}
 
 	/**
@@ -539,4 +547,61 @@ class Bluenet(looper: Looper? = null) {
 	private fun onPermissionGranted(data: Any) {
 		initScanner()
 	}
+
+	/**
+	 * Initialize file logger.
+	 *
+	 * @param activity Optional: Activity that will be used to ask for permissions (if needed).
+	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
+	 *                 and from there calls Bluenet.handlePermissionResult().
+	 */
+	@Synchronized
+	fun initFileLogging(activity: Activity?) {
+		if (!FileLogger.checkPermissions(context)) {
+			if (activity != null && !activity.isDestroyed) {
+				FileLogger.requestPermissions(activity)
+			}
+		}
+		if (!::fileLogger.isInitialized) {
+			fileLogger = FileLogger(context)
+			Log.setFileLogger(fileLogger)
+		}
+	}
+
+	/**
+	 * Enable / disable logging to file.
+	 *
+	 * Make sure file logging has been initialized first.
+	 */
+	fun enableFileLogging(enable: Boolean) {
+		if (::fileLogger.isInitialized) {
+			fileLogger.enable(enable)
+		}
+	}
+
+	/**
+	 * Set the minimal log level.
+	 */
+	fun setLogLevel(level: Log.Level) {
+		Log.setLogLevel(level)
+	}
+
+	/**
+	 * Set the minimal log level for logging to file.
+	 */
+	fun setFileLogLevel(level: Log.Level) {
+		Log.setFileLogLevel(level)
+	}
+
+	/**
+	 * Clear all log files.
+	 *
+	 * Make sure file logging has been initialized first.
+	 */
+	fun clearLogFiles() {
+		if (::fileLogger.isInitialized) {
+			fileLogger.clearLogFiles()
+		}
+	}
+
 }
