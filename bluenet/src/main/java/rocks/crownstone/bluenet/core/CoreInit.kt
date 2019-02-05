@@ -727,15 +727,19 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 				// PROVIDERS_CHANGED_ACTION  are also triggered if mode is changed, so only
 				// create events if the _locationsServicesReady flag changes
 				if (isLocationServiceEnabled()) {
-					Log.i(TAG, "location service on")
-					onEnableLocationServiceResult(true)
-					eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_ON)
-					checkScannerReady()
+					handler.post {
+						Log.i(TAG, "location service on")
+						onEnableLocationServiceResult(true)
+						eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_ON)
+						checkScannerReady()
+					}
 				}
 				else {
-					Log.i(TAG, "location service off")
-					eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_OFF)
-					checkScannerReady()
+					handler.post {
+						Log.i(TAG, "location service off")
+						eventBus.emit(BluenetEvent.LOCATION_SERVICE_TURNED_OFF)
+						checkScannerReady()
+					}
 				}
 			}
 		}
