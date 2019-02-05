@@ -84,13 +84,12 @@ class FileLogger(context: Context) {
 	fun logToFile(level: Char, tag: String, msg: String) {
 		if (enabled && checkFile()) {
 			try {
-				val log = "${logTimestampFormat.format(Date())} $level $tag $msg\r\n"
+				val log = "${logTimestampFormat.format(Date())} ${android.os.Process.myTid()} $level $tag $msg\r\n"
 				logFileStream?.write(log.toByteArray())
 			} catch (e: IOException) {
 				Log.e(TAG, "Failed to write to log file")
 				e.printStackTrace()
 			}
-
 		}
 	}
 
