@@ -332,7 +332,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * @return return true if permission result was handled, false otherwise.
 	 */
 	@Synchronized
-	fun handlePermissionResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray): Boolean {
+	fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
 		when (requestCode) {
 			REQ_CODE_PERMISSIONS_LOCATION -> {
 				handler.removeCallbacks(getLocationPermissionTimeout)
@@ -681,32 +681,36 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 			if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
 				when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
 					BluetoothAdapter.STATE_ON -> {
-						Log.i(TAG, "bluetooth on")
+						handler.post {
+							Log.i(TAG, "bluetooth on")
 
-						onEnableBleResult(true)
-						/*
-						// if bluetooth state turns on because of a reset, then reset was completed
-						if (_resettingBle) {
-							_resettingBle = false
+							onEnableBleResult(true)
+							/*
+							// if bluetooth state turns on because of a reset, then reset was completed
+							if (_resettingBle) {
+								_resettingBle = false
+							}
+							*/
+							eventBus.emit(BluenetEvent.BLE_TURNED_ON)
+							checkScannerReady()
 						}
-						*/
-						eventBus.emit(BluenetEvent.BLE_TURNED_ON)
-						checkScannerReady()
 					}
 					BluetoothAdapter.STATE_OFF -> {
-						Log.i(TAG, "bluetooth off")
-						/*
-						// TODO: this has to happen after event has been sent?
-						_connections = HashMap<String, Connection>()
-						_scanning = false
+						handler.post {
+							Log.i(TAG, "bluetooth off")
+							/*
+							// TODO: this has to happen after event has been sent?
+							_connections = HashMap<String, Connection>()
+							_scanning = false
 
-						// if bluetooth state turns off because of a reset, enable it again
-						if (_resettingBle) {
-							_bluetoothAdapter.enable()
+							// if bluetooth state turns off because of a reset, enable it again
+							if (_resettingBle) {
+								_bluetoothAdapter.enable()
+							}
+							*/
+							eventBus.emit(BluenetEvent.BLE_TURNED_OFF)
+							checkScannerReady()
 						}
-						*/
-						eventBus.emit(BluenetEvent.BLE_TURNED_OFF)
-						checkScannerReady()
 					}
 				}
 			}
