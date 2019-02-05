@@ -536,6 +536,7 @@ class Bluenet(looper: Looper? = null) {
 //		}
 //		scannerReadyPromises.clear()
 		scannerReadyPromise?.resolve()
+		scannerReadyPromise = null
 	}
 
 	@Synchronized
