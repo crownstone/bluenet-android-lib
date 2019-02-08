@@ -172,5 +172,8 @@ class EventBus {
 //				break
 //			}
 //		}
+		if (eventSubscriptions.getValue(eventType).isEmpty()) {
+			eventSubscriptions.remove(eventType)
+		}
 	}
 }
