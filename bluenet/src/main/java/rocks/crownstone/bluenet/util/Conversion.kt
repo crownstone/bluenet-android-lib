@@ -13,6 +13,7 @@ import rocks.crownstone.bluenet.structs.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 object Conversion {
@@ -124,6 +125,29 @@ object Conversion {
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		return bb.getFloat(offset)
 	}
+
+	fun byteArrayToUint16Array(bytes: ByteArray, offset: Int = 0): List<Uint16> {
+		val bb = ByteBuffer.wrap(bytes)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
+		bb.position(offset)
+		val result = ArrayList<Uint16>(bb.remaining()/2)
+		while (bb.remaining() > 2) {
+			result.add(Conversion.toUint16(bb.getShort()))
+		}
+		return result
+	}
+
+	fun byteArrayToInt16Array(bytes: ByteArray, offset: Int = 0): List<Int16> {
+		val bb = ByteBuffer.wrap(bytes)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
+		bb.position(offset)
+		val result = ArrayList<Int16>(bb.remaining()/2)
+		while (bb.remaining() > 2) {
+			result.add(bb.getShort())
+		}
+		return result
+	}
+
 
 	fun int32ToByteArray(value: Int32): ByteArray {
 		val bb = ByteBuffer.allocate(4)

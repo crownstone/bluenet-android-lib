@@ -158,6 +158,61 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 		}
 	}
 
+	@Synchronized
+	fun getSwitchCraftBuffers(): Promise<List<Int16>, Exception> {
+		Log.i(TAG, "getSwitchCraftBuffers")
+		val deferred = deferred<List<Int16>, Exception>()
+		val allSamples = ArrayList<Int16>()
+		getSwitchCraftBuffer(StateType.SWITCHCRAFT_LAST_BUF1)
+				.then {
+					allSamples.addAll(it)
+					getSwitchCraftBuffer(StateType.SWITCHCRAFT_LAST_BUF2)
+				}.unwrap()
+				.then {
+					allSamples.addAll(it)
+					getSwitchCraftBuffer(StateType.SWITCHCRAFT_LAST_BUF3)
+				}.unwrap()
+				.then {
+					allSamples.addAll(it)
+					deferred.resolve(allSamples)
+				}
+				.fail { deferred.reject(it) }
+		return deferred.promise
+	}
+
+	@Synchronized
+	private fun getSwitchCraftBuffer(buf: StateType): Promise<List<Int16>, Exception> {
+		Log.i(TAG, "getSwitchCraftBuffers")
+		val deferred = deferred<List<Int16>, Exception>()
+		getState(buf)
+				.then {
+					val arr = it.getPayload()
+					if (arr == null) {
+						deferred.reject(Errors.Parse("state payload expected"))
+						return@then
+//						return@then Promise.ofFail<ByteArray, Exception>(Errors.Parse("state payload expected"))
+					}
+					if (arr.size < 2) {
+						deferred.reject(Errors.Parse("payload too small"))
+						return@then
+//						return@then Promise.ofFail<ByteArray, Exception>(Errors.Parse("payload too small"))
+					}
+//					val length = Conversion.byteArrayTo<Uint16>(arr)
+					val length = Conversion.toUint16(Conversion.byteArrayToShort(arr))
+					if (arr.size - 2 < length*2) {
+						deferred.reject(Errors.Parse("payload too small for length"))
+						return@then
+//						return@then Promise.ofFail<ByteArray, Exception>(Errors.Parse("payload too small for length"))
+					}
+					val samples = Conversion.byteArrayToInt16Array(arr, 2)
+					deferred.resolve(samples)
+//					return@then Promise.ofSuccess<List<Uint16>, Exception>(samples)
+				}
+				.fail { deferred.reject(it) }
+		return deferred.promise
+	}
+
+
 	inline private fun <reified T>getStateValue(type: StateType): Promise<T, Exception> {
 		return getState(type)
 				.then {

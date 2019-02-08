@@ -192,6 +192,9 @@ enum class StateType(val num: Uint8) {
 	TEMPERATURE(135),
 	TIME(136),
 	ERRORS(139),
+	SWITCHCRAFT_LAST_BUF1(149),
+	SWITCHCRAFT_LAST_BUF2(150),
+	SWITCHCRAFT_LAST_BUF3(151),
 	UNKNOWN(255);
 	companion object {
 		private val map = StateType.values().associateBy(StateType::num)
