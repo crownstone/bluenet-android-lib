@@ -274,7 +274,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun disconnect(): Promise<Unit, Exception> {
+	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect")
 
 		return Util.recoverableUnitPromise(
@@ -291,7 +291,9 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 						else -> false
 					}
 				}
-		)
+		).then {
+			connection.disconnect(clearCache)
+		}.unwrap()
 	}
 
 	/**

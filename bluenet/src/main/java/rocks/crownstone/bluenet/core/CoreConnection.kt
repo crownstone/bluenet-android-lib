@@ -53,7 +53,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		val deferred = deferred<Unit, Exception>()
 
 		if (gatt != null) {
-			Log.d(TAG, "gatt already open")
+			Log.w(TAG, "gatt already open")
 			// TODO: disconnect and close?
 			if (gatt.device.address != address) {
 				return Promise.ofFail(Errors.BusyOtherDevice())
