@@ -414,6 +414,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 //				.then { connection.wait(500) }.unwrap() // We have to delay the read a bit until the result is written to the characteristic
 				.then { checkRecoveryResult() }.unwrap()
 				.then { connection.disconnect(false) }.unwrap()
+				.then { connection.wait(2000) }.unwrap() // Wait for the crownstone to disconnect us before connecting again. TODO: do this with a waitForDisconnect() function.
 				.then { connection.connect(address) }.unwrap()
 				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
 				.then { checkRecoveryResult() }.unwrap()
