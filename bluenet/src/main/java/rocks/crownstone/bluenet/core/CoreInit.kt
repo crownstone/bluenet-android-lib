@@ -331,24 +331,29 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized
 	fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
 		when (requestCode) {
 			REQ_CODE_PERMISSIONS_LOCATION -> {
-				handler.removeCallbacks(getLocationPermissionTimeout)
-				if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
-						grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					// Permission granted.
-					Log.i(TAG, "handlePermissionResult granted")
-					eventBus.emit(BluenetEvent.LOCATION_PERMISSION_GRANTED)
-					locationPermissionPromise?.resolve()
+				handler.post {
+					// Post, so that this code is executed on correct thread.
+					// Only lock once on correct thread. (Is the lock even required then?)
+					synchronized(this) {
+						handler.removeCallbacks(getLocationPermissionTimeout)
+						if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
+								grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+							// Permission granted.
+							Log.i(TAG, "handlePermissionResult granted")
+							eventBus.emit(BluenetEvent.LOCATION_PERMISSION_GRANTED)
+							locationPermissionPromise?.resolve()
+						}
+						else {
+							// Permission not granted.
+							Log.i(TAG, "handlePermissionResult denied")
+							locationPermissionPromise?.reject(Exception("location permission denied"))
+						}
+						locationPermissionPromise = null
+					}
 				}
-				else {
-					// Permission not granted.
-					Log.i(TAG, "handlePermissionResult denied")
-					locationPermissionPromise?.reject(Exception("location permission denied"))
-				}
-				locationPermissionPromise = null
 				return true
 			}
 		}
@@ -524,20 +529,31 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 *
 	 * @return return true if permission result was handled, false otherwise.
 	 */
-	@Synchronized
 	fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 		when (requestCode) {
 			REQ_CODE_ENABLE_BLUETOOOTH -> {
-				Log.i(TAG, "bluetooth enable result: $resultCode")
-				if (resultCode == Activity.RESULT_CANCELED) {
-					onEnableBleResult(false, "canceled")
+				handler.post {
+					// Post, so that this code is executed on correct thread.
+					// Only lock once on correct thread. (Is the lock even required then?)
+					synchronized(this) {
+						Log.i(TAG, "bluetooth enable result: $resultCode")
+						if (resultCode == Activity.RESULT_CANCELED) {
+							onEnableBleResult(false, "canceled")
+						}
+					}
 				}
 				return true
 			}
 			REQ_CODE_ENABLE_LOCATION_SERVICE -> {
-				Log.i(TAG, "location services enable result: $resultCode")
-				if (resultCode == Activity.RESULT_CANCELED) {
-					onEnableLocationServiceResult(false, "canceled")
+				handler.post {
+					// Post, so that this code is executed on correct thread.
+					// Only lock once on correct thread. (Is the lock even required then?)
+					synchronized(this) {
+						Log.i(TAG, "location services enable result: $resultCode")
+						if (resultCode == Activity.RESULT_CANCELED) {
+							onEnableLocationServiceResult(false, "canceled")
+						}
+					}
 				}
 				return true
 			}

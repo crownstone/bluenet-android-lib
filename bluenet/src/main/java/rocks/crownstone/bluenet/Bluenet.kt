@@ -348,6 +348,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
+		Log.i(TAG, "handlePermissionResult requestCode=$requestCode  permissions=$permissions  grantResults=$grantResults")
 		var result = false
 		if (bleCore.handlePermissionResult(requestCode, permissions, grantResults)) {
 			result = true
