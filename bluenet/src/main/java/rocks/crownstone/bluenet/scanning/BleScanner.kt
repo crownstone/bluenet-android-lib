@@ -66,8 +66,8 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 
 //	@Synchronized
 	fun startScan(delay: Long = 0) {
+		Log.i(TAG, "startScan delay=$delay")
 		synchronized(this) {
-			Log.i(TAG, "startScan delay=$delay")
 			if (!running) {
 				running = true
 				handler.removeCallbacksAndMessages(null)
