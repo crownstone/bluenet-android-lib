@@ -166,7 +166,6 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 	@Synchronized
 	private fun onDfuError(error: Int, errorType: Int, message: String?) {
 		val deferred = dfuDeferred ?: return
-		deferred.resolve(Unit)
 		val type = when (errorType) {
 			DfuBaseService.ERROR_TYPE_COMMUNICATION_STATE -> "ERROR_TYPE_COMMUNICATION_STATE"
 			DfuBaseService.ERROR_TYPE_COMMUNICATION -> "ERROR_TYPE_COMMUNICATION"
