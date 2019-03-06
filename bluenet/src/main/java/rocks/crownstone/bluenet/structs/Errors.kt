@@ -23,6 +23,8 @@ object Errors {
 	class GattDisconnectedByTimeout: Gatt(8, "timeout")
 	class GattDisconnectedByPeer: Gatt(19, "disconnected by peer")
 	class GattDisconnectedByHost: Gatt(22, "disconnected by host")
+	class GattConnectionFail: Gatt(62, "connection failed to establish")
+
 
 	class GattNoResources: Gatt(128)
 	class GattInternal: Gatt(129)
@@ -94,6 +96,7 @@ object Errors {
 			8 -> GattDisconnectedByTimeout()
 			19 -> GattDisconnectedByPeer()
 			22 -> GattDisconnectedByHost()
+			62 -> GattConnectionFail()
 			else -> GattDisconnected(status)
 		}
 	}
