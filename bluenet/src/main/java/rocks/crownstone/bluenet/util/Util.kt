@@ -65,6 +65,9 @@ object Util {
 	}
 
 	fun waitPromise(timeMs: Long, handler: Handler): Promise<Unit, Exception> {
+		if (timeMs <=0 ) {
+			return Promise.ofSuccess(Unit)
+		}
 		val deferred = deferred<Unit, Exception>()
 		handler.postDelayed({deferred.resolve()}, timeMs)
 		return deferred.promise
