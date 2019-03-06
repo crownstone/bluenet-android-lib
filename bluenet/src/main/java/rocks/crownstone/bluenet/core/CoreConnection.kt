@@ -283,8 +283,11 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 				deferred.resolve()
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
-				closeFinal(clearCache)
-				deferred.resolve()
+				disconnect()
+						.always {
+							closeFinal(clearCache)
+							deferred.resolve()
+						}
 			}
 			else -> {
 				deferred.reject(Errors.BusyWrongState())
@@ -298,7 +301,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		if (clearCache) {
 			refreshGatt()
 		}
-		Log.d(TAG, "gatt.close")
+		Log.i(TAG, "gatt.close")
 		currentGatt?.close()
 		currentGatt = null
 	}
