@@ -64,6 +64,7 @@ object Errors {
 	// Wrong crownstone mode
 	open class Mode(msg: String = "wrong mode"): Exception(msg)
 	class NotInMode(expectedMode: CrownstoneMode): Mode("not in ${expectedMode.name} mode")
+	class AlreadySetupInMode: Mode("already in setup mode")
 
 	// Recovery
 	class RecoveryRebootRequired: Exception("reboot of stone is required before you can recover")

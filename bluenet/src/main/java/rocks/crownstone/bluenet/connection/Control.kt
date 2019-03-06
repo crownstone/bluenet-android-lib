@@ -403,6 +403,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * Recover a crownstone.
 	 *
 	 * This will connect, recover, and disconnect.
+	 * Will resolve when already in setup mode.
 	 *
 	 * @param address MAC address of the crownstone.
 	 * @return Promise
@@ -411,18 +412,37 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun recover(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "recover $address")
 		val packet = Conversion.uint32ToByteArray(BluenetProtocol.RECOVERY_CODE)
-		// TODO: check if already in setup mode, resolve in that case.
-		return connection.connect(address)
-				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
-//				.then { connection.wait(500) }.unwrap() // We have to delay the read a bit until the result is written to the characteristic
-				.then { checkRecoveryResult() }.unwrap()
-				.then { connection.disconnect(false) }.unwrap()
-				.then { connection.wait(2000) }.unwrap() // Wait for the crownstone to disconnect us before connecting again. TODO: do this with a waitForDisconnect() function.
-				.then { connection.connect(address) }.unwrap()
+		// If previous recover attempt succeeded step 1, then only one more write is needed. So also check if in setup mode after second connect.
+		// TODO: resolve nicely when already in setup mode, don't use the error hack for that.
+		val deferred = deferred<Unit, Exception>()
+		connection.connect(address)
+				.then { checkIfAlreadyInSetupMode() }.unwrap()
 				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
 				.then { checkRecoveryResult() }.unwrap()
 				.then { connection.disconnect(true) }.unwrap()
-				.fail { connection.disconnect(true) }
+				.then { connection.wait(2000) }.unwrap() // Wait for the crownstone trying to disconnect us before connecting again. TODO: do this with a waitForDisconnect() function.
+				.then { connection.connect(address) }.unwrap()
+				.then { checkIfAlreadyInSetupMode() }.unwrap()
+				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
+				.then { checkRecoveryResult() }.unwrap()
+				.success {
+					connection.disconnect(true).always { deferred.resolve() }
+				}
+				.fail {
+					when (it) {
+						is Errors.AlreadySetupInMode -> connection.disconnect(true).always { deferred.resolve() }
+						else -> connection.disconnect(true).always { deferred.reject(it) }
+					}
+				}
+		return deferred.promise
+	}
+
+	// Bit of a hack: return an error when already in setup mode.
+	private fun checkIfAlreadyInSetupMode(): Promise<Unit, Exception> {
+		if (connection.mode == CrownstoneMode.SETUP) {
+			return Promise.ofFail(Errors.AlreadySetupInMode())
+		}
+		return Promise.ofSuccess(Unit)
 	}
 
 	private fun checkRecoveryResult(): Promise<Unit, Exception> {
