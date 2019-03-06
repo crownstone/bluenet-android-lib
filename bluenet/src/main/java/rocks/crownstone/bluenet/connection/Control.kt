@@ -281,6 +281,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 			writeCommand(ControlType.DISCONNECT),
 			fun (error: Exception): Boolean {
 				return when(error) {
+					is Errors.Timeout -> true // Assume the write callback was never called because the ack didn't arrive?
 					is Errors.GattDisconnectedByPeer -> true // The crownstone disconnected us, this was a result of the write.
 					is Errors.GattError133 -> true // Often the case when disconnected by peer, but the real error (19) is only given in the connection state change.
 					is Errors.NotConnected -> true
