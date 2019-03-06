@@ -276,24 +276,27 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect")
-
-		return Util.recoverableUnitPromise(
-				writeCommand(ControlType.DISCONNECT),
-//				{ error ->
-//					when(error) {
-//						is Errors.NotConnected -> true
-//						else -> false
-//					}
-//				}
-				fun (error: Exception): Boolean {
-					return when(error) {
-						is Errors.NotConnected -> true
-						else -> false
-					}
+		val deferred = deferred<Unit, Exception>()
+		Util.recoverableUnitPromise(
+			writeCommand(ControlType.DISCONNECT),
+			fun (error: Exception): Boolean {
+				return when(error) {
+					is Errors.GattDisconnectedByPeer -> true // The crownstone disconnected us, this was a result of the write.
+					is Errors.GattError133 -> true // Often the case when disconnected by peer, but the real error (19) is only given in the connection state change.
+					is Errors.NotConnected -> true
+					else -> false
 				}
-		).then {
-			connection.disconnect(clearCache)
-		}.unwrap()
+			}
+		)
+				// Disconnect afterwards, so that resolve only happens after being disconnected.
+				// TODO: do this with a waitForDisconnect() function?
+				.success {
+					connection.disconnect(clearCache).always { deferred.resolve() }
+				}
+				.fail {
+					connection.disconnect(clearCache).always { deferred.reject(it) }
+				}
+		return deferred.promise
 	}
 
 	/**
