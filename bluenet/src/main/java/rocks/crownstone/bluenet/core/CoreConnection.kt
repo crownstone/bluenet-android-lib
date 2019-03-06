@@ -199,6 +199,19 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid) != null
 	}
 
+	@Synchronized
+	fun logCharacteristics() {
+		Log.i(TAG, "logCharacteristics")
+		val services = currentGatt?.services ?: return
+		for (service in services) {
+			Log.i(TAG, "service: ${service.uuid}")
+			val characteristics = service.characteristics ?: break
+			for (characteristic in characteristics) {
+				Log.i(TAG, "  characteristic: ${characteristic.uuid}")
+			}
+		}
+	}
+
 	/**
 	 * Get the address of the device we're connected to.
 	 *

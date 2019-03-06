@@ -205,6 +205,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				return bleCore.refreshDeviceCache()
 			}
 			else -> {
+				Log.w(TAG, "unknown mode")
+				bleCore.logCharacteristics()
 				return Promise.ofFail(Errors.Mode())
 			}
 		}
