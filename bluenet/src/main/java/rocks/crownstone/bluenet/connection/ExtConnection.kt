@@ -7,6 +7,7 @@
 
 package rocks.crownstone.bluenet.connection
 
+import android.os.SystemClock
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
@@ -37,11 +38,13 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 
 	/**
 	 * Connect, discover service and get session data
+	 *
+	 * Will retry to connect for certain connection errors.
 	 */
 	@Synchronized
-	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
+	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return bleCore.connect(address, timeoutMs)
+		return connectionAttempt(address, timeoutMs, retries)
 				.then {
 					mode = CrownstoneMode.UNKNOWN
 					bleCore.discoverServices(false)
@@ -52,6 +55,32 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				.success {
 //					isConnected = true
 				}
+	}
+
+	private fun connectionAttempt(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int): Promise<Unit, Exception> {
+		// TODO: check time
+		val deferred = deferred<Unit, Exception>()
+		val startTime = SystemClock.elapsedRealtime()
+		bleCore.connect(address, timeoutMs)
+				.success { deferred.resolve() }
+				.fail {
+					val retry = when (it) {
+						is Errors.GattError133 -> true
+						else -> false
+					}
+					val curTime = SystemClock.elapsedRealtime()
+					if (retry && retries > 1 && (curTime - startTime < BluenetConfig.TIMEOUT_CONNECT_RETRY)) {
+						connectionAttempt(address, timeoutMs, retries - 1)
+								.success { deferred.resolve() }
+								.fail { exception: Exception ->
+									deferred.reject(exception)
+								}
+					}
+					else {
+						deferred.reject(it)
+					}
+				}
+		return deferred.promise
 	}
 
 	@Synchronized
