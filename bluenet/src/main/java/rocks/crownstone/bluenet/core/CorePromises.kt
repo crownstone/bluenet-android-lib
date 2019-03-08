@@ -82,6 +82,11 @@ class CorePromises(handler: Handler) {
 		return true
 	}
 
+	@Synchronized
+	fun getAction(): Action {
+		return action
+	}
+
 	val timeoutRunnable = Runnable {
 		timeout()
 	}

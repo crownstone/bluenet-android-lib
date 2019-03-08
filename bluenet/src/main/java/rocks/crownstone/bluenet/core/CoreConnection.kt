@@ -250,6 +250,9 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			return
 		}
 
+		if (status != BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED) {
+			closeFinal(true) // TODO: refresh?
+		}
 		when (newState) {
 			BluetoothProfile.STATE_CONNECTED -> {
 				notificationEventBus.reset()
@@ -257,11 +260,11 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 			BluetoothProfile.STATE_DISCONNECTED -> {
 				notificationEventBus.reset()
-				promises.resolve(Action.DISCONNECT)
+				when (promises.getAction()) {
+					Action.DISCONNECT -> promises.resolve(Action.DISCONNECT)
+					else -> promises.reject(Errors.gattError(status))
+				}
 			}
-		}
-		if (status != BluetoothGatt.GATT_SUCCESS) {
-			close(true) // TODO: refresh?
 		}
 	}
 

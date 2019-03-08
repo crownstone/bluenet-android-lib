@@ -69,7 +69,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 						else -> false
 					}
 					val curTime = SystemClock.elapsedRealtime()
-					if (retry && retries > 1 && (curTime - startTime < BluenetConfig.TIMEOUT_CONNECT_RETRY)) {
+					Log.i(TAG, "retry=$retry retries=$retries dt=${curTime - startTime}")
+					if (retry && retries > 0 && (curTime - startTime < BluenetConfig.TIMEOUT_CONNECT_RETRY)) {
 						connectionAttempt(address, timeoutMs, retries - 1)
 								.success { deferred.resolve() }
 								.fail { exception: Exception ->
