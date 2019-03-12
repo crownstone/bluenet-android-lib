@@ -18,7 +18,7 @@ class KeepAliveSameTimeout(val timeout: Uint16): PacketInterface {
 	val list = ArrayList<KeepAliveSameTimeoutItem>()
 
 	companion object {
-		const val HEADER_SIZE = 4
+		const val HEADER_SIZE = 3
 	}
 
 	fun add(item: KeepAliveSameTimeoutItem) {
@@ -35,7 +35,6 @@ class KeepAliveSameTimeout(val timeout: Uint16): PacketInterface {
 		}
 		bb.putShort(timeout)
 		bb.put(list.size.toByte())
-		bb.put(0) // reserved
 		for (it in list) {
 			if (!it.toBuffer(bb)) {
 				return false
