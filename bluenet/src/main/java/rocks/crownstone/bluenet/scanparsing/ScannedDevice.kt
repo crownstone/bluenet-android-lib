@@ -30,6 +30,7 @@ class ScannedDevice(result: ScanResult) {
 	val rssi = result.rssi                                        // RSSI of the scan.
 	var operationMode = OperationMode.UNKNOWN; internal set       // Operation mode of the device.
 	var validated = false; internal set                           // Whether or not this is a validated device.
+	var sphereId: String? = null; internal set                    // The sphere ID of this device.
 
 	/**
 	 * Check if device is a crownstone.

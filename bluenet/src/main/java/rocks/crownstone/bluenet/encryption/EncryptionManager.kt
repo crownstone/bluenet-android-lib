@@ -88,6 +88,26 @@ class EncryptionManager {
 	}
 
 	@Synchronized
+	fun getSphereIdFromAddress(address: DeviceAddress): SphereId? {
+		return addresses.get(address)
+	}
+
+	@Synchronized
+	fun getSphereId(device: ScannedDevice): SphereId? {
+		val uuid = device.ibeaconData?.uuid
+		if (uuid != null) {
+			val sphereId = uuids.get(uuid)
+			if (sphereId != null) {
+				// Cache result
+				addresses.put(device.address, sphereId)
+				return sphereId
+			}
+		}
+		// Fall back to cached result
+		return getSphereIdFromAddress(device.address)
+	}
+
+	@Synchronized
 	fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean): Promise<Unit, Exception> {
 		this.sessionData = null // Make sure it's null when parsing fails.
 		val sessionData = if (isEncrypted) {
