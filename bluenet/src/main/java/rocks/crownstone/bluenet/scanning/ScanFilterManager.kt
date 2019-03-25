@@ -53,8 +53,8 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		val dataMask = ByteArray(BluenetProtocol.APPLE_HEADER_SIZE + BluenetProtocol.IBEACON_SIZE, { 0 })
 		data[0] = BluenetProtocol.IBEACON_TYPE.toByte()
 		data[1] = BluenetProtocol.IBEACON_SIZE.toByte()
-		dataMask[0] = 1
-		dataMask[1] = 1
+		dataMask[0] = 0xFF.toByte()
+		dataMask[1] = 0xFF.toByte()
 		val scanFilter = ScanFilter.Builder()
 				.setManufacturerData(BluenetProtocol.APPLE_COMPANY_ID, data, dataMask)
 				.build()
@@ -92,12 +92,12 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		val dataMask = ByteArray(BluenetProtocol.APPLE_HEADER_SIZE + BluenetProtocol.IBEACON_SIZE, { 0 })
 		data[0] = BluenetProtocol.IBEACON_TYPE.toByte()
 		data[1] = BluenetProtocol.IBEACON_SIZE.toByte()
-		dataMask[0] = 1
-		dataMask[1] = 1
+		dataMask[0] = 0xFF.toByte()
+		dataMask[1] = 0xFF.toByte()
 //		System.arraycopy(uuidArray, 0, data, 2, uuidArray.size)
 		for (i in 0 until uuidArray.size) {
 			data[i+2] = uuidArray[i]
-			dataMask[i+2] = 1
+			dataMask[i+2] = 0xFF.toByte()
 		}
 //			updateCallback(getFilters())
 //		}
