@@ -60,6 +60,11 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 			}
 		}
 		synchronized(lockScanConfig) {
+			Log.d(TAG, "scanFilters:")
+			for (f in scanFilters) {
+				Log.d(TAG, "$f")
+			}
+			Log.d(TAG, "scanSettings=$scanSettings")
 			scanner.startScan(scanFilters, scanSettings, scanCallback)
 		}
 //		synchronized(this) {
