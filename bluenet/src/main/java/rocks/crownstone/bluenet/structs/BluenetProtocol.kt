@@ -387,8 +387,11 @@ enum class MultiKeepAliveType(val num: Uint8) {
 	}
 }
 
-class KeepAliveActionSwitch {
+class KeepAliveActionSwitch() {
 	var actionSwitchValue: Uint8 = 255; private set
+	constructor(action: Uint8): this() {
+		this.setAction(action)
+	}
 	fun setAction(switchValue: Uint8) {
 		actionSwitchValue = switchValue
 	}
