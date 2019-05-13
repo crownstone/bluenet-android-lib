@@ -636,6 +636,10 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 */
 	@Synchronized
 	fun isBleEnabled(): Boolean {
+		if (!bleInitialized) {
+			Log.w(TAG, "isBleEnabled: BLE not initialized")
+			return false
+		}
 		val result = bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON
 		Log.i(TAG, "isBleEnabled: $result (enabled=${bleAdapter.isEnabled}, state=${bleAdapter.state}, STATE_ON=${BluetoothAdapter.STATE_ON})")
 		return result
