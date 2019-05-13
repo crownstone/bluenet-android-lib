@@ -43,7 +43,8 @@ open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		if (ids.isEmpty() || bb.remaining() < getPacketSize()) {
+		// Empty id list is valid, it means it's a broadcast.
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.put(type.num)
