@@ -22,7 +22,7 @@ import rocks.crownstone.bluenet.structs.ScanMode
 /**
  * Class that adds scanning to the bluetooth LE core class.
  */
-open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : CoreConnection(appContext, evtBus, looper) {
+open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : CoreAdvertiser(appContext, evtBus, looper) {
 	private var scanFilters: List<ScanFilter> = ArrayList()
 	private var scanSettingsBuilder = ScanSettings.Builder()
 	private var scanSettings: ScanSettings
