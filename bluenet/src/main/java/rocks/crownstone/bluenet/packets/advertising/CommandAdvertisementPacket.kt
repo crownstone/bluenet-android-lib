@@ -16,6 +16,7 @@ import java.nio.ByteBuffer
 
 enum class CommandAdvertisementType(val num: Uint8) {
 	MULTI_SWITCH(1),
+	SET_TIME(2),
 	UNKNOWN(255);
 	companion object {
 		private val map = CommandAdvertisementType.values().associateBy(CommandAdvertisementType::num)
@@ -25,23 +26,35 @@ enum class CommandAdvertisementType(val num: Uint8) {
 	}
 }
 
-class AdvertiseCommandPacket(val validationTimestamp: Uint32, val type: CommandAdvertisementType, val payload: PacketInterface): PacketInterface {
+/**
+ * Packet to sent command advertisements.
+ * The size is fixed by zero padding.
+ */
+class CommandAdvertisementPacket(val validationTimestamp: Uint32, val type: CommandAdvertisementType, val payload: CommandAdvertisementPayloadInterface): PacketInterface {
 	companion object {
 		const val HEADER_SIZE = 5
+		const val PAYLOAD_SIZE = 11
 	}
 
 	override fun getPacketSize(): Int {
-		return HEADER_SIZE + payload.getPacketSize()
+//		return HEADER_SIZE + payload.getPacketSize()
+		return HEADER_SIZE + PAYLOAD_SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		val payload = this.payload
-		if (payload == null || type == CommandAdvertisementType.UNKNOWN || bb.remaining() < getPacketSize()) {
+		if (type == CommandAdvertisementType.UNKNOWN || payload.getPacketSize() > PAYLOAD_SIZE || bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.putInt(validationTimestamp)
 		bb.put(type.num)
-		return payload.toBuffer(bb)
+		if (!payload.toBuffer(bb)) {
+			return false
+		}
+		for (i in 1..(PAYLOAD_SIZE - payload.getPacketSize())) {
+			bb.put(0)
+		}
+		return true
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
