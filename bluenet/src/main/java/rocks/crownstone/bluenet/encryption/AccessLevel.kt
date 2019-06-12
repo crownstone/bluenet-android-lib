@@ -14,9 +14,10 @@ enum class AccessLevel(val num: Uint8) {
 	MEMBER(1),
 	GUEST(2),
 	SETUP(100),
+	SERVICE_DATA(101),
 	UNKNOWN(201),
 	HIGHEST_AVAILABLE(202),
-	ENCRYPTION_DISABLED(255);
+	ENCRYPTION_DISABLED(254);
 
 	companion object {
 		private val map = AccessLevel.values().associateBy(AccessLevel::num)

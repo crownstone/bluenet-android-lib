@@ -19,9 +19,6 @@ import java.nio.charset.Charset
  */
 class KeySet() {
 	private val TAG = this.javaClass.simpleName
-//	private var adminKeyString: String? = null
-//	private var memberKeyString: String? = null
-//	private var guestKeyString: String? = null
 	var adminKeyBytes: ByteArray? = null
 		private set
 	var memberKeyBytes: ByteArray? = null
@@ -30,23 +27,29 @@ class KeySet() {
 		private set
 	var setupKeyBytes: ByteArray? = null
 		internal set
-	var serviceDataKey: ByteArray? = null
+	var serviceDataKeyBytes: ByteArray? = null
 		internal set
-	var meshAppKey: ByteArray? = null
+	var meshAppKeyBytes: ByteArray? = null
 		internal set
-	var meshNetKey: ByteArray? = null
+	var meshNetKeyBytes: ByteArray? = null
 		internal set
 	var initialized = false
 		private set
 
-	constructor(adminKey: String?, memberKey: String?, guestKey: String?, serviceDataKey: String?): this() {
+	constructor(adminKey: String?, memberKey: String?, guestKey: String?, serviceDataKey: String?, meshAppKey: String?, meshNetKey: String?): this() {
 		val adminKeyString = getKeyFromString(adminKey)
 		val memberKeyString = getKeyFromString(memberKey)
 		val guestKeyString = getKeyFromString(guestKey)
+		val serviceDataKeyString = getKeyFromString(serviceDataKey)
+		val meshAppKeyString = getKeyFromString(meshAppKey)
+		val meshNetKeyString = getKeyFromString(meshNetKey)
 		adminKeyBytes = null
 		memberKeyBytes = null
 		guestKeyBytes = null
 		setupKeyBytes = null
+		serviceDataKeyBytes = null
+		meshAppKeyBytes = null
+		meshNetKeyBytes = null
 		try {
 			if (adminKeyString != null) {
 				adminKeyBytes = Conversion.hexStringToBytes(adminKeyString)
@@ -57,6 +60,15 @@ class KeySet() {
 			if (guestKeyString != null) {
 				guestKeyBytes = Conversion.hexStringToBytes(guestKeyString)
 			}
+			if (serviceDataKeyString != null) {
+				serviceDataKeyBytes = Conversion.hexStringToBytes(serviceDataKeyString)
+			}
+			if (meshAppKeyString != null) {
+				meshAppKeyBytes = Conversion.hexStringToBytes(meshAppKeyString)
+			}
+			if (meshNetKeyString != null) {
+				meshNetKeyBytes = Conversion.hexStringToBytes(meshNetKeyString)
+			}
 		}
 		catch (e: java.lang.NumberFormatException) {
 			Log.e(TAG, "Invalid key format")
@@ -64,22 +76,31 @@ class KeySet() {
 			adminKeyBytes = null
 			memberKeyBytes = null
 			guestKeyBytes = null
+			setupKeyBytes = null
+			serviceDataKeyBytes = null
+			meshAppKeyBytes = null
+			meshNetKeyBytes = null
 			return
 		}
 		initialized = true
 	}
 
-	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, setupKey: ByteArray?=null): this() {
-		if ((adminKey != null && adminKey.size != AES_BLOCK_SIZE) ||
-			(memberKey != null && memberKey.size != AES_BLOCK_SIZE) ||
-			(guestKey != null && guestKey.size != AES_BLOCK_SIZE)) {
+	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, serviceDataKey: ByteArray?, setupKey: ByteArray?=null): this() {
+		if (
+				(adminKey != null && adminKey.size != AES_BLOCK_SIZE) ||
+				(memberKey != null && memberKey.size != AES_BLOCK_SIZE) ||
+				(guestKey != null && guestKey.size != AES_BLOCK_SIZE) ||
+				(serviceDataKey != null && serviceDataKey.size != AES_BLOCK_SIZE) ||
+				(setupKey != null && setupKey.size != AES_BLOCK_SIZE)
+		) {
 			Log.e(TAG, "Invalid key size")
 			return
 		}
-		setupKeyBytes = setupKey
 		adminKeyBytes = adminKey
 		memberKeyBytes = memberKey
 		guestKeyBytes = guestKey
+		serviceDataKeyBytes = serviceDataKey
+		setupKeyBytes = setupKey
 		initialized = true
 	}
 
@@ -93,6 +114,7 @@ class KeySet() {
 			AccessLevel.MEMBER -> return memberKeyBytes
 			AccessLevel.GUEST -> return guestKeyBytes
 			AccessLevel.SETUP -> return setupKeyBytes
+			AccessLevel.SERVICE_DATA -> return serviceDataKeyBytes
 			else -> return null
 		}
 	}
@@ -115,7 +137,15 @@ class KeySet() {
 
 	override fun toString(): String {
 //		return "Keys: [$adminKeyString, $memberKeyString, $guestKeyString]"
-		return "Keys: [${Conversion.bytesToHexString(adminKeyBytes)}, ${Conversion.bytesToHexString(memberKeyBytes)}, ${Conversion.bytesToHexString(guestKeyBytes)}, ${Conversion.bytesToHexString(setupKeyBytes)}]"
+		return "Keys: [" +
+				"admin: ${Conversion.bytesToHexString(adminKeyBytes)}, " +
+				"member: ${Conversion.bytesToHexString(memberKeyBytes)}, " +
+				"guest: ${Conversion.bytesToHexString(guestKeyBytes)}, " +
+				"setup: ${Conversion.bytesToHexString(setupKeyBytes)}, " +
+				"serviceData: ${Conversion.bytesToHexString(serviceDataKeyBytes)}, " +
+				"meshApp: ${Conversion.bytesToHexString(meshAppKeyBytes)}, " +
+				"meshNet: ${Conversion.bytesToHexString(meshNetKeyBytes)}" +
+				"]"
 	}
 
 	private fun getKeyFromString(key: String?): String? {

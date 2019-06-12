@@ -22,7 +22,7 @@ import java.nio.ByteOrder
 class SetupPacketV2(val stoneId: Uint8,
 					val sphereId: Uint8,
 					val keySet: KeySet,
-					val meshDeviceKey: ByteArray,
+					val meshDeviceKeyBytes: ByteArray,
 				  val ibeaconData: IbeaconData): PacketInterface {
 	companion object {
 		const val SIZE = 1+1+7*16+16+2+2
@@ -42,14 +42,14 @@ class SetupPacketV2(val stoneId: Uint8,
 				keySet.adminKeyBytes == null ||
 				keySet.memberKeyBytes == null ||
 				keySet.guestKeyBytes == null ||
-				keySet.serviceDataKey == null ||
-				meshDeviceKey == null ||
-				keySet.meshAppKey == null ||
-				keySet.meshNetKey == null
+				keySet.serviceDataKeyBytes == null ||
+				meshDeviceKeyBytes == null ||
+				keySet.meshAppKeyBytes == null ||
+				keySet.meshNetKeyBytes == null
 		) {
 			Log.w(TAG, "missing key:" +
-					"admin=${keySet.adminKeyBytes} member=${keySet.memberKeyBytes} guest=${keySet.guestKeyBytes} serviceData=${keySet.serviceDataKey}" +
-					"device=${meshDeviceKey} app=${keySet.meshAppKey} net=${keySet.meshNetKey}")
+					"admin=${keySet.adminKeyBytes} member=${keySet.memberKeyBytes} guest=${keySet.guestKeyBytes} serviceData=${keySet.serviceDataKeyBytes}" +
+					"device=${meshDeviceKeyBytes} app=${keySet.meshAppKeyBytes} net=${keySet.meshNetKeyBytes}")
 			return false
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)
@@ -58,10 +58,10 @@ class SetupPacketV2(val stoneId: Uint8,
 		bb.put(keySet.adminKeyBytes)
 		bb.put(keySet.memberKeyBytes)
 		bb.put(keySet.guestKeyBytes)
-		bb.put(keySet.serviceDataKey)
-		bb.put(meshDeviceKey)
-		bb.put(keySet.meshAppKey)
-		bb.put(keySet.meshNetKey)
+		bb.put(keySet.serviceDataKeyBytes)
+		bb.put(meshDeviceKeyBytes)
+		bb.put(keySet.meshAppKeyBytes)
+		bb.put(keySet.meshNetKeyBytes)
 		bb.put(Conversion.uuidToBytes(ibeaconData.uuid))
 		bb.putShort(ibeaconData.major)
 		bb.putShort(ibeaconData.minor)
