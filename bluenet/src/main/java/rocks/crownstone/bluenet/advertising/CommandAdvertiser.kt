@@ -7,49 +7,105 @@
 
 package rocks.crownstone.bluenet.advertising
 
+import android.bluetooth.le.AdvertiseData
+import android.os.Handler
+import android.os.Looper
+import android.os.ParcelUuid
 import rocks.crownstone.bluenet.BleCore
+import rocks.crownstone.bluenet.BluenetConfig
+import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
-import rocks.crownstone.bluenet.packets.PacketInterface
-import rocks.crownstone.bluenet.packets.advertising.AdvertiseItemListPacket
-import rocks.crownstone.bluenet.packets.advertising.AdvertiseSingleItemPacket
-import rocks.crownstone.bluenet.packets.advertising.CommandAdvertisementPacket
-import rocks.crownstone.bluenet.packets.advertising.CommandAdvertisementType
+import rocks.crownstone.bluenet.packets.advertising.*
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 import java.util.*
 import kotlin.collections.ArrayList
 
-class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
+class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
+	private val handler = Handler(looper)
 	private val queue = LinkedList<CommandAdvertiserItem>()
+	private var advertising = false
 
 	/**
 	 * Add an item to the queue.
 	 */
+	@Synchronized
 	fun add(item: CommandAdvertiserItem) {
-		// Remove any items with same type and id.
+		// Remove any items with same sphere, type, and id.
 		for (it in queue) {
-			if (it.type == item.type && it.id == item.id) {
+			if (it.type == item.type && it.id == item.id && it.sphereId == it.sphereId) {
 				queue.remove(it)
 				break
 			}
 		}
 		// Put item in front of the queue.
 		queue.addFirst(item)
+		advertiseNext()
 	}
 
+	@Synchronized
+	private fun advertiseNext() {
+		Log.d(TAG, "advertiseNext")
+		if (advertising) {
+			return
+		}
+		val commandAdvertisement = getNextCommandAdvertisementPacket()
+		if (commandAdvertisement == null) {
+			return
+		}
+		val sphereId = commandAdvertisement.sphereId
+		val keySet = encryptionManager.getKeySet(sphereId)
+		val keyAccess = keySet?.getHighestKey()
+		if (keyAccess == null) {
+			advertiseNext()
+			return
+		}
 
+		// TODO: get timestamp from somewhere.
+		// TODO: get locationId from somewhere.
+		// TODO: get profileId from somewhere.
+		// TODO: get rssiOffset from somewhere.
+		// TODO: get flags from somewhere.
+		val backgroundAdvertisement = BackgroundAdvertisementPayloadPacket(0, 1, 0, 0, false)
+		// TODO: get sphereUid from somewhere.
+		val commandAdvertisementHeader = CommandAdvertisementHeaderPacket(0, 1, keyAccess.accessLevel.num, backgroundAdvertisement)
 
+		val commandAdvertisementBytes = commandAdvertisement.getArray() ?: return
+		val backgroundAdvertisementBytes = backgroundAdvertisement.getArray() ?: return
+		// TODO: put backgroundAdvertisement in 4 16bit service UUIDs.
+		val commandAdvertiesmentUuid = Conversion.bytesToUuid(commandAdvertisementBytes)
+		val advertiseData = AdvertiseData.Builder()
+				.addServiceUuid(ParcelUuid(commandAdvertiesmentUuid))
+				.build()
+		advertising = true
+		bleCore.advertise(advertiseData, BluenetConfig.COMMAND_ADVERTISER_INTERVAL_MS)
+		handler.postDelayed(onAdvertisementDoneRunnable, BluenetConfig.COMMAND_ADVERTISER_INTERVAL_MS.toLong())
+	}
+
+	private val onAdvertisementDoneRunnable = Runnable {
+		onAdvertisementDone()
+	}
+
+	@Synchronized
+	private fun onAdvertisementDone() {
+		Log.i(TAG, "onAdvertisementDone")
+		advertising = false
+		advertiseNext()
+	}
+
+	@Synchronized
 	private fun getNextCommandAdvertisementPacket(): CommandAdvertisementPacket? {
 		if (queue.isEmpty()) {
 			return null
 		}
 		val validationTimestamp = Conversion.toUint32(BluenetProtocol.CAFEBABE)
-		val firstItem = getNextItemFromQueue(null) ?: return null
+		val firstItem = getNextItemFromQueue() ?: return null
 
 		val payload = when (firstItem.type) {
 			CommandAdvertiserItemType.SWITCH -> AdvertiseItemListPacket()
@@ -59,12 +115,12 @@ class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: E
 			CommandAdvertiserItemType.SWITCH -> CommandAdvertisementType.MULTI_SWITCH
 			CommandAdvertiserItemType.SET_TIME -> CommandAdvertisementType.SET_TIME
 		}
-		val packet = CommandAdvertisementPacket(validationTimestamp, type, payload)
+		val packet = CommandAdvertisementPacket(validationTimestamp, firstItem.sphereId, type, payload)
 		val addedItems = ArrayList<CommandAdvertiserItem>()
 		payload.add(firstItem.payload)
 		addedItems.add(firstItem)
 		while (!payload.isFull()) {
-			val item = getNextItemFromQueue(firstItem.type)
+			val item = getNextItemFromQueue(firstItem)
 			if (item == null) {
 				break
 			}
@@ -78,17 +134,26 @@ class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: E
 	}
 
 	/**
-	 * Get and remove next item from queue with similar type.
+	 * Get and remove next item from queue.
 	 */
-	private fun getNextItemFromQueue(type: CommandAdvertiserItemType?): CommandAdvertiserItem? {
+	@Synchronized
+	private fun getNextItemFromQueue(): CommandAdvertiserItem? {
 		if (queue.isEmpty()) {
 			return null
 		}
-		if (type == null) {
-			return queue.removeFirst()
+		return queue.removeFirst()
+	}
+
+	/**
+	 * Get and remove next item from queue with similar type and sphere id.
+	 */
+	@Synchronized
+	private fun getNextItemFromQueue(firstItem: CommandAdvertiserItem): CommandAdvertiserItem? {
+		if (queue.isEmpty()) {
+			return null
 		}
 		for (it in queue) {
-			if (it.type == type) {
+			if (it.type == firstItem.type && it.sphereId == firstItem.sphereId) {
 				queue.remove(it)
 				return it
 			}
@@ -99,6 +164,7 @@ class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: E
 	/**
 	 * Decrease the timeout count, and put item back in queue.
 	 */
+	@Synchronized
 	private fun putItemBackInQueue(item: CommandAdvertiserItem) {
 		item.timeoutCount -= 1
 		if (item.timeoutCount == 0) {
@@ -107,4 +173,5 @@ class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: E
 		// Put item at the back of the queue.
 		queue.addLast(item)
 	}
+
 }

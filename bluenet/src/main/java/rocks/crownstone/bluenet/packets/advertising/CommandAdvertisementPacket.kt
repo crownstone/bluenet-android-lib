@@ -8,6 +8,7 @@
 package rocks.crownstone.bluenet.packets.advertising
 
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.SphereId
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.put
@@ -30,7 +31,7 @@ enum class CommandAdvertisementType(val num: Uint8) {
  * Packet to sent command advertisements.
  * The size is fixed by zero padding.
  */
-class CommandAdvertisementPacket(val validationTimestamp: Uint32, val type: CommandAdvertisementType, val payload: CommandAdvertisementPayloadInterface): PacketInterface {
+class CommandAdvertisementPacket(val validationTimestamp: Uint32, val sphereId: SphereId, val type: CommandAdvertisementType, val payload: CommandAdvertisementPayloadInterface): PacketInterface {
 	companion object {
 		const val HEADER_SIZE = 5
 		const val PAYLOAD_SIZE = 11

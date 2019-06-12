@@ -60,13 +60,13 @@ object Conversion {
 		return uuid
 	}
 
-	fun stringToUuid(uuids: Array<String>): Array<UUID?> {
-		val result = Array<UUID?>(uuids.size) { UUID(0,0) }
-		for (i in uuids.indices) {
-			result[i] = stringToUuid(uuids[i])
-		}
-		return result
-	}
+//	fun stringToUuid(uuids: Array<String>): Array<UUID?> {
+//		val result = Array<UUID?>(uuids.size) { UUID(0,0) }
+//		for (i in uuids.indices) {
+//			result[i] = stringToUuid(uuids[i])
+//		}
+//		return result
+//	}
 
 	fun uuidToBytes(uuidStr: String): ByteArray? {
 		val uuid = stringToUuid(uuidStr) ?: return null
@@ -87,14 +87,15 @@ object Conversion {
 		return bb.array()
 	}
 
-	fun bytesToUuid(bytes: ByteArray): String {
+	fun bytesToUuid(bytes: ByteArray): UUID {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 
 		val lsb = bb.long
 		val msb = bb.long
-		val uuid = UUID(msb, lsb)
-		return uuidToString(uuid)
+		return UUID(msb, lsb)
+//		val uuid = UUID(msb, lsb)
+//		return uuidToString(uuid)
 	}
 
 	fun encodedStringToBytes(encoded: String): ByteArray {
@@ -320,7 +321,7 @@ object Conversion {
 
 
 	@Throws
-	inline fun <reified T> byteArrayTo(array: ByteArray): T {
+	inline fun <reified T> byteArrayTo(array: ByteArray, offset: Int = 0): T {
 		when (T::class) {
 			Byte::class, Int8::class, Uint8::class -> {
 				if (array.size != 1) {
@@ -345,19 +346,19 @@ object Conversion {
 
 		when (T::class) {
 			Byte::class, Int8::class ->
-				return array[0] as T
+				return array[offset] as T
 			Uint8::class ->
 				return toUint8(array[0]) as T
 			Short::class, Int16::class ->
-				return byteArrayToShort(array) as T
+				return byteArrayToShort(array, offset) as T
 			Uint16::class ->
-				return toUint16(byteArrayToShort(array)) as T
+				return toUint16(byteArrayToShort(array, offset)) as T
 			Int::class, Int32::class ->
-				return byteArrayToInt(array) as T
+				return byteArrayToInt(array, offset) as T
 			Uint32::class ->
-				return toUint32(byteArrayToInt(array)) as T
+				return toUint32(byteArrayToInt(array, offset)) as T
 			Float::class ->
-				return byteArrayToFloat(array) as T
+				return byteArrayToFloat(array, offset) as T
 			else ->
 				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 		}

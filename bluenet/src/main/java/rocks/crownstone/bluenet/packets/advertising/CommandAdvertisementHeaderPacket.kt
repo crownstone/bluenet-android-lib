@@ -8,14 +8,16 @@
 package rocks.crownstone.bluenet.packets.advertising
 
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.SphereUid
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
 class CommandAdvertisementHeaderPacket(
 		val protocol: Int,
-		val sphereId: Int,
-		val accessLevel: Int,
+		val sphereUid: SphereUid,
+		val accessLevel: Uint8,
 		val backgroundPayload: BackgroundAdvertisementPayloadPacket
 		): PacketInterface {
 	val payload: Int
@@ -42,8 +44,8 @@ class CommandAdvertisementHeaderPacket(
 		val sequence0: Int = 0
 		val data0: Int = (sequence0 and 0x03) shl (3+8+3)
 		+ (protocol and 0x07) shl (8+3)
-		+ (sphereId and 0xFF) shl (3)
-		+ (accessLevel and 0x07) shl (0)
+		+ (sphereUid.toInt() and 0xFF) shl (3)
+		+ (accessLevel.toInt() and 0x07) shl (0)
 		bb.putShort(Conversion.toUint16(data0))
 
 		val sequence1: Int = 1

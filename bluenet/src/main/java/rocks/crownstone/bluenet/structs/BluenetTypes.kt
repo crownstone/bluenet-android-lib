@@ -67,6 +67,7 @@ typealias Uint32 = Long
 
 typealias DeviceAddress = String
 typealias SphereId = String
+typealias SphereUid = Uint8
 typealias Keys = HashMap<SphereId, KeyData>
 data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)
 

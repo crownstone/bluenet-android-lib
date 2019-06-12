@@ -29,4 +29,6 @@ object BluenetConfig {
 	val SCAN_CHECK_PERIOD = 30 * 1000
 
 	val CONNECT_RETRIES = 3
+
+	val COMMAND_ADVERTISER_INTERVAL_MS = 250 // Time for each packet to be advertised.
 }

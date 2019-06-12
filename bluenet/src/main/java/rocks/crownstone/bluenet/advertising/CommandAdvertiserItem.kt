@@ -9,6 +9,7 @@ package rocks.crownstone.bluenet.advertising
 
 import nl.komponents.kovenant.Deferred
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.SphereId
 
 enum class CommandAdvertiserItemType {
 	SWITCH,
@@ -17,6 +18,7 @@ enum class CommandAdvertiserItemType {
 
 class CommandAdvertiserItem(
 		val promise: Deferred<Unit, Exception>,
+		val sphereId: SphereId,
 		val type: CommandAdvertiserItemType,
 		val id: Int,
 		val payload: PacketInterface,
