@@ -528,6 +528,14 @@ class Bluenet(looper: Looper? = null) {
 		return connection.disconnect(clearCache)
 	}
 
+	/**
+	 * Waits for given time, then resolves.
+	 */
+	@Synchronized
+	fun waitPromise(timeMs: Long): Promise<Unit, Exception> {
+		return Util.waitPromise(timeMs, handler)
+	}
+
 	@Synchronized
 	private fun onCoreScannerReady(data: Any) {
 		initScanner()
