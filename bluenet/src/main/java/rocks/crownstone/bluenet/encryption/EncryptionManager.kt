@@ -11,6 +11,7 @@ import nl.komponents.kovenant.Promise
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.*
+import rocks.crownstone.bluenet.util.Conversion
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
@@ -74,15 +75,14 @@ class EncryptionManager {
 
 	@Synchronized
 	fun getKeySet(device: ScannedDevice): KeySet? {
-		val uuid = device.ibeaconData?.uuid
-		if (uuid != null) {
-			val sphereId = uuids.get(uuid)
-			if (sphereId != null) {
-				// Cache result
-				addresses.put(device.address, sphereId)
-				return getKeySet(sphereId)
-			}
-		}
+//		val uuid = device.ibeaconData?.uuid
+//		if (uuid != null) {
+//			val sphereId = uuids.get(uuid)
+//			if (sphereId != null) {
+//				cacheSphereId(device.address, sphereId)
+//				return getKeySet(sphereId)
+//			}
+//		}
 		// Fall back to cached result
 		return getKeySetFromAddress(device.address)
 	}
@@ -94,17 +94,44 @@ class EncryptionManager {
 
 	@Synchronized
 	fun getSphereId(device: ScannedDevice): SphereId? {
+//		val uuid = device.ibeaconData?.uuid
+//		if (uuid != null) {
+//			val sphereId = uuids.get(uuid)
+//			if (sphereId != null) {
+//				cacheSphereId(device.address, sphereId)
+//				return sphereId
+//			}
+//		}
+		// Fall back to cached result
+		return getSphereIdFromAddress(device.address)
+	}
+
+	private fun cacheSphereId(address: DeviceAddress, sphereId: SphereId) {
+		// Only add when sphereId changed, as calculating the original address is a bit expensive.
+		if (addresses.get(address) == sphereId) {
+			return
+		}
+		addresses.put(address, sphereId)
+		// The ibeacon MAC address is the original MAC address with first byte increased by 1.
+		// So add the original address as well.
+		val addressBytes = Conversion.addressToBytes(address)
+		addressBytes[0] = (addressBytes[0] - 1).toByte()
+		val originalAddress = Conversion.bytesToAddress(addressBytes)
+		addresses.put(originalAddress, sphereId)
+	}
+
+	/**
+	 * Determine sphere id based on iBeacon uuid and caches the result.
+	 */
+	@Synchronized
+	fun cacheSphereId(device: ScannedDevice) {
 		val uuid = device.ibeaconData?.uuid
 		if (uuid != null) {
 			val sphereId = uuids.get(uuid)
 			if (sphereId != null) {
-				// Cache result
-				addresses.put(device.address, sphereId)
-				return sphereId
+				cacheSphereId(device.address, sphereId)
 			}
 		}
-		// Fall back to cached result
-		return getSphereIdFromAddress(device.address)
 	}
 
 	@Synchronized

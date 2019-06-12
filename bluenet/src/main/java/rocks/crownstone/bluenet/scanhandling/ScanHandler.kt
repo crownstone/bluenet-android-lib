@@ -54,11 +54,12 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		device.parseServiceDataHeader()
 		device.parseDfu()
 
+		encryptionManager.cacheSphereId(device)
+
 		// After parsing service data header and dfu, the operation mode should be known.
 		// But only if the scan has service data at all..
 		when (device.operationMode) {
 				OperationMode.NORMAL -> {
-					// TODO: maybe do something like: encryptionManager.setKeys(device) which sets a keys field (and sphereId) at the device?
 					device.sphereId = encryptionManager.getSphereId(device)
 					val key = encryptionManager.getKeySet(device)?.guestKeyBytes
 					if (key != null) {

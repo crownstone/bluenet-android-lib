@@ -271,7 +271,7 @@ object Conversion {
 	 * Inverses the byte array.
 	 */
 	fun bytesToAddress(bytes: ByteArray): String {
-		if (bytes.size != 6) {
+		if (bytes.size != ADDRESS_LENGTH) {
 			return ""
 		}
 		val sb = StringBuilder()
