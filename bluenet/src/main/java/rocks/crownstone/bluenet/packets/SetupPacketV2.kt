@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.structs.IbeaconData
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.encryption.KeySet
+import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.put
@@ -39,17 +40,15 @@ class SetupPacketV2(val stoneId: Uint8,
 			return false
 		}
 		if (
-				keySet.adminKeyBytes == null ||
-				keySet.memberKeyBytes == null ||
-				keySet.guestKeyBytes == null ||
-				keySet.serviceDataKeyBytes == null ||
-				meshDeviceKeyBytes == null ||
-				keySet.meshAppKeyBytes == null ||
-				keySet.meshNetKeyBytes == null
+				keySet.adminKeyBytes == null || keySet.adminKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
+				keySet.memberKeyBytes == null || keySet.memberKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
+				keySet.guestKeyBytes == null || keySet.guestKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
+				keySet.serviceDataKeyBytes == null || keySet.serviceDataKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
+				meshDeviceKeyBytes == null || meshDeviceKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
+				keySet.meshAppKeyBytes == null || keySet.meshAppKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
+				keySet.meshNetKeyBytes == null || keySet.meshNetKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE
 		) {
-			Log.w(TAG, "missing key:" +
-					"admin=${keySet.adminKeyBytes} member=${keySet.memberKeyBytes} guest=${keySet.guestKeyBytes} serviceData=${keySet.serviceDataKeyBytes}" +
-					"device=${meshDeviceKeyBytes} app=${keySet.meshAppKeyBytes} net=${keySet.meshNetKeyBytes}")
+			Log.w(TAG, "wrong key: keySet=$keySet meshDevice=${Conversion.bytesToHexString(meshDeviceKeyBytes)}")
 			return false
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)
