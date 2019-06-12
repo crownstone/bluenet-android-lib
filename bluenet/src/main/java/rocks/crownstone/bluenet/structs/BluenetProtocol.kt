@@ -45,6 +45,7 @@ object BluenetProtocol {
 	val CHAR_SETUP_GOTO_DFU_UUID =       UUID.fromString("24f10006-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SETUP_SESSION_NONCE_UUID =  UUID.fromString("24f10008-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SETUP_CONTROL2_UUID =       UUID.fromString("24f10007-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_SETUP_CONTROL3_UUID =       UUID.fromString("24f10009-7d10-4805-bfc1-7663a01c3bff")
 
 	// Device Information Service
 	val DEVICE_INFO_SERVICE_UUID =    UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")

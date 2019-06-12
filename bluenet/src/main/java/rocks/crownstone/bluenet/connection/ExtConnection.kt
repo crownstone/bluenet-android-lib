@@ -94,11 +94,14 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	 * Encrypt and write data.
 	 */
 	@Synchronized
-	fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray, accessLevel: AccessLevel=AccessLevel.HIGHEST_AVAILABLE): Promise<Unit, Exception> {
+	fun write(serviceUuid: UUID, characteristicUuid: UUID, data: ByteArray?, accessLevel: AccessLevel=AccessLevel.HIGHEST_AVAILABLE): Promise<Unit, Exception> {
 		Log.i(TAG, "write to $characteristicUuid accessLevel=${accessLevel.name} data=${Conversion.bytesToString(data)}")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
+		}
+		if (data == null) {
+			return Promise.ofFail(Errors.ValueWrong())
 		}
 		val encryptedData = when (accessLevel) {
 			AccessLevel.UNKNOWN, AccessLevel.ENCRYPTION_DISABLED -> {

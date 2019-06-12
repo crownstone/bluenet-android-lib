@@ -11,11 +11,13 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.packets.CommandResultPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
+import rocks.crownstone.bluenet.packets.SetupPacketV2
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.Util
+import java.util.*
 import kotlin.Exception
 
 /**
@@ -73,45 +75,51 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	 *
 	 * Emits progress events.
 	 *
-	 * @param id                The crownstone id, should be unique per meshAccessAddress.
+	 * @param stoneId           The crownstone id, should be unique per sphere.
+	 * @param sphereId          The sphere id, these are not unique, but used as filter.
 	 * @param keySet            The keys for encryption.
+	 * @param meshDeviceKey     Unique key for this device.
 	 * @param meshAccessAddress A unique value, should comply to rules found ... where ??
 	 * @param ibeaconData       iBeacon UUID, major, minor, and calibrated rssi.
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
-		Log.i(TAG, "setup id=$id keySet=$keySet meshAccessAddress=$meshAccessAddress ibeaconData=$ibeaconData")
+	fun setup(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshAccessAddress: Uint32, meshDeviceKey: ByteArray, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		Log.i(TAG, "setup stoneId=$stoneId stoneId=$sphereId keySet=$keySet meshAccessAddress=$meshAccessAddress meshDeviceKey=${Conversion.bytesToString(meshDeviceKey)} ibeaconData=$ibeaconData")
 		if (connection.mode != CrownstoneMode.SETUP) {
 			return Promise.ofFail(Errors.NotInMode(CrownstoneMode.SETUP))
 		}
-		val adminKey =  keySet.adminKeyBytes
-		val memberKey = keySet.memberKeyBytes
-		val guestKey =  keySet.guestKeyBytes
-		if (adminKey == null || memberKey == null || guestKey == null) {
-			return Promise.ofFail(Errors.ValueWrong())
-		}
 
-		if ((id <= 0 || id > 255) ||
+		if (
+				(stoneId <= 0 || stoneId > 255) ||
+				(sphereId <= 0 || sphereId > 255) ||
 				(ibeaconData.major < 0 || ibeaconData.major > 0xFFFF) ||
-				(ibeaconData.minor < 0 || ibeaconData.minor > 0xFFFF)) {
+				(ibeaconData.minor < 0 || ibeaconData.minor > 0xFFFF)
+		) {
 			return Promise.ofFail(Errors.ValueWrong())
 		}
 
-		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-			return fastSetup(id, keySet, meshAccessAddress, ibeaconData)
+		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+			return fastSetupV2(stoneId, sphereId, keySet, meshDeviceKey, ibeaconData)
+		}
+		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+			return fastSetup(stoneId, keySet, meshAccessAddress, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
-			return oldSetup(id, adminKey, memberKey, guestKey, meshAccessAddress, ibeaconData)
+			return oldSetup(stoneId, keySet.adminKeyBytes, keySet.memberKeyBytes, keySet.guestKeyBytes, meshAccessAddress, ibeaconData)
 		}
 		else {
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
 	}
 
-	private fun oldSetup(id: Uint8, adminKey: ByteArray, memberKey: ByteArray, guestKey: ByteArray, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+	private fun oldSetup(id: Uint8, adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val config = Config(eventBus, connection)
 		val control = Control(eventBus, connection)
+
+		if (adminKey == null || memberKey == null || guestKey == null) {
+			return Promise.ofFail(Errors.ValueWrong())
+		}
 
 		fun sendProgress(progress: OldSetupStep) {
 			Log.i(TAG, "progress ${progress.name}")
@@ -196,19 +204,28 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 				}
 	}
 
+	private fun fastSetup(stoneId: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		val packet = SetupPacket(0, stoneId, keySet, meshAccessAddress, ibeaconData)
+		val control = Control(eventBus, connection)
+		val writeCommand = fun (): Promise<Unit, Exception> { return control.setup(packet) }
+		return performFastSetup(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)
+	}
+
+	private fun fastSetupV2(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshDeviceKey: ByteArray, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshDeviceKey, ibeaconData)
+		val control = Control(eventBus, connection)
+		val writeCommand = fun (): Promise<Unit, Exception> { return control.setup(packet) }
+		return performFastSetup(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)
+	}
+
 	/**
 	 * Perform the fast setup
 	 *
 	 * Subscribes, then writes the setup command, then waits for notifications, then disconnects.
 	 * If notifications time out, we assume a success, because the crownstone probably rebooted before sending the notifications.
 	 */
-	private fun fastSetup(id: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+	private fun performFastSetup(writeCommand: () -> Promise<Unit, Exception>, characteristicUuid: UUID): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
-
-		// After subscribing to notifications, the setup command should be written.
-		val packet = SetupPacket(0, id, keySet, meshAccessAddress, ibeaconData)
-		val control = Control(eventBus, connection)
-		val writeCommand = fun (): Promise<Unit, Exception> { return control.setup(packet) }
 		var step = FastSetupStep.START
 
 		fun sendProgress(progress: FastSetupStep, isDone: Boolean) {
@@ -248,7 +265,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 
 		// Subscribe for notifications
 		Util.recoverablePromise(
-				connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, writeCommand, processCallback, 3000),
+				connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, characteristicUuid, writeCommand, processCallback, 3000),
 				fun (error: Exception): Promise<Unit, Exception> {
 					// If the promise failed with a timeout error, assume it was a success (because we assume the crownstone rebooted before sending the notification).
 					if (error is Errors.Timeout) {

@@ -14,13 +14,13 @@ interface PacketInterface {
 	fun getPacketSize(): Int
 	fun toBuffer(bb: ByteBuffer): Boolean
 	fun fromBuffer(bb: ByteBuffer): Boolean
-	fun getArray(): ByteArray {
+	fun getArray(): ByteArray? {
 		val arr = ByteArray(getPacketSize())
 		val bb = ByteBuffer.wrap(arr)
 		val result = toBuffer(bb)
 		if (!result) {
-			return ByteArray(0)
-			// Or just return null?
+			//return ByteArray(0)
+			return null
 		}
 		return bb.array()
 	}

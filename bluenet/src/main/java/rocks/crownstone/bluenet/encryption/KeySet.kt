@@ -30,10 +30,16 @@ class KeySet() {
 		private set
 	var setupKeyBytes: ByteArray? = null
 		internal set
+	var serviceDataKey: ByteArray? = null
+		internal set
+	var meshAppKey: ByteArray? = null
+		internal set
+	var meshNetKey: ByteArray? = null
+		internal set
 	var initialized = false
 		private set
 
-	constructor(adminKey: String?, memberKey: String?, guestKey: String?): this() {
+	constructor(adminKey: String?, memberKey: String?, guestKey: String?, serviceDataKey: String?): this() {
 		val adminKeyString = getKeyFromString(adminKey)
 		val memberKeyString = getKeyFromString(memberKey)
 		val guestKeyString = getKeyFromString(guestKey)

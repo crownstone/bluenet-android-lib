@@ -18,7 +18,14 @@ class CommandAdvertisementHeaderPacket(
 		val accessLevel: Int,
 		val backgroundPayload: BackgroundAdvertisementPayloadPacket
 		): PacketInterface {
-	val payload = Conversion.byteArrayToInt(backgroundPayload.getArray())
+	val payload: Int
+	init {
+		val arr = backgroundPayload.getArray()
+		payload = when (arr) {
+			null -> 0
+			else -> Conversion.byteArrayToInt(arr)
+		}
+	}
 
 	companion object {
 		const val SIZE = 8

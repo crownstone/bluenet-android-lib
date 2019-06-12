@@ -11,6 +11,7 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.packets.ControlPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
+import rocks.crownstone.bluenet.packets.SetupPacketV2
 import rocks.crownstone.bluenet.packets.keepAlive.KeepAlivePacket
 import rocks.crownstone.bluenet.packets.keepAlive.MultiKeepAlivePacket
 import rocks.crownstone.bluenet.packets.meshCommand.MeshCommandPacket
@@ -478,6 +479,12 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(controlPacket)
 	}
 
+	@Synchronized
+	internal fun setup(packet: SetupPacketV2): Promise<Unit, Exception> {
+		val controlPacket = ControlPacket(ControlType.SETUP, packet)
+		return writeCommand(controlPacket)
+	}
+
 	// Commands without payload
 	private fun writeCommand(type: ControlType): Promise<Unit, Exception> {
 		return writeCommand(ControlPacket(type))
@@ -490,10 +497,13 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	private fun writeCommand(packet: ControlPacket): Promise<Unit, Exception> {
-		val array = packet.getArray()
+		val array = packet.getArray() ?: return Promise.ofFail(Errors.ValueWrong())
 		Log.i(TAG, "writeCommand ${Conversion.bytesToString(array)}")
 		if (connection.mode == CrownstoneMode.SETUP) {
-			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID, array, AccessLevel.SETUP)
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
 				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, array, AccessLevel.SETUP)
 			}
 			else {
