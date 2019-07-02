@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.structs.IbeaconData
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.encryption.KeySet
+import rocks.crownstone.bluenet.encryption.MeshKeySet
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
@@ -23,7 +24,7 @@ import java.nio.ByteOrder
 class SetupPacketV2(val stoneId: Uint8,
 					val sphereId: Uint8,
 					val keySet: KeySet,
-					val meshDeviceKeyBytes: ByteArray,
+					val meshKeys: MeshKeySet,
 				  val ibeaconData: IbeaconData): PacketInterface {
 	companion object {
 		const val SIZE = 1+1+7*16+16+2+2
@@ -40,15 +41,15 @@ class SetupPacketV2(val stoneId: Uint8,
 			return false
 		}
 		if (
-				keySet.adminKeyBytes == null || keySet.adminKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
-				keySet.memberKeyBytes == null || keySet.memberKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
-				keySet.guestKeyBytes == null || keySet.guestKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
-				keySet.serviceDataKeyBytes == null || keySet.serviceDataKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
-				meshDeviceKeyBytes == null || meshDeviceKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
-				keySet.meshAppKeyBytes == null || keySet.meshAppKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE ||
-				keySet.meshNetKeyBytes == null || keySet.meshNetKeyBytes?.size != BluenetProtocol.AES_BLOCK_SIZE
+				keySet.adminKeyBytes == null ||
+				keySet.memberKeyBytes == null ||
+				keySet.guestKeyBytes == null ||
+				keySet.serviceDataKeyBytes == null ||
+				meshKeys.deviceKeyBytes == null ||
+				meshKeys.appKeyBytes == null ||
+				meshKeys.netKeyBytes == null
 		) {
-			Log.w(TAG, "wrong key: keySet=$keySet meshDevice=${Conversion.bytesToHexString(meshDeviceKeyBytes)}")
+			Log.w(TAG, "wrong key: keySet=$keySet meshKeys=$meshKeys")
 			return false
 		}
 		bb.order(ByteOrder.LITTLE_ENDIAN)
@@ -58,9 +59,9 @@ class SetupPacketV2(val stoneId: Uint8,
 		bb.put(keySet.memberKeyBytes)
 		bb.put(keySet.guestKeyBytes)
 		bb.put(keySet.serviceDataKeyBytes)
-		bb.put(meshDeviceKeyBytes)
-		bb.put(keySet.meshAppKeyBytes)
-		bb.put(keySet.meshNetKeyBytes)
+		bb.put(meshKeys.deviceKeyBytes)
+		bb.put(meshKeys.appKeyBytes)
+		bb.put(meshKeys.netKeyBytes)
 		bb.put(Conversion.uuidToBytes(ibeaconData.uuid))
 		bb.putShort(ibeaconData.major)
 		bb.putShort(ibeaconData.minor)

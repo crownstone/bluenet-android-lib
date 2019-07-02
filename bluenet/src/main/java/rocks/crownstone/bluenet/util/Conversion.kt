@@ -12,6 +12,7 @@ import android.util.Base64
 import rocks.crownstone.bluenet.structs.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.charset.Charset
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -244,6 +245,25 @@ object Conversion {
 			sb.append(String.format("%02x", b))
 		}
 		return sb.toString()
+	}
+
+	/**
+	 * Gets a key from a string.
+	 *
+	 * String can be a hexadecimal string, or a plain string.
+	 */
+	fun getKeyFromString(key: String?): ByteArray? {
+		if (key == null) {
+			return null
+		}
+		var retKey: ByteArray? = null
+		if (key.length == BluenetProtocol.AES_BLOCK_SIZE * 2) {
+			retKey = hexStringToBytes(key)
+		}
+		if (key.length == BluenetProtocol.AES_BLOCK_SIZE) {
+			retKey = key.toByteArray(Charset.forName("UTF-8"))
+		}
+		return retKey
 	}
 
 	@Throws

@@ -9,6 +9,7 @@ package rocks.crownstone.bluenet.connection
 
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.KeySet
+import rocks.crownstone.bluenet.encryption.MeshKeySet
 import rocks.crownstone.bluenet.packets.CommandResultPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
 import rocks.crownstone.bluenet.packets.SetupPacketV2
@@ -77,15 +78,16 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	 *
 	 * @param stoneId           The crownstone id, should be unique per sphere.
 	 * @param sphereId          The sphere id, these are not unique, but used as filter.
-	 * @param keySet            The keys for encryption.
+	 * @param keys              The keys for encryption.
+	 * @param meshKeys          The mesh keys.
 	 * @param meshDeviceKey     Unique key for this device.
 	 * @param meshAccessAddress A unique value, should comply to rules found ... where ??
 	 * @param ibeaconData       iBeacon UUID, major, minor, and calibrated rssi.
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setup(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshAccessAddress: Uint32, meshDeviceKey: ByteArray, ibeaconData: IbeaconData): Promise<Unit, Exception> {
-		Log.i(TAG, "setup stoneId=$stoneId stoneId=$sphereId keySet=$keySet meshAccessAddress=$meshAccessAddress meshDeviceKey=${Conversion.bytesToString(meshDeviceKey)} ibeaconData=$ibeaconData")
+	fun setup(stoneId: Uint8, sphereId: Uint8, keys: KeySet, meshKeys: MeshKeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		Log.i(TAG, "setup stoneId=$stoneId stoneId=$sphereId keys=$keys meshKeys=$meshKeys meshAccessAddress=$meshAccessAddress ibeaconData=$ibeaconData")
 		if (connection.mode != CrownstoneMode.SETUP) {
 			return Promise.ofFail(Errors.NotInMode(CrownstoneMode.SETUP))
 		}
@@ -100,13 +102,13 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		}
 
 		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
-			return fastSetupV2(stoneId, sphereId, keySet, meshDeviceKey, ibeaconData)
+			return fastSetupV2(stoneId, sphereId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-			return fastSetup(stoneId, keySet, meshAccessAddress, ibeaconData)
+			return fastSetup(stoneId, keys, meshAccessAddress, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
-			return oldSetup(stoneId, keySet.adminKeyBytes, keySet.memberKeyBytes, keySet.guestKeyBytes, meshAccessAddress, ibeaconData)
+			return oldSetup(stoneId, keys.adminKeyBytes, keys.memberKeyBytes, keys.guestKeyBytes, meshAccessAddress, ibeaconData)
 		}
 		else {
 			return Promise.ofFail(Errors.CharacteristicNotFound())
@@ -211,8 +213,8 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		return performFastSetup(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)
 	}
 
-	private fun fastSetupV2(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshDeviceKey: ByteArray, ibeaconData: IbeaconData): Promise<Unit, Exception> {
-		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshDeviceKey, ibeaconData)
+	private fun fastSetupV2(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshKeys, ibeaconData)
 		val control = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> { return control.setup(packet) }
 		return performFastSetup(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)
