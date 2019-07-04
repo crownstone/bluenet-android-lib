@@ -17,39 +17,35 @@ import kotlin.collections.HashMap
 
 
 enum class BluenetEvent {
-	INITIALIZED, // Sent when bluenet has been initialized.
-	SPHERE_SETTINGS_UPDATED, // Sent when sphere settings have been updated.
-	BLE_TURNED_ON,    // Bluetooth is turned on
-	BLE_TURNED_OFF,   // Bluetooth is turned off
-	NO_LOCATION_SERVICE_PERMISSION, // Sent when location service permission is required, but not granted.
-	LOCATION_PERMISSION_GRANTED,    // Sent when location service permission is granted.
-	LOCATION_SERVICE_TURNED_ON,  // Sent when location service is turned on.
-	LOCATION_SERVICE_TURNED_OFF, // Sent when location service is turned off.
-	BLE_READY,         // BLE is ready to be used (connections).
-	BLE_NOT_READY,     // BLE is no longer ready to be used (connections).
-	CORE_SCANNER_READY,     // Scanner is ready to be used.
-	CORE_SCANNER_NOT_READY, // Scanner is no longer ready to be used.
-	SCANNER_READY,
-	SCANNER_NOT_READY,
-	READY,             // BleCore is ready to be used.
-	NOT_READY,         // BleCore is no longer ready to be used.
-	SCAN_RESULT_RAW, // Device was scanned. ScanResult as data.
-	SCAN_FAILURE,    // Scanning failed.
-	SCAN_RESULT,                  // Device was scanned. ScannedDevice as data.
-	SCAN_RESULT_VALIDATED,        // Validated device was scanned. ScannedDevice as data.
-	SCAN_RESULT_UNIQUE,           // Device was scanned, with unique service data.  ScannedDevice as data.
-	SCAN_RESULT_VALIDATED_UNIQUE, // Validated device was scanned, with unique service data.  ScannedDevice as data.
-	NEAREST_STONE,            // Any device that is a stone was scanned.                The current nearest is calculated. NearestDeviceListEntry as data.
-	NEAREST_UNVALIDATED,      // Unvalidated device, that is a stone, was scanned.      The current nearest is calculated. NearestDeviceListEntry as data.
-	NEAREST_VALIDATED,        // Validated device (any operation mode) was scanned.     The current nearest is calculated. NearestDeviceListEntry as data.
-	NEAREST_VALIDATED_NORMAL, // Validated device in normal operation mode was scanned. The current nearest is calculated. NearestDeviceListEntry as data.
-	NEAREST_DFU,              // Validated device in dfu operation mode was scanned.    The current nearest is calculated. NearestDeviceListEntry as data.
-	NEAREST_SETUP,            // Validated device in setup operation mode was scanned.  The current nearest is calculated. NearestDeviceListEntry as data.
-	SETUP_PROGRESS,  // Setup is in progress, Double (progress, where 1.0 is done) as data.
-	IBEACON_SCAN,    // List of iBeacons was scanned. ScannedIbeaconList as data.
-	IBEACON_ENTER_REGION, // Region was entered. IbeaconRegionEventData as data.
-	IBEACON_EXIT_REGION,  // Region was exited. IbeaconRegionEventData as data.
-	DFU_PROGRESS,    // DfuProgress as data.
+	INITIALIZED,                       // Sent when bluenet has been initialized.
+	SPHERE_SETTINGS_UPDATED,           // Sent when sphere settings have been updated. Used internally.
+	BLE_TURNED_ON,                     // Bluetooth is turned on.
+	BLE_TURNED_OFF,                    // Bluetooth is turned off.
+	NO_LOCATION_SERVICE_PERMISSION,    // Sent when location service permission is required, but not granted.
+	LOCATION_PERMISSION_GRANTED,       // Sent when location service permission is granted.
+	LOCATION_SERVICE_TURNED_ON,        // Sent when location service is turned on.
+	LOCATION_SERVICE_TURNED_OFF,       // Sent when location service is turned off.
+	CORE_SCANNER_READY,                // Core scanner is ready to be used. Used internally.
+	CORE_SCANNER_NOT_READY,            // Core scanner is no longer ready to be used. Used internally.
+	SCANNER_READY,                     // Scanner is ready to be used.
+	SCANNER_NOT_READY,                 // Scanner is no longer ready to be used.
+	SCAN_RESULT_RAW,                   // Device was scanned. ScanResult as data.
+	SCAN_FAILURE,                      // Scanning failed.
+	SCAN_RESULT,                       // Device was scanned. ScannedDevice as data.
+	SCAN_RESULT_VALIDATED,             // Validated device was scanned. ScannedDevice as data.
+	SCAN_RESULT_UNIQUE,                // Device was scanned, with unique service data.  ScannedDevice as data.
+	SCAN_RESULT_VALIDATED_UNIQUE,      // Validated device was scanned, with unique service data.  ScannedDevice as data.
+	NEAREST_STONE,                     // Any device that is a stone was scanned.                The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_UNVALIDATED,               // Unvalidated device, that is a stone, was scanned.      The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_VALIDATED,                 // Validated device (any operation mode) was scanned.     The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_VALIDATED_NORMAL,          // Validated device in normal operation mode was scanned. The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_DFU,                       // Validated device in dfu operation mode was scanned.    The current nearest is calculated. NearestDeviceListEntry as data.
+	NEAREST_SETUP,                     // Validated device in setup operation mode was scanned.  The current nearest is calculated. NearestDeviceListEntry as data.
+	SETUP_PROGRESS,                    // Setup is in progress, Double (progress, where 1.0 is done) as data.
+	IBEACON_SCAN,                      // List of iBeacons was scanned. ScannedIbeaconList as data.
+	IBEACON_ENTER_REGION,              // Region was entered. IbeaconRegionEventData as data.
+	IBEACON_EXIT_REGION,               // Region was exited. IbeaconRegionEventData as data.
+	DFU_PROGRESS,                      // DfuProgress as data.
 }
 
 typealias Int8 = Byte
