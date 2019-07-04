@@ -5,16 +5,16 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets.advertising
+package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
-import rocks.crownstone.bluenet.structs.Uint32
-import rocks.crownstone.bluenet.util.putInt
+import rocks.crownstone.bluenet.structs.Uint8
+import rocks.crownstone.bluenet.util.put
 import java.nio.ByteBuffer
 
-class AdvertiseSetTimePacket(val timestamp: Uint32): PacketInterface {
+class BroadcastSwitchItemPacket(var id: Uint8, var switchValue: Uint8): PacketInterface {
 	companion object {
-		const val SIZE = 4
+		const val SIZE = 2
 	}
 
 	override fun getPacketSize(): Int {
@@ -25,11 +25,13 @@ class AdvertiseSetTimePacket(val timestamp: Uint32): PacketInterface {
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.putInt(timestamp)
+		bb.put(id)
+		bb.put(switchValue)
 		return true
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		// Not implemented yet (no need?)
+		return false
 	}
 }

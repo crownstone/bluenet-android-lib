@@ -5,11 +5,11 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets.advertising
+package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 
-interface CommandAdvertisementPayloadInterface : PacketInterface{
+interface CommandBroadcastPayloadInterface : PacketInterface{
 	fun add(packet: PacketInterface): Boolean
 	fun isFull(): Boolean
 }

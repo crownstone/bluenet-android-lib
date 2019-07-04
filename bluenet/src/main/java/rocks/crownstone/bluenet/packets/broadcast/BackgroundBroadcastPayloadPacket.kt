@@ -5,18 +5,17 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets.advertising
+package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.Util
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
-class BackgroundAdvertisementPayloadPacket(
+class BackgroundBroadcastPayloadPacket(
 		val timestamp: Uint32,
 		val locationId: Uint8,
 		val profileId: Uint8,

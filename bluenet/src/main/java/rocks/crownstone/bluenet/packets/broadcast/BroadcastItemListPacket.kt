@@ -5,14 +5,14 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets.advertising
+package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.util.Log
 import java.nio.ByteBuffer
 import kotlin.reflect.KClass
 
-class AdvertiseItemListPacket: CommandAdvertisementPayloadInterface {
+class BroadcastItemListPacket: CommandBroadcastPayloadInterface {
 	private val TAG = this.javaClass.simpleName
 	private val list = ArrayList<PacketInterface>()
 	private var size = HEADER_SIZE

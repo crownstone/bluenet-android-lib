@@ -5,7 +5,7 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets.advertising
+package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.structs.SphereId
@@ -15,23 +15,23 @@ import rocks.crownstone.bluenet.util.put
 import rocks.crownstone.bluenet.util.putInt
 import java.nio.ByteBuffer
 
-enum class CommandAdvertisementType(val num: Uint8) {
+enum class CommandBroadcastType(val num: Uint8) {
 	MULTI_SWITCH(1),
 	SET_TIME(2),
 	UNKNOWN(255);
 	companion object {
-		private val map = CommandAdvertisementType.values().associateBy(CommandAdvertisementType::num)
-		fun fromNum(action: Uint8): CommandAdvertisementType {
+		private val map = CommandBroadcastType.values().associateBy(CommandBroadcastType::num)
+		fun fromNum(action: Uint8): CommandBroadcastType {
 			return map[action] ?: return UNKNOWN
 		}
 	}
 }
 
 /**
- * Packet to sent command advertisements.
+ * Packet to sent command broadcasts.
  * The size is fixed by zero padding.
  */
-class CommandAdvertisementPacket(val validationTimestamp: Uint32, val sphereId: SphereId, val type: CommandAdvertisementType, val payload: CommandAdvertisementPayloadInterface): PacketInterface {
+class CommandBroadcastPacket(val validationTimestamp: Uint32, val sphereId: SphereId, val type: CommandBroadcastType, val payload: CommandBroadcastPayloadInterface): PacketInterface {
 	companion object {
 		const val HEADER_SIZE = 5
 		const val PAYLOAD_SIZE = 11
@@ -44,7 +44,7 @@ class CommandAdvertisementPacket(val validationTimestamp: Uint32, val sphereId: 
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		val payload = this.payload
-		if (type == CommandAdvertisementType.UNKNOWN || payload.getPacketSize() > PAYLOAD_SIZE || bb.remaining() < getPacketSize()) {
+		if (type == CommandBroadcastType.UNKNOWN || payload.getPacketSize() > PAYLOAD_SIZE || bb.remaining() < getPacketSize()) {
 			return false
 		}
 		bb.putInt(validationTimestamp)

@@ -5,7 +5,7 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.advertising
+package rocks.crownstone.bluenet.broadcast
 
 import android.bluetooth.le.AdvertiseData
 import android.os.Handler
@@ -13,11 +13,9 @@ import android.os.Looper
 import android.os.ParcelUuid
 import rocks.crownstone.bluenet.BleCore
 import rocks.crownstone.bluenet.BluenetConfig
-import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
-import rocks.crownstone.bluenet.packets.advertising.*
+import rocks.crownstone.bluenet.packets.broadcast.*
 import rocks.crownstone.bluenet.structs.BluenetProtocol
-import rocks.crownstone.bluenet.structs.SphereState
 import rocks.crownstone.bluenet.structs.SphereStateMap
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
@@ -26,21 +24,21 @@ import rocks.crownstone.bluenet.util.Log
 import java.util.*
 import kotlin.collections.ArrayList
 
-class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
+class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val libState = state
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
 	private val handler = Handler(looper)
-	private val queue = LinkedList<CommandAdvertiserItem>()
-	private var advertising = false
+	private val queue = LinkedList<CommandBroadcastItem>()
+	private var broadcasting = false
 
 	/**
 	 * Add an item to the queue.
 	 */
 	@Synchronized
-	fun add(item: CommandAdvertiserItem) {
+	fun add(item: CommandBroadcastItem) {
 		// Remove any items with same sphere, type, and stone id.
 		for (it in queue) {
 			if (it.type == item.type && it.stoneId == item.stoneId && it.sphereId == it.sphereId) {
@@ -50,32 +48,32 @@ class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCor
 		}
 		// Put item in front of the queue.
 		queue.addFirst(item)
-		advertiseNext()
+		broadcastNext()
 	}
 
 	@Synchronized
-	private fun advertiseNext() {
-		Log.d(TAG, "advertiseNext")
-		if (advertising) {
+	private fun broadcastNext() {
+		Log.d(TAG, "broadcastNext")
+		if (broadcasting) {
 			return
 		}
-		val commandAdvertisement = getNextCommandAdvertisementPacket()
-		if (commandAdvertisement == null) {
+		val commandBroadcast = getNextCommandBroadcastPacket()
+		if (commandBroadcast == null) {
 			return
 		}
-		val sphereId = commandAdvertisement.sphereId
+		val sphereId = commandBroadcast.sphereId
 		val keySet = encryptionManager.getKeySet(sphereId)
 		val keyAccess = keySet?.getHighestKey()
 		if (keyAccess == null) {
 			Log.w(TAG, "Missing key for sphere $sphereId")
-			advertiseNext()
+			broadcastNext()
 			return
 		}
 
 		val sphereState = libState[sphereId]
 		if (sphereState == null) {
 			Log.w(TAG, "Missing state for sphere $sphereId")
-			advertiseNext()
+			broadcastNext()
 			return
 		}
 		val locationId = sphereState.locationId
@@ -84,34 +82,34 @@ class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCor
 		val tapToToggleEnabled = sphereState.tapToToggleEnabled
 		val sphereShortId = sphereState.settings.sphereShortId
 
-		val backgroundAdvertisement = BackgroundAdvertisementPayloadPacket(0, locationId, profileId, rssiOffset, tapToToggleEnabled)
-		val commandAdvertisementHeader = CommandAdvertisementHeaderPacket(0, sphereShortId, keyAccess.accessLevel.num, backgroundAdvertisement)
+		val backgroundBroadcast = BackgroundBroadcastPayloadPacket(0, locationId, profileId, rssiOffset, tapToToggleEnabled)
+		val commandBroadcastHeader = CommandBroadcastHeaderPacket(0, sphereShortId, keyAccess.accessLevel.num, backgroundBroadcast)
 
-		val commandAdvertisementBytes = commandAdvertisement.getArray() ?: return
-		val backgroundAdvertisementBytes = backgroundAdvertisement.getArray() ?: return
-		// TODO: put backgroundAdvertisement in 4 16bit service UUIDs.
-		val commandAdvertiesmentUuid = Conversion.bytesToUuid(commandAdvertisementBytes)
+		val commandBroadcastBytes = commandBroadcast.getArray() ?: return
+		val backgroundBroadcastBytes = backgroundBroadcast.getArray() ?: return
+		// TODO: put backgroundBroadcast in 4 16bit service UUIDs.
+		val commandBroadcastUuid = Conversion.bytesToUuid(commandBroadcastBytes)
 		val advertiseData = AdvertiseData.Builder()
-				.addServiceUuid(ParcelUuid(commandAdvertiesmentUuid))
+				.addServiceUuid(ParcelUuid(commandBroadcastUuid))
 				.build()
-		advertising = true
-		bleCore.advertise(advertiseData, BluenetConfig.COMMAND_ADVERTISER_INTERVAL_MS)
-		handler.postDelayed(onAdvertisementDoneRunnable, BluenetConfig.COMMAND_ADVERTISER_INTERVAL_MS.toLong())
+		broadcasting = true
+		bleCore.advertise(advertiseData, BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS)
+		handler.postDelayed(onBroadcastDoneRunnable, BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS.toLong())
 	}
 
-	private val onAdvertisementDoneRunnable = Runnable {
-		onAdvertisementDone()
-	}
-
-	@Synchronized
-	private fun onAdvertisementDone() {
-		Log.i(TAG, "onAdvertisementDone")
-		advertising = false
-		advertiseNext()
+	private val onBroadcastDoneRunnable = Runnable {
+		onBroadcastDone()
 	}
 
 	@Synchronized
-	private fun getNextCommandAdvertisementPacket(): CommandAdvertisementPacket? {
+	private fun onBroadcastDone() {
+		Log.i(TAG, "onBroadcastDone")
+		broadcasting = false
+		broadcastNext()
+	}
+
+	@Synchronized
+	private fun getNextCommandBroadcastPacket(): CommandBroadcastPacket? {
 		if (queue.isEmpty()) {
 			return null
 		}
@@ -119,15 +117,15 @@ class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCor
 		val firstItem = getNextItemFromQueue() ?: return null
 
 		val payload = when (firstItem.type) {
-			CommandAdvertiserItemType.SWITCH -> AdvertiseItemListPacket()
-			else -> AdvertiseSingleItemPacket()
+			CommandBroadcastItemType.SWITCH -> BroadcastItemListPacket()
+			else -> BroadcastSingleItemPacket()
 		}
 		val type = when (firstItem.type) {
-			CommandAdvertiserItemType.SWITCH -> CommandAdvertisementType.MULTI_SWITCH
-			CommandAdvertiserItemType.SET_TIME -> CommandAdvertisementType.SET_TIME
+			CommandBroadcastItemType.SWITCH -> CommandBroadcastType.MULTI_SWITCH
+			CommandBroadcastItemType.SET_TIME -> CommandBroadcastType.SET_TIME
 		}
-		val packet = CommandAdvertisementPacket(validationTimestamp, firstItem.sphereId, type, payload)
-		val addedItems = ArrayList<CommandAdvertiserItem>()
+		val packet = CommandBroadcastPacket(validationTimestamp, firstItem.sphereId, type, payload)
+		val addedItems = ArrayList<CommandBroadcastItem>()
 		payload.add(firstItem.payload)
 		addedItems.add(firstItem)
 		while (!payload.isFull()) {
@@ -148,7 +146,7 @@ class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCor
 	 * Get and remove next item from queue.
 	 */
 	@Synchronized
-	private fun getNextItemFromQueue(): CommandAdvertiserItem? {
+	private fun getNextItemFromQueue(): CommandBroadcastItem? {
 		if (queue.isEmpty()) {
 			return null
 		}
@@ -159,7 +157,7 @@ class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCor
 	 * Get and remove next item from queue with similar type and sphere id.
 	 */
 	@Synchronized
-	private fun getNextItemFromQueue(firstItem: CommandAdvertiserItem): CommandAdvertiserItem? {
+	private fun getNextItemFromQueue(firstItem: CommandBroadcastItem): CommandBroadcastItem? {
 		if (queue.isEmpty()) {
 			return null
 		}
@@ -176,7 +174,7 @@ class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCor
 	 * Decrease the timeout count, and put item back in queue.
 	 */
 	@Synchronized
-	private fun putItemBackInQueue(item: CommandAdvertiserItem) {
+	private fun putItemBackInQueue(item: CommandBroadcastItem) {
 		item.timeoutCount -= 1
 		if (item.timeoutCount == 0) {
 			return

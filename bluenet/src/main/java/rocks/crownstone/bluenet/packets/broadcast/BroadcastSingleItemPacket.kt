@@ -5,13 +5,12 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets.advertising
+package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
-import rocks.crownstone.bluenet.util.Log
 import java.nio.ByteBuffer
 
-class AdvertiseSingleItemPacket: CommandAdvertisementPayloadInterface {
+class BroadcastSingleItemPacket: CommandBroadcastPayloadInterface {
 	private val TAG = this.javaClass.simpleName
 	private lateinit var itemPayload: PacketInterface
 

@@ -5,7 +5,7 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets.advertising
+package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.structs.SphereShortId
@@ -14,11 +14,11 @@ import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
-class CommandAdvertisementHeaderPacket(
+class CommandBroadcastHeaderPacket(
 		val protocol: Int,
 		val sphereShortId: SphereShortId,
 		val accessLevel: Uint8,
-		val backgroundPayload: BackgroundAdvertisementPayloadPacket
+		val backgroundPayload: BackgroundBroadcastPayloadPacket
 		): PacketInterface {
 	val payload: Int
 	init {
