@@ -33,6 +33,7 @@ import java.util.*
  */
 class Bluenet(looper: Looper? = null) {
 	private val TAG = this.javaClass.simpleName
+	private val libState = SphereStateMap()
 	private val eventBus = EventBus()
 	private val looper: Looper
 	private val handler: Handler
@@ -42,7 +43,7 @@ class Bluenet(looper: Looper? = null) {
 	private var bleScanner: BleScanner? = null
 	private var scanHandler: ScanHandler? = null
 	private lateinit var service: BackgroundServiceManager
-	private val encryptionManager = EncryptionManager()
+	private val encryptionManager = EncryptionManager(eventBus, libState)
 	private val nearestDevices = NearestDevices(eventBus)
 	private lateinit var fileLogger: FileLogger // Only initialized when required.
 
@@ -299,25 +300,92 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
-	 * Set the keys for encryption and decryption.
+	 * Load settings for each sphere.
 	 *
-	 * The keys consist of a KeySet per sphere.
-	 * SphereId is usually the sphere id that is used in the cloud, but can be any string you like.
-	 * Currently, the iBeacon UUID is used to select which KeySet should be used,
-	 * so that should match with the iBeacon UUID that is used for setup.
+	 * Values should match values used in setup.
 	 */
 	@Synchronized
-	fun loadKeys(keys: Keys) {
-		encryptionManager.setKeys(keys)
+	fun setSphereSettings(sphereSettings: SphereSettingsMap) {
+		libState.clear()
+		for ((sphereId, settings) in sphereSettings) {
+			libState[sphereId] = SphereState(settings)
+		}
+		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
+	}
+
+	@Synchronized
+	fun clearSphereSettings() {
+		libState.clear()
+		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
 
 	/**
-	 * Clear all stored keys for encryption and decryption.
+	 * Set the sphere short id for a sphere.
 	 */
 	@Synchronized
-	fun clearKeys() {
-		encryptionManager.clearKeys()
+	@Deprecated("Sphere short id should be known at init and not change.")
+	fun setSphereShortId(sphereId: SphereId, id: Uint8) {
+		val state = libState[sphereId] ?: return
+		state.settings.sphereShortId = id
 	}
+
+	/**
+	 * Set the location for a sphere.
+	 */
+	@Synchronized
+	fun setLocation(sphereId: SphereId, location: Uint8) {
+		val state = libState[sphereId] ?: return
+		state.locationId = location
+	}
+
+	/**
+	 * Set the profile for a sphere.
+	 */
+	@Synchronized
+	fun setProfile(sphereId: SphereId, profile: Uint8) {
+		val state = libState[sphereId] ?: return
+		state.profileId = profile
+	}
+
+	/**
+	 * Set tap to toggle for a sphere.
+	 */
+	@Synchronized
+	fun setTapToToggle(sphereId: SphereId?, enabled: Boolean, rssiOffset: Int) {
+		if (sphereId == null) {
+			for (state in libState) {
+				state.value.tapToToggleEnabled = enabled
+				state.value.rssiOffset = rssiOffset
+			}
+		}
+		else {
+			val state = libState[sphereId] ?: return
+			state.tapToToggleEnabled = enabled
+			state.rssiOffset = rssiOffset
+		}
+	}
+
+
+//	/**
+//	 * Set the keys for encryption and decryption.
+//	 *
+//	 * The keys consist of a KeySet per sphere.
+//	 * SphereId is usually the sphere id that is used in the cloud, but can be any string you like.
+//	 * Currently, the iBeacon UUID is used to select which KeySet should be used,
+//	 * so that should match with the iBeacon UUID that is used for setup.
+//	 */
+//	@Synchronized
+//	fun loadKeys(keys: Keys) {
+//		encryptionManager.setKeys(keys)
+//	}
+//
+//	/**
+//	 * Clear all stored keys for encryption and decryption.
+//	 */
+//	@Synchronized
+//	fun clearKeys() {
+//		encryptionManager.clearKeys()
+//	}
 
 	/**
 	 * Handles an enable request result.

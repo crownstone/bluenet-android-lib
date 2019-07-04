@@ -9,13 +9,16 @@ package rocks.crownstone.bluenet.structs
 
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.KeySet
+import rocks.crownstone.bluenet.encryption.MeshKeySet
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Util
 import java.util.*
+import kotlin.collections.HashMap
 
 
 enum class BluenetEvent {
 	INITIALIZED, // Sent when bluenet has been initialized.
+	SPHERE_SETTINGS_UPDATED, // Sent when sphere settings have been updated.
 	BLE_TURNED_ON,    // Bluetooth is turned on
 	BLE_TURNED_OFF,   // Bluetooth is turned off
 	NO_LOCATION_SERVICE_PERMISSION, // Sent when location service permission is required, but not granted.
@@ -67,8 +70,43 @@ typealias Uint32 = Long
 
 typealias DeviceAddress = String
 typealias SphereId = String
-typealias SphereUid = Uint8
+typealias SphereShortId = Uint8
 typealias Keys = HashMap<SphereId, KeyData>
+typealias SphereSettingsMap = HashMap<SphereId, SphereSettings>
+typealias SphereStateMap = HashMap<SphereId, SphereState>
+
+/**
+ * Struct that holds sphere settings.
+ *
+ * @param keySet             Keys of the sphere.
+ * @param meshKeySet         Mesh keys of the sphere.
+ * @param ibeaconUuid        iBeacon UUID of the sphere, should be unique per sphere.
+ * @param sphereShortId      Short ID of the sphere, not globally unique, but used as filter.
+ */
+data class SphereSettings(
+		val keySet: KeySet,
+		val meshKeySet: MeshKeySet?,
+		val ibeaconUuid: UUID,
+		var sphereShortId: SphereShortId = 0 // TODO: make this val, for now, this value isn't always known on init.
+)
+
+/**
+ * Struct that holds state of a sphere.
+ *
+ * @param settings            Settings of the sphere.
+ * @param profileId          Profile this device uses. Influences the behaviour of a Crownstone.
+ * @param locationId         ID of the location this device is currently at. Influences the behaviour of a Crownstone.
+ * @param tapToToggleEnabled Whether or not this device has tap to toggle enabled.
+ * @param rssiOffset         RSSI offset of this device. Influences the distance at which tap to toggle is triggered.
+ */
+data class SphereState(
+		var settings: SphereSettings,
+		var locationId: Uint8 = 0,
+		var profileId: Uint8 = 0,
+		var tapToToggleEnabled: Boolean = false,
+		var rssiOffset: Int = 0
+)
+
 data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)
 
 enum class CrownstoneMode {

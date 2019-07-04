@@ -17,15 +17,19 @@ import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.packets.advertising.*
 import rocks.crownstone.bluenet.structs.BluenetProtocol
+import rocks.crownstone.bluenet.structs.SphereState
+import rocks.crownstone.bluenet.structs.SphereStateMap
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import java.util.*
 import kotlin.collections.ArrayList
 
-class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
+class CommandAdvertiser(evtBus: EventBus, state: SphereStateMap, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
+	private val libState = state
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
 	private val handler = Handler(looper)
@@ -37,9 +41,9 @@ class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: E
 	 */
 	@Synchronized
 	fun add(item: CommandAdvertiserItem) {
-		// Remove any items with same sphere, type, and id.
+		// Remove any items with same sphere, type, and stone id.
 		for (it in queue) {
-			if (it.type == item.type && it.id == item.id && it.sphereId == it.sphereId) {
+			if (it.type == item.type && it.stoneId == item.stoneId && it.sphereId == it.sphereId) {
 				queue.remove(it)
 				break
 			}
@@ -63,18 +67,25 @@ class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: E
 		val keySet = encryptionManager.getKeySet(sphereId)
 		val keyAccess = keySet?.getHighestKey()
 		if (keyAccess == null) {
+			Log.w(TAG, "Missing key for sphere $sphereId")
 			advertiseNext()
 			return
 		}
 
-		// TODO: get timestamp from somewhere.
-		// TODO: get locationId from somewhere.
-		// TODO: get profileId from somewhere.
-		// TODO: get rssiOffset from somewhere.
-		// TODO: get flags from somewhere.
-		val backgroundAdvertisement = BackgroundAdvertisementPayloadPacket(0, 1, 0, 0, false)
-		// TODO: get sphereUid from somewhere.
-		val commandAdvertisementHeader = CommandAdvertisementHeaderPacket(0, 1, keyAccess.accessLevel.num, backgroundAdvertisement)
+		val sphereState = libState[sphereId]
+		if (sphereState == null) {
+			Log.w(TAG, "Missing state for sphere $sphereId")
+			advertiseNext()
+			return
+		}
+		val locationId = sphereState.locationId
+		val profileId = sphereState.profileId
+		val rssiOffset = getRssiOffset(sphereState.rssiOffset)
+		val tapToToggleEnabled = sphereState.tapToToggleEnabled
+		val sphereShortId = sphereState.settings.sphereShortId
+
+		val backgroundAdvertisement = BackgroundAdvertisementPayloadPacket(0, locationId, profileId, rssiOffset, tapToToggleEnabled)
+		val commandAdvertisementHeader = CommandAdvertisementHeaderPacket(0, sphereShortId, keyAccess.accessLevel.num, backgroundAdvertisement)
 
 		val commandAdvertisementBytes = commandAdvertisement.getArray() ?: return
 		val backgroundAdvertisementBytes = backgroundAdvertisement.getArray() ?: return
@@ -174,4 +185,10 @@ class CommandAdvertiser(evtBus: EventBus, bleCore: BleCore, encryptionManager: E
 		queue.addLast(item)
 	}
 
+	/**
+	 * Get "compressed" rssi offset, a 4 bit uint.
+	 */
+	private fun getRssiOffset(offset: Int): Uint8 {
+		return Conversion.toUint8(offset / 2 + 8)
+	}
 }

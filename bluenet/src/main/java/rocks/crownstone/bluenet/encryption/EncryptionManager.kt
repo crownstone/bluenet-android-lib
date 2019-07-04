@@ -12,48 +12,71 @@ import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.EventBus
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
 
-
-class EncryptionManager {
+class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 	private val TAG = this.javaClass.simpleName
 
-	private var keys: Keys? = null
+	private val eventBus = evtBus
+	private val libState = state
+//	private var keys: Keys? = null
 	private var sessionData: SessionData? = null
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
 
+	init {
+		eventBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, ::onSettingsUpdate)
+		setKeys()
+	}
+
+
 	@Synchronized
-	fun setKeys(keys: Keys) {
+	private fun onSettingsUpdate(data: Any) {
+		setKeys()
+	}
+
+	private fun setKeys() {
 		Log.i(TAG, "setKeys")
-		this.keys = keys
 		uuids.clear()
 		addresses.clear()
-		for (entry in keys.entries) {
-			val sphereId = entry.key
-			val ibeaconUuid = entry.value.ibeaconUuid
-			Log.i(TAG, "sphereId=$sphereId ibeaconUuid=$ibeaconUuid keys=${entry.value.keySet}")
-			uuids.put(ibeaconUuid, sphereId)
+		for ((sphereId, state) in libState) {
+			uuids.put(state.settings.ibeaconUuid, sphereId)
 		}
 	}
 
-	// Similar to setting an empty list of keys
-	@Synchronized
-	fun clearKeys() {
-		Log.i(TAG, "clearKeys")
-		keys = null
-		uuids.clear()
-		addresses.clear()
-	}
+//	@Synchronized
+//	fun setKeys(keys: Keys) {
+//		Log.i(TAG, "setKeys")
+//		this.keys = keys
+//		uuids.clear()
+//		addresses.clear()
+//		for (entry in keys.entries) {
+//			val sphereId = entry.key
+//			val ibeaconUuid = entry.value.ibeaconUuid
+//			Log.i(TAG, "sphereId=$sphereId ibeaconUuid=$ibeaconUuid keys=${entry.value.keySet}")
+//			uuids.put(ibeaconUuid, sphereId)
+//		}
+//	}
+//
+//	// Similar to setting an empty list of keys
+//	@Synchronized
+//	fun clearKeys() {
+//		Log.i(TAG, "clearKeys")
+//		keys = null
+//		uuids.clear()
+//		addresses.clear()
+//	}
 
 	@Synchronized
 	fun getKeySet(id: SphereId?): KeySet? {
 		if (id == null) {
 			return null
 		}
-		return keys?.get(id)?.keySet
+		return libState.get(id)?.settings?.keySet
+//		return keys?.get(id)?.keySet
 	}
 
 	@Synchronized
@@ -258,3 +281,4 @@ class EncryptionManager {
 		return decryptedData
 	}
 }
+

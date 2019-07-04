@@ -20,7 +20,7 @@ class CommandAdvertiserItem(
 		val promise: Deferred<Unit, Exception>,
 		val sphereId: SphereId,
 		val type: CommandAdvertiserItemType,
-		val id: Int,
+		val stoneId: Int,
 		val payload: PacketInterface,
 		var timeoutCount: Int
 ) {
