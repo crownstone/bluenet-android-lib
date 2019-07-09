@@ -29,16 +29,19 @@ class KeySet() {
 		internal set
 	var serviceDataKeyBytes: ByteArray? = null
 		internal set
+	var localizationKeyBytes: ByteArray? = null
+		internal set
 	var initialized = false
 		private set
 
-	constructor(adminKey: String?, memberKey: String?, guestKey: String?, serviceDataKey: String?): this() {
+	constructor(adminKey: String?, memberKey: String?, guestKey: String?, serviceDataKey: String?, localizationKey: String?): this() {
 		clear()
 		try {
-				adminKeyBytes = Conversion.getKeyFromString(adminKey)
-				memberKeyBytes = Conversion.getKeyFromString(memberKey)
-				guestKeyBytes = Conversion.getKeyFromString(guestKey)
-				serviceDataKeyBytes = Conversion.getKeyFromString(serviceDataKey)
+			adminKeyBytes = Conversion.getKeyFromString(adminKey)
+			memberKeyBytes = Conversion.getKeyFromString(memberKey)
+			guestKeyBytes = Conversion.getKeyFromString(guestKey)
+			serviceDataKeyBytes = Conversion.getKeyFromString(serviceDataKey)
+			localizationKeyBytes = Conversion.getKeyFromString(localizationKey)
 		}
 		catch (e: java.lang.NumberFormatException) {
 			Log.e(TAG, "Invalid key format")
@@ -49,12 +52,13 @@ class KeySet() {
 		initialized = true
 	}
 
-	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, serviceDataKey: ByteArray?, setupKey: ByteArray?=null): this() {
+	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, serviceDataKey: ByteArray?, localizationKey: ByteArray?, setupKey: ByteArray?=null): this() {
 		if (
 				(adminKey != null && adminKey.size != AES_BLOCK_SIZE) ||
 				(memberKey != null && memberKey.size != AES_BLOCK_SIZE) ||
 				(guestKey != null && guestKey.size != AES_BLOCK_SIZE) ||
 				(serviceDataKey != null && serviceDataKey.size != AES_BLOCK_SIZE) ||
+				(localizationKey != null && localizationKey.size != AES_BLOCK_SIZE) ||
 				(setupKey != null && setupKey.size != AES_BLOCK_SIZE)
 		) {
 			Log.e(TAG, "Invalid key size")
@@ -64,6 +68,7 @@ class KeySet() {
 		memberKeyBytes = memberKey
 		guestKeyBytes = guestKey
 		serviceDataKeyBytes = serviceDataKey
+		localizationKeyBytes = localizationKey
 		setupKeyBytes = setupKey
 		initialized = true
 	}
@@ -79,6 +84,7 @@ class KeySet() {
 			AccessLevel.GUEST -> return guestKeyBytes
 			AccessLevel.SETUP -> return setupKeyBytes
 			AccessLevel.SERVICE_DATA -> return serviceDataKeyBytes
+			AccessLevel.LOCALIZATION -> return localizationKeyBytes
 			else -> return null
 		}
 	}
@@ -105,6 +111,7 @@ class KeySet() {
 		guestKeyBytes = null
 		setupKeyBytes = null
 		serviceDataKeyBytes = null
+		localizationKeyBytes = null
 		initialized = false
 	}
 
@@ -115,6 +122,7 @@ class KeySet() {
 				"guest: ${Conversion.bytesToHexString(guestKeyBytes)}, " +
 				"setup: ${Conversion.bytesToHexString(setupKeyBytes)}, " +
 				"serviceData: ${Conversion.bytesToHexString(serviceDataKeyBytes)}, " +
+				"localization: ${Conversion.bytesToHexString(localizationKeyBytes)}, " +
 				"]"
 	}
 }

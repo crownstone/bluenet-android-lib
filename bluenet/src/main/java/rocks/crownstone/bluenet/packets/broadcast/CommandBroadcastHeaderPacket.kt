@@ -13,19 +13,19 @@ import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
+import java.util.*
 
 class CommandBroadcastHeaderPacket(
 		val protocol: Int,
 		val sphereShortId: SphereShortId,
 		val accessLevel: Uint8,
-		val backgroundPayload: BackgroundBroadcastPayloadPacket
+		val encryptedBackgroundPayload: ByteArray
 		): PacketInterface {
-	val payload: Int
+	private val encryptedBackgroundPayloadInt: Int
 	init {
-		val arr = backgroundPayload.getArray()
-		payload = when (arr) {
-			null -> 0
-			else -> Conversion.byteArrayToInt(arr)
+		encryptedBackgroundPayloadInt = when (encryptedBackgroundPayload.size) {
+			4 -> Conversion.byteArrayToInt(encryptedBackgroundPayload)
+			else -> 0
 		}
 	}
 
@@ -51,17 +51,17 @@ class CommandBroadcastHeaderPacket(
 		val sequence1: Int = 1
 		val data1: Int = (sequence1 and 0x03) shl (10+4)
 		+ (0 and 0x03FF) shl (4)
-		+ ((payload shr (32-4)) and 0x0F) shl (0)
+		+ ((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0)
 		bb.putShort(Conversion.toUint16(data1))
 
 		val sequence2: Int = 2
 		val data2: Int = (sequence2 and 0x03) shl (14)
-		+ ((payload shr (32-4-14)) and 0x3FFF) shl (0)
+		+ ((encryptedBackgroundPayloadInt shr (32-4-14)) and 0x3FFF) shl (0)
 		bb.putShort(Conversion.toUint16(data2))
 
 		val sequence3: Int = 3
 		val data3: Int = (sequence3 and 0x03) shl (14)
-		+ ((payload shr (32-4-14-14)) and 0x3FFF) shl (0)
+		+ ((encryptedBackgroundPayloadInt shr (32-4-14-14)) and 0x3FFF) shl (0)
 		bb.putShort(Conversion.toUint16(data3))
 
 		return true

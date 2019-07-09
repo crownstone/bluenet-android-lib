@@ -27,6 +27,11 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
 
+	/**
+	 * Map with list of RC5 subkeys for each sphere.
+	 */
+	private val rc5subKeysMap = HashMap<SphereId, List<Uint16>?>()
+
 	init {
 		eventBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, ::onSettingsUpdate)
 		setKeys()
@@ -44,6 +49,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		addresses.clear()
 		for ((sphereId, state) in libState) {
 			uuids.put(state.settings.ibeaconUuid, sphereId)
+			rc5subKeysMap.put(sphereId, RC5.expandKey(state.settings.keySet.localizationKeyBytes))
 		}
 	}
 
@@ -279,6 +285,28 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 			return null
 		}
 		return decryptedData
+	}
+
+	@Synchronized
+	fun encryptRC5(sphereId: SphereId, data: ByteArray): ByteArray? {
+		if (data.size != 4) {
+			return null
+		}
+		val subKeys = rc5subKeysMap.get(sphereId) ?: return null
+		val dataUint: Uint32 = Conversion.byteArrayTo(data)
+		val encryptedUint = RC5.encrypt(dataUint, subKeys) ?: return null
+		return Conversion.uint32ToByteArray(encryptedUint)
+	}
+
+	@Synchronized
+	fun decryptRC5(sphereId: SphereId, data: ByteArray): ByteArray? {
+		if (data.size != 4) {
+			return null
+		}
+		val subKeys = rc5subKeysMap.get(sphereId) ?: return null
+		val dataUint: Uint32 = Conversion.byteArrayTo(data)
+		val decryptedUint = RC5.decrypt(dataUint, subKeys) ?: return null
+		return Conversion.uint32ToByteArray(decryptedUint)
 	}
 }
 

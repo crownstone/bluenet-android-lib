@@ -50,38 +50,14 @@ object Encryption {
 		random.nextBytes(packetNonce)
 		Log.v(TAG, "packetNonce: ${Conversion.bytesToString(packetNonce)}")
 
-		// Create iv by concatting session nonce and packet nonce.
-		val iv = ByteArray(AES_BLOCK_SIZE)
-		System.arraycopy(packetNonce, 0, iv, 0, PACKET_NONCE_LENGTH)
-		System.arraycopy(sessionNonce, 0, iv, PACKET_NONCE_LENGTH, SESSION_NONCE_LENGTH)
+		// Nonce is concatenation of session nonce and packet nonce
+		val nonce = ByteArray(PACKET_NONCE_LENGTH + SESSION_NONCE_LENGTH)
+		System.arraycopy(packetNonce, 0, nonce, 0, PACKET_NONCE_LENGTH)
+		System.arraycopy(sessionNonce, 0, nonce, PACKET_NONCE_LENGTH, SESSION_NONCE_LENGTH)
 
-		// Allocate to-be-encrypted payload array, fill with payloadData prefixed with validation key.
-		val payloadLen = VALIDATION_KEY_LENGTH + payloadData.size
-		val paddingLen = (AES_BLOCK_SIZE - payloadLen % AES_BLOCK_SIZE) % AES_BLOCK_SIZE
-		val payload = ByteArray(payloadLen + paddingLen)
-		//Arrays.fill(payload, (byte)0); // Already zeroes by default
-		System.arraycopy(validationKey, 0, payload, 0, VALIDATION_KEY_LENGTH)
-		System.arraycopy(payloadData, 0, payload, VALIDATION_KEY_LENGTH, payloadData.size)
-		Log.v(TAG, "payload: ${Conversion.bytesToString(payload)}")
-
-		// Allocate output array
-		val encryptedData = ByteArray(PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH + payloadLen + paddingLen)
+		val encryptedData = encryptCtr(payloadData, 0, PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH, nonce, key) ?: return null
 		System.arraycopy(packetNonce, 0, encryptedData, 0, PACKET_NONCE_LENGTH)
 		encryptedData[PACKET_NONCE_LENGTH] = accessLevel.toByte()
-
-		// Encrypt payload
-		try {
-			val cipher = Cipher.getInstance("AES/CTR/NoPadding")
-			cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), IvParameterSpec(iv))
-			Log.v(TAG, "IV before: ${Conversion.bytesToString(cipher.iv)}")
-			// doFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
-			cipher.doFinal(payload, 0, payload.size, encryptedData, PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH)
-			Log.v(TAG, "IV after: ${Conversion.bytesToString(cipher.iv)}")
-		}
-		catch (e: GeneralSecurityException) {
-			e.printStackTrace()
-			return null
-		}
 		Log.v(TAG, "encryptedData: ${Conversion.bytesToString(encryptedData)}")
 		return encryptedData
 	}
@@ -195,5 +171,49 @@ object Encryption {
 		}
 
 		return decryptedData
+	}
+
+	/**
+	 * Encrypt data using AES CTR.
+	 *
+	 * Assumes correct size of input parameters.
+	 *
+	 * @param data                Data to be encrypted.
+	 * @param dataOffset          Offset of the data to encrypt.
+	 * @param encryptedDataOffset Output array offset, encrypted data will start at this offset.
+	 * @param nonce               Nonce.
+	 * @param key                 Key.
+	 * @return                    Encrypted data.
+	 */
+	fun encryptCtr(data: ByteArray, dataOffset: Int, encryptedDataOffset: Int, nonce: ByteArray, key: ByteArray): ByteArray? {
+		// Create iv with nonce nonce and packet nonce.
+		val iv = ByteArray(AES_BLOCK_SIZE) // Already initialized with zeroes
+		System.arraycopy(nonce, 0, iv, 0, nonce.size)
+
+		// Pad with zeroes.
+		val dataSize = data.size - dataOffset
+		val paddingSize = (AES_BLOCK_SIZE - dataSize % AES_BLOCK_SIZE) % AES_BLOCK_SIZE
+		val paddedData = ByteArray(dataSize + paddingSize) // Already initialized with zeroes
+		//Arrays.fill(payload, (byte)0); // Already zeroes by default
+		System.arraycopy(data, dataOffset, paddedData, 0, dataSize)
+		Log.v(TAG, "paddedData: ${Conversion.bytesToString(paddedData)}")
+
+		val encryptedData = ByteArray(paddedData.size + encryptedDataOffset)
+
+		// Encrypt payload
+		try {
+			val cipher = Cipher.getInstance("AES/CTR/NoPadding")
+			cipher.init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"), IvParameterSpec(iv))
+			Log.v(TAG, "IV before: ${Conversion.bytesToString(cipher.iv)}")
+			// doFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset)
+			cipher.doFinal(paddedData, 0, paddedData.size, encryptedData, encryptedDataOffset)
+			Log.v(TAG, "IV after: ${Conversion.bytesToString(cipher.iv)}")
+		}
+		catch (e: GeneralSecurityException) {
+			e.printStackTrace()
+			return null
+		}
+		Log.v(TAG, "encryptedData: ${Conversion.bytesToString(encryptedData)}")
+		return encryptedData
 	}
 }

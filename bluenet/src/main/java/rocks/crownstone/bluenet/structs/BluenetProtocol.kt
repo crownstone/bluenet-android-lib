@@ -69,6 +69,11 @@ object BluenetProtocol {
 	const val PACKET_NONCE_LENGTH = 3
 	const val ACCESS_LEVEL_LENGTH = 1
 
+	const val RC5_ROUNDS = 12
+	const val RC5_NUM_SUBKEYS = (2*(RC5_ROUNDS+1))
+	const val RC5_KEYLEN = 16
+	const val RC5_WORD_SIZE = 2
+
 	const val MULTIPART_NOTIFICATION_MAX_SIZE = 512
 	const val MULTIPART_NOTIFICATION_LAST_NR = 255
 

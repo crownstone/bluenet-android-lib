@@ -88,15 +88,37 @@ object Conversion {
 		return bb.array()
 	}
 
-	fun bytesToUuid(bytes: ByteArray): UUID {
+	fun bytesToUuid(bytes: ByteArray): UUID? {
+		return when (bytes.size) {
+			2 -> bytesToUuid2(bytes)
+			4 -> bytesToUuid4(bytes)
+			16 -> bytesToUuid16(bytes)
+			else -> null
+		}
+	}
+
+	fun bytesToUuid16(bytes: ByteArray): UUID {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-
 		val lsb = bb.long
 		val msb = bb.long
 		return UUID(msb, lsb)
-//		val uuid = UUID(msb, lsb)
-//		return uuidToString(uuid)
+	}
+
+	fun bytesToUuid4(bytes: ByteArray, offset: Int = 0): UUID? {
+		val bb = ByteBuffer.wrap(bytes)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
+		val uint32 = bb.getUint32(offset)
+		val str = "%08x".format(uint32)
+		return stringToUuid(str)
+	}
+
+	fun bytesToUuid2(bytes: ByteArray, offset: Int = 0): UUID? {
+		val bb = ByteBuffer.wrap(bytes)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
+		val uint16 = bb.getUint16(offset)
+		val str = "%04x".format(uint16)
+		return stringToUuid(str)
 	}
 
 	fun encodedStringToBytes(encoded: String): ByteArray {
@@ -216,6 +238,10 @@ object Conversion {
 		return (num and 0xFF).toShort()
 	}
 
+	fun toUint16(num: Byte): Uint16 {
+		return num.toInt() and 0xFFFF
+	}
+
 	fun toUint16(num: Short): Uint16 {
 		return num.toInt() and 0xFFFF
 	}
@@ -224,8 +250,20 @@ object Conversion {
 		return num and 0xFFFF
 	}
 
+	fun toUint16(num: Long): Uint16 {
+		return (num and 0xFFFF).toInt()
+	}
+
 	fun toUint32(num: Int): Uint32 {
 		return num.toLong() and 0xFFFFFFFFL
+	}
+
+	fun uint16ListToUint32Reversed(list: List<Uint16>): Uint32 {
+		return (toUint32(list[0]) shl 16) + toUint32(list[1])
+	}
+
+	fun uint32ToUint16ListReversed(num: Uint32): List<Uint16> {
+		return arrayListOf(toUint16(num shr 16), toUint16(num))
 	}
 
 	fun hexStringToBytes(hex: String): ByteArray {
