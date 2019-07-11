@@ -21,6 +21,7 @@ class BroadcastItemListPacket: CommandBroadcastPayloadInterface {
 	companion object {
 		const val HEADER_SIZE = 1
 		const val MAX_PAYLOAD_SIZE = 10
+		const val MAX_PACKET_SIZE = HEADER_SIZE + MAX_PAYLOAD_SIZE
 	}
 
 	override fun add(item: PacketInterface): Boolean {
@@ -34,7 +35,7 @@ class BroadcastItemListPacket: CommandBroadcastPayloadInterface {
 		}
 
 		val itemSize = item.getPacketSize()
-		if (size + itemSize > MAX_PAYLOAD_SIZE) {
+		if (size + itemSize > MAX_PACKET_SIZE) {
 			return false
 		}
 		size += itemSize
@@ -46,7 +47,8 @@ class BroadcastItemListPacket: CommandBroadcastPayloadInterface {
 		if (list.isEmpty()) {
 			return false
 		}
-		return (getPacketSize() + list[0].getPacketSize() > MAX_PAYLOAD_SIZE)
+		val itemSize = list[0].getPacketSize()
+		return (size + itemSize > MAX_PACKET_SIZE)
 	}
 
 	override fun getPacketSize(): Int {

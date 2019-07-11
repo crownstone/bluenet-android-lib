@@ -17,6 +17,7 @@ interface PacketInterface {
 	fun getArray(): ByteArray? {
 		val arr = ByteArray(getPacketSize())
 		val bb = ByteBuffer.wrap(arr)
+		bb.order(ByteOrder.LITTLE_ENDIAN)
 		val result = toBuffer(bb)
 		if (!result) {
 			//return ByteArray(0)

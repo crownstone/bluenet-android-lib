@@ -31,4 +31,5 @@ object BluenetConfig {
 	val CONNECT_RETRIES = 3
 
 	val COMMAND_BROADCAST_INTERVAL_MS = 250 // Time for each packet to be advertised.
+	val COMMAND_BROADCAST_TIME_MS = 1500 // Time for each command to be advertised. Should be a multiple of interval.
 }

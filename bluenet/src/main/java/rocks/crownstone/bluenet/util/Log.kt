@@ -8,11 +8,16 @@
 package rocks.crownstone.bluenet.util
 
 import android.util.Log
+import java.util.*
+import java.util.Arrays.asList
+
+
 
 class Log private constructor() {
 	private var logLevel =     Log.VERBOSE
 	private var logLevelFile = Log.DEBUG
 	private var fileLogger: FileLogger? = null
+	private var usePrint = isLocalUnitTest()
 
 	enum class Level(val num: Int) {
 		VERBOSE(Log.VERBOSE),
@@ -125,10 +130,27 @@ class Log private constructor() {
 	}
 
 	fun log(level: Int, tag: String, msg: String) {
-		Log.println(level, tag, msg)
+		if (usePrint) {
+			println("$tag $msg")
+		}
+		else {
+			Log.println(level, tag, msg)
+		}
 	}
 
 	fun logFile(level: Int, tag: String, msg: String) {
 		fileLogger?.logToFile(levelToChar[level], tag, msg)
+	}
+
+	private fun isLocalUnitTest(): Boolean {
+//		val stackTrace = Thread.currentThread().stackTrace
+//		val list = Arrays.asList(stackTrace)
+//		for (element in list) {
+//			if (element.getClassName().startsWith("org.junit.")) {
+//				return true
+//			}
+//		}
+//		return false
+		return System.getProperty("runningLocalUnitTest") == "true"
 	}
 }

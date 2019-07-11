@@ -12,6 +12,7 @@ import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Util
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
@@ -28,7 +29,7 @@ class BackgroundBroadcastPayloadPacket(
 		validationTimestamp = Conversion.toUint16((timestamp shr 7).toInt())
 		var tempFlags: Int = 0
 		if (flagTapToToggle) {
-			tempFlags += 1 shl 2
+			tempFlags = Util.setBit(tempFlags, 2)
 		}
 		flags = tempFlags
 	}
@@ -45,19 +46,23 @@ class BackgroundBroadcastPayloadPacket(
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
+		val data: Int = Conversion.toUint16(
+				((locationId.toInt() and 0x3F) shl (3+4+3)) +
+				((profileId.toInt() and 0x07) shl (4+3)) +
+				((rssiOffset.toInt() and 0x0F) shl (3)) +
+				((flags and 0x07) shl (0))
+		)
+		println("BackgroundBroadcastPayloadPacket: ${(locationId.toInt() and 0x3F) shl (3+4+3)} + ${(profileId.toInt() and 0x07) shl (4+3)} + ${(rssiOffset.toInt() and 0x0F) shl (3)} + ${(flags and 0x07) shl (0)} = $data")
+		bb.putShort(data)
 		bb.putShort(validationTimestamp)
-		val data: Int = (locationId.toInt() and 0x3F) shl (3+4+3)
-		+ (profileId.toInt() and 0x07) shl (4+3)
-		+ (rssiOffset.toInt() and 0x0F) shl (3)
-		+ (flags and 0x07) shl (0)
-		val data1 = (data shr 8) and 0xFF
-		val data2 = data and 0xFF
-		bb.put(data1.toByte())
-		bb.put(data2.toByte())
 		return true
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
 		return false // Not implemented yet (no need?)
+	}
+
+	override fun toString(): String {
+		return "BackgroundBroadcastPayloadPacket(timestamp=$timestamp, locationId=$locationId, profileId=$profileId, rssiOffset=$rssiOffset, flagTapToToggle=$flagTapToToggle, validationTimestamp=$validationTimestamp, flags=$flags)"
 	}
 }

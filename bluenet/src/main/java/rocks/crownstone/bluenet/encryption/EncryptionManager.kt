@@ -290,9 +290,14 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 	@Synchronized
 	fun encryptRC5(sphereId: SphereId, data: ByteArray): ByteArray? {
 		if (data.size != 4) {
+			Log.w(TAG, "Invalid size: ${data.size}")
 			return null
 		}
-		val subKeys = rc5subKeysMap.get(sphereId) ?: return null
+		val subKeys = rc5subKeysMap.get(sphereId)
+		if (subKeys == null) {
+			Log.w(TAG, "Missing sub keys for sphereId=$sphereId")
+			return null
+		}
 		val dataUint: Uint32 = Conversion.byteArrayTo(data)
 		val encryptedUint = RC5.encrypt(dataUint, subKeys) ?: return null
 		return Conversion.uint32ToByteArray(encryptedUint)
@@ -301,9 +306,14 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 	@Synchronized
 	fun decryptRC5(sphereId: SphereId, data: ByteArray): ByteArray? {
 		if (data.size != 4) {
+			Log.w(TAG, "Invalid size: ${data.size}")
 			return null
 		}
-		val subKeys = rc5subKeysMap.get(sphereId) ?: return null
+		val subKeys = rc5subKeysMap.get(sphereId)
+		if (subKeys == null) {
+			Log.w(TAG, "Missing sub keys for sphereId=$sphereId")
+			return null
+		}
 		val dataUint: Uint32 = Conversion.byteArrayTo(data)
 		val decryptedUint = RC5.decrypt(dataUint, subKeys) ?: return null
 		return Conversion.uint32ToByteArray(decryptedUint)
