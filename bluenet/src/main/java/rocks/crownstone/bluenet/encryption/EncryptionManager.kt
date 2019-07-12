@@ -50,6 +50,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		for ((sphereId, state) in libState) {
 			uuids.put(state.settings.ibeaconUuid, sphereId)
 			rc5subKeysMap.put(sphereId, RC5.expandKey(state.settings.keySet.localizationKeyBytes))
+			Log.d(TAG, "sphereId=$sphereId ibeaconUuid=${state.settings.ibeaconUuid} keys=${state.settings.keySet}")
 		}
 	}
 
@@ -81,6 +82,9 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		if (id == null) {
 			return null
 		}
+//		if (libState.get(id)?.settings == null) {
+//			Log.w(TAG, "no settings for sphereId $id")
+//		}
 		return libState.get(id)?.settings?.keySet
 //		return keys?.get(id)?.keySet
 	}
@@ -99,19 +103,14 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 
 	@Synchronized
 	fun getKeySetFromAddress(address: DeviceAddress): KeySet? {
+//		if (!addresses.containsKey(address)) {
+//			Log.v(TAG, "no sphere id for $address")
+//		}
 		return getKeySet(addresses.get(address))
 	}
 
 	@Synchronized
 	fun getKeySet(device: ScannedDevice): KeySet? {
-//		val uuid = device.ibeaconData?.uuid
-//		if (uuid != null) {
-//			val sphereId = uuids.get(uuid)
-//			if (sphereId != null) {
-//				cacheSphereId(device.address, sphereId)
-//				return getKeySet(sphereId)
-//			}
-//		}
 		// Fall back to cached result
 		return getKeySetFromAddress(device.address)
 	}
@@ -123,14 +122,6 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 
 	@Synchronized
 	fun getSphereId(device: ScannedDevice): SphereId? {
-//		val uuid = device.ibeaconData?.uuid
-//		if (uuid != null) {
-//			val sphereId = uuids.get(uuid)
-//			if (sphereId != null) {
-//				cacheSphereId(device.address, sphereId)
-//				return sphereId
-//			}
-//		}
 		// Fall back to cached result
 		return getSphereIdFromAddress(device.address)
 	}
@@ -141,12 +132,14 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 			return
 		}
 		addresses.put(address, sphereId)
+		Log.d(TAG, "Cache sphereId for $address to $sphereId")
 		// The ibeacon MAC address is the original MAC address with first byte increased by 1.
 		// So add the original address as well.
 		val addressBytes = Conversion.addressToBytes(address)
 		addressBytes[0] = (addressBytes[0] - 1).toByte()
 		val originalAddress = Conversion.bytesToAddress(addressBytes)
 		addresses.put(originalAddress, sphereId)
+		Log.d(TAG, "Cache sphereId for $originalAddress to $sphereId")
 	}
 
 	/**
@@ -157,6 +150,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		val uuid = device.ibeaconData?.uuid
 		if (uuid != null) {
 			val sphereId = uuids.get(uuid)
+			Log.v(TAG, "no sphere id for ibeacon $uuid")
 			if (sphereId != null) {
 				cacheSphereId(device.address, sphereId)
 			}
@@ -169,7 +163,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		val sessionData = if (isEncrypted) {
 			val key = getKeySetFromAddress(address)?.guestKeyBytes
 			if (key == null) {
-				Log.w(TAG, "No key")
+				Log.w(TAG, "No key for $address")
 				return Promise.ofFail(Errors.EncryptionKeyMissing())
 			}
 			val decryptedData = Encryption.decryptEcb(data, key)
@@ -222,7 +216,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 					getKeySetFromAddress(address)?.getHighestKey()
 				}
 				if (keyAccessLevel == null) {
-					Log.w(TAG, "No key")
+					Log.w(TAG, "No key for $address")
 					return null
 				}
 				return Encryption.encryptCtr(data, sessionData.sessionNonce, sessionData.validationKey, keyAccessLevel.key, keyAccessLevel.accessLevel.num)
@@ -276,7 +270,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 			getKeySetFromAddress(address)
 		}
 		if (keys == null) {
-			Log.e(TAG, Errors.EncryptionKeyMissing().message)
+			Log.w(TAG, "No key for $address")
 			return null
 		}
 		val decryptedData = Encryption.decryptCtr(data, sessionData.sessionNonce, sessionData.validationKey, keys)
