@@ -242,7 +242,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		val keys = if (setupKey != null) {
 			Log.i(TAG, "Use setup key")
 //			KeyAccessLevelPair(setupKey, AccessLevel.SETUP)
-			KeySet(setupKey, setupKey, setupKey, setupKey, setupKey)
+			KeySet(setupKey, setupKey, setupKey, setupKey, setupKey, setupKey)
 		}
 		else {
 			getKeySetFromAddress(address)
@@ -270,7 +270,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		val keys = if (setupKey != null) {
 			Log.i(TAG, "Use setup key")
 //			KeyAccessLevelPair(setupKey, AccessLevel.SETUP)
-			KeySet(setupKey, setupKey, setupKey, setupKey, setupKey)
+			KeySet(setupKey, setupKey, setupKey, setupKey, setupKey, setupKey)
 		}
 		else {
 			getKeySetFromAddress(address)

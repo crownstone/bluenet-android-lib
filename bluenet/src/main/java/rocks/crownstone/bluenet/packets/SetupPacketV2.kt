@@ -27,7 +27,7 @@ class SetupPacketV2(val stoneId: Uint8,
 					val meshKeys: MeshKeySet,
 				  val ibeaconData: IbeaconData): PacketInterface {
 	companion object {
-		const val SIZE = 1+1+7*16+16+2+2
+		const val SIZE = 1+1+8*16+16+2+2
 	}
 	private val TAG = this.javaClass.simpleName
 
@@ -45,6 +45,7 @@ class SetupPacketV2(val stoneId: Uint8,
 				keySet.memberKeyBytes == null ||
 				keySet.guestKeyBytes == null ||
 				keySet.serviceDataKeyBytes == null ||
+				keySet.localizationKeyBytes == null ||
 				meshKeys.deviceKeyBytes == null ||
 				meshKeys.appKeyBytes == null ||
 				meshKeys.netKeyBytes == null
@@ -59,6 +60,7 @@ class SetupPacketV2(val stoneId: Uint8,
 		bb.put(keySet.memberKeyBytes)
 		bb.put(keySet.guestKeyBytes)
 		bb.put(keySet.serviceDataKeyBytes)
+		bb.put(keySet.localizationKeyBytes)
 		bb.put(meshKeys.deviceKeyBytes)
 		bb.put(meshKeys.appKeyBytes)
 		bb.put(meshKeys.netKeyBytes)

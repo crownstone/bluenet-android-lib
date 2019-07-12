@@ -55,7 +55,12 @@ object Encryption {
 		System.arraycopy(packetNonce, 0, nonce, 0, PACKET_NONCE_LENGTH)
 		System.arraycopy(sessionNonce, 0, nonce, PACKET_NONCE_LENGTH, SESSION_NONCE_LENGTH)
 
-		val encryptedData = encryptCtr(payloadData, 0, PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH, nonce, key) ?: return null
+		// prepend validation key to payload
+		val payload = ByteArray(VALIDATION_KEY_LENGTH + payloadData.size)
+		System.arraycopy(validationKey, 0, payload, 0, VALIDATION_KEY_LENGTH)
+		System.arraycopy(payloadData, 0, payload, VALIDATION_KEY_LENGTH, payloadData.size)
+
+		val encryptedData = encryptCtr(payload, 0, PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH, nonce, key) ?: return null
 		System.arraycopy(packetNonce, 0, encryptedData, 0, PACKET_NONCE_LENGTH)
 		encryptedData[PACKET_NONCE_LENGTH] = accessLevel.toByte()
 		Log.v(TAG, "encryptedData: ${Conversion.bytesToString(encryptedData)}")

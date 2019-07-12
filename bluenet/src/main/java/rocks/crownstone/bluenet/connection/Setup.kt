@@ -77,7 +77,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	 * Emits progress events.
 	 *
 	 * @param stoneId           The crownstone id, should be unique per sphere.
-	 * @param sphereId          The sphere id, these are not unique, but used as filter.
+	 * @param sphereShortId     The sphere short id, these are not unique, but used as filter.
 	 * @param keys              The keys for encryption.
 	 * @param meshKeys          The mesh keys.
 	 * @param meshDeviceKey     Unique key for this device.
@@ -86,15 +86,15 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setup(stoneId: Uint8, sphereId: Uint8, keys: KeySet, meshKeys: MeshKeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
-		Log.i(TAG, "setup stoneId=$stoneId stoneId=$sphereId keys=$keys meshKeys=$meshKeys meshAccessAddress=$meshAccessAddress ibeaconData=$ibeaconData")
+	fun setup(stoneId: Uint8, sphereShortId: Uint8, keys: KeySet, meshKeys: MeshKeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		Log.i(TAG, "setup stoneId=$stoneId stoneId=$sphereShortId keys=$keys meshKeys=$meshKeys meshAccessAddress=$meshAccessAddress ibeaconData=$ibeaconData")
 		if (connection.mode != CrownstoneMode.SETUP) {
 			return Promise.ofFail(Errors.NotInMode(CrownstoneMode.SETUP))
 		}
 
 		if (
 				(stoneId <= 0 || stoneId > 255) ||
-				(sphereId <= 0 || sphereId > 255) ||
+				(sphereShortId <= 0 || sphereShortId > 255) ||
 				(ibeaconData.major < 0 || ibeaconData.major > 0xFFFF) ||
 				(ibeaconData.minor < 0 || ibeaconData.minor > 0xFFFF)
 		) {
@@ -102,7 +102,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		}
 
 		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
-			return fastSetupV2(stoneId, sphereId, keys, meshKeys, ibeaconData)
+			return fastSetupV2(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
 			return fastSetup(stoneId, keys, meshAccessAddress, ibeaconData)

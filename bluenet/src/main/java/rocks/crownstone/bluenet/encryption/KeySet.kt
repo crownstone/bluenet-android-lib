@@ -52,7 +52,7 @@ class KeySet() {
 		initialized = true
 	}
 
-	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, serviceDataKey: ByteArray?, localizationKey: ByteArray?, setupKey: ByteArray?=null): this() {
+	constructor(adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, serviceDataKey: ByteArray?, localizationKey: ByteArray?, setupKey: ByteArray?): this() {
 		if (
 				(adminKey != null && adminKey.size != AES_BLOCK_SIZE) ||
 				(memberKey != null && memberKey.size != AES_BLOCK_SIZE) ||

@@ -24,14 +24,26 @@ fun ByteBuffer.putInt(value: Uint32) {
 	this.putInt(value.toInt())
 }
 
-fun ByteBuffer.getUint8(offset: Int = 0): Uint8 {
+fun ByteBuffer.getUint8(): Uint8 {
+	return Conversion.toUint8(this.get())
+}
+
+fun ByteBuffer.getUint16(): Uint16 {
+	return Conversion.toUint16(this.getShort())
+}
+
+fun ByteBuffer.getUint32(): Uint32 {
+	return Conversion.toUint32(this.getInt())
+}
+
+fun ByteBuffer.getUint8(offset: Int): Uint8 {
 	return Conversion.toUint8(this.get(offset))
 }
 
-fun ByteBuffer.getUint16(offset: Int = 0): Uint16 {
+fun ByteBuffer.getUint16(offset: Int): Uint16 {
 	return Conversion.toUint16(this.getShort(offset))
 }
 
-fun ByteBuffer.getUint32(offset: Int = 0): Uint32 {
+fun ByteBuffer.getUint32(offset: Int): Uint32 {
 	return Conversion.toUint32(this.getInt(offset))
 }
