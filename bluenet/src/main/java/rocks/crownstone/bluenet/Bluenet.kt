@@ -14,6 +14,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import nl.komponents.kovenant.*
+import rocks.crownstone.bluenet.broadcast.CommandBroadcaster
 import rocks.crownstone.bluenet.connection.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.scanning.BleScanner
@@ -59,6 +60,7 @@ class Bluenet(looper: Looper? = null) {
 	lateinit var state: State; private set
 	lateinit var deviceInfo: DeviceInfo; private set
 	lateinit var dfu: Dfu; private set
+	lateinit var broadCast: CommandBroadcaster; private set
 
 	// Public variables
 	lateinit var iBeaconRanger: IbeaconRanger; private set
@@ -138,6 +140,7 @@ class Bluenet(looper: Looper? = null) {
 		deviceInfo = DeviceInfo(eventBus, connection)
 		dfu = Dfu(eventBus, connection, context)
 		iBeaconRanger = IbeaconRanger(eventBus, looper)
+		broadCast = CommandBroadcaster(eventBus, libState, bleCore, encryptionManager, looper)
 
 		service = BackgroundServiceManager(appContext, eventBus, looper)
 		if (notificationId == null || notification == null) {

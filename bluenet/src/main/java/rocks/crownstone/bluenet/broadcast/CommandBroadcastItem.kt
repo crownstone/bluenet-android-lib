@@ -31,23 +31,15 @@ class CommandBroadcastItem(
 		val validationTimestamp: Uint32? = null
 ) {
 	private val TAG = this.javaClass.simpleName
-	var isBroadcasting: Boolean = false
-		private set
 
 	@Synchronized
-	fun startedBroadcasting() {
-//		timeoutCount -= 1
-		isBroadcasting = true
+	fun startedAdvertising() {
+		Log.v(TAG, "startedAdvertising ${toString()}")
 	}
 
 	@Synchronized
-	fun stoppedBroadcasting(error: java.lang.Exception?) {
-		Log.v(TAG, "stoppedBroadcasting ${toString()}")
-		if (!isBroadcasting) {
-			Log.w(TAG, "Not being broadcasted! ${toString()}")
-			return
-		}
-		isBroadcasting = false
+	fun stoppedAdvertising(error: java.lang.Exception?) {
+		Log.v(TAG, "stoppedAdvertising ${toString()}")
 		if (error != null) {
 			reject(error)
 			return
@@ -76,7 +68,7 @@ class CommandBroadcastItem(
 	}
 
 	override fun toString(): String {
-		return "CommandBroadcastItem(promise=$promise, sphereId='$sphereId', type=$type, stoneId=$stoneId, timeoutCount=$timeoutCount, isBroadcasting=$isBroadcasting, payload=$payload)"
+		return "CommandBroadcastItem(promise=$promise, sphereId='$sphereId', type=$type, stoneId=$stoneId, timeoutCount=$timeoutCount, payload=$payload)"
 	}
 
 

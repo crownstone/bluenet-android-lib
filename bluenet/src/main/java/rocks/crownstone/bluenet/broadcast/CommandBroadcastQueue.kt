@@ -2,22 +2,28 @@ package rocks.crownstone.bluenet.broadcast
 
 import android.bluetooth.le.AdvertiseData
 import android.os.ParcelUuid
-import android.support.annotation.VisibleForTesting
 import rocks.crownstone.bluenet.encryption.Encryption
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.packets.broadcast.*
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
+import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
+/**
+ * Class that keeps up a queue of broadcast items.
+ *
+ * Selects which items to broadcast next and build an AdvertiseData packet to be advertised.
+ * Each item can have a promise that will be resolved when it has been advertised long enough.
+ */
 class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
 	private val encryptionManager = encryptionManager
 	private val libState = state
 	private val queue = LinkedList<CommandBroadcastItem>()
-	private val broadcastedItems = ArrayList<CommandBroadcastItem>()
+	private val advertisedItems = ArrayList<CommandBroadcastItem>()
 
 	/**
 	 * Add an item to the queue.
@@ -37,14 +43,14 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 				break
 			}
 		}
-		for (it in broadcastedItems) {
+		for (it in advertisedItems) {
 			if (it.sphereId == it.sphereId &&
 					it.type == item.type &&
 					it.stoneId != null &&
 					it.stoneId == item.stoneId
 			) {
-				it.stoppedBroadcasting(Errors.Aborted())
-				broadcastedItems.remove(it)
+				it.stoppedAdvertising(Errors.Aborted())
+				advertisedItems.remove(it)
 				break
 			}
 		}
@@ -52,6 +58,9 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 		queue.addFirst(item)
 	}
 
+	/**
+	 * Returns true if there is a next advertisement.
+	 */
 	@Synchronized
 	fun hasNext(): Boolean {
 		return queue.isNotEmpty()
@@ -64,7 +73,51 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	 */
 	@Synchronized
 	fun getNextAdvertisement(): AdvertiseData? {
-		Log.d(TAG, "broadcastNext")
+		Log.d(TAG, "getNextAdvertisement")
+		if (advertisedItems.isNotEmpty()) {
+			Log.w(TAG, "Items are already being advertised.")
+		}
+		val advertiseUuids = getNextAdvertisementUuids() ?: return null
+		val advertiseBuilder = AdvertiseData.Builder()
+		for (uuid in advertiseUuids) {
+			advertiseBuilder.addServiceUuid(ParcelUuid(uuid))
+		}
+		return advertiseBuilder.build()
+	}
+
+	/**
+	 * To be called when advertisement has been advertised.
+	 */
+	@Synchronized
+	fun advertisementDone(error: java.lang.Exception?) {
+		for (it in advertisedItems) {
+			it.stoppedAdvertising(error)
+			putItemBackInQueue(it)
+		}
+		advertisedItems.clear()
+	}
+
+	/**
+	 * Clear queue.
+	 *
+	 * Rejects any items that are still in queue.
+	 */
+	@Synchronized
+	fun clear(error: Exception) {
+		for (it in advertisedItems) {
+			it.reject(error)
+		}
+		advertisedItems.clear()
+		for (it in queue) {
+			it.reject(error)
+		}
+		queue.clear()
+	}
+
+	/**
+	 * Get next service data uuids to advertise.
+	 */
+	internal fun getNextAdvertisementUuids(): List<UUID>? {
 		val commandBroadcast = getNextCommandBroadcastPacket()
 		if (commandBroadcast == null) {
 			return null
@@ -90,47 +143,27 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 		val encryptedCommandBroadcast = Encryption.encryptCtr(commandBroadcastBytes, 0, 0, commandBroadcastHeader, keyAccessLevel.key) ?: return null
 		Log.v(TAG, "encryptedCommandBroadcast: ${Conversion.bytesToString(encryptedCommandBroadcast)}")
 
-		Log.v(TAG, "UUIDs:")
-		Log.v(TAG, "  ${Conversion.bytesToUuid(encryptedCommandBroadcast)}")
-		for (i in 0 until 4) {
-			val uuid = Conversion.bytesToUuid2(commandBroadcastHeader, i * 2) ?: return null
-			Log.v(TAG, "  $uuid")
-		}
-		return null
+		val advertiseUuids = ArrayList<UUID>()
+		val commandBroadcastUuid = Conversion.bytesToUuid(encryptedCommandBroadcast) ?: return null
+		advertiseUuids.add(commandBroadcastUuid)
 
-		val advertiseBuilder = AdvertiseData.Builder()
-		val commandBroadcastUuid = Conversion.bytesToUuid(encryptedCommandBroadcast)
-		advertiseBuilder.addServiceUuid(ParcelUuid(commandBroadcastUuid))
 		for (i in 0 until 4) {
 			val uuid = Conversion.bytesToUuid2(commandBroadcastHeader, i*2) ?: return null
-			advertiseBuilder.addServiceUuid(ParcelUuid(uuid))
+			advertiseUuids.add(uuid)
 		}
-		return advertiseBuilder.build()
-	}
-
-	/**
-	 * To be called when advertisement has been advertised.
-	 */
-	@Synchronized
-	fun advertisementDone(error: java.lang.Exception?) {
-		for (it in broadcastedItems) {
-			it.stoppedBroadcasting(error)
-			putItemBackInQueue(it)
-		}
-		broadcastedItems.clear()
+		return advertiseUuids
 	}
 
 	/**
 	 * Get next command broadcast packet, made from items in queue.
 	 */
-	private fun getNextCommandBroadcastPacket(): CommandBroadcastPacket? {
+	internal fun getNextCommandBroadcastPacket(): CommandBroadcastPacket? {
 		Log.v(TAG, "getNextCommandBroadcastPacket")
 //		Log.v(TAG, "queue:")
 //		for (it in queue) {
 //			Log.v(TAG, "  $it")
 //		}
 		val firstItem = getNextItemFromQueue() ?: return null
-		Log.v(TAG, "firstItem: $firstItem")
 
 		val payload = when (firstItem.type) {
 			CommandBroadcastItemType.SWITCH -> BroadcastItemListPacket()
@@ -140,33 +173,33 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 			CommandBroadcastItemType.SWITCH -> CommandBroadcastType.MULTI_SWITCH
 			CommandBroadcastItemType.SET_TIME -> CommandBroadcastType.SET_TIME
 		}
-		val validationTimestamp = Conversion.toUint32(BluenetProtocol.CAFEBABE) // TODO: use time from crownstones
+		val validationTimestamp = when (firstItem.validationTimestamp) {
+			null -> Conversion.toUint32(BluenetProtocol.CAFEBABE) // TODO: use time from crownstones
+			else -> firstItem.validationTimestamp
+		}
 		val packet = CommandBroadcastPacket(validationTimestamp, firstItem.sphereId, type, payload)
-//		val addedItems = ArrayList<CommandBroadcastItem>()
 		payload.add(firstItem.payload)
-		broadcastedItems.add(firstItem)
+		advertisedItems.add(firstItem)
 		while (!payload.isFull()) {
 			val item = getNextItemFromQueue(firstItem)
 			if (item == null) {
 				break
 			}
-			Log.v(TAG, "add item: $item")
 			payload.add(item.payload)
-			broadcastedItems.add(item)
+			advertisedItems.add(item)
 		}
-		for (it in broadcastedItems) {
-			it.startedBroadcasting()
-//			putItemBackInQueue(it)
+		for (it in advertisedItems) {
+			it.startedAdvertising()
 		}
 		return packet
 	}
 
 	/**
-	 * Get a command broadcast header
+	 * Get a command broadcast header.
 	 */
-	private fun getCommandBroadcastHeader(sphereId: SphereId, sphereState: SphereState, keyAccessLevel: KeyAccessLevelPair): ByteArray? {
+	internal fun getCommandBroadcastHeader(sphereId: SphereId, sphereState: SphereState, keyAccessLevel: KeyAccessLevelPair): ByteArray? {
 		val sphereShortId = sphereState.settings.sphereShortId
-		val encryptedBackgroundBroadcastPayload = getBackgroundBroadcast(sphereId, sphereState) ?: return null
+		val encryptedBackgroundBroadcastPayload = getBackgroundPayload(sphereId, sphereState) ?: return null
 		Log.v(TAG, "encryptedBackgroundBroadcastPayload: ${Conversion.bytesToString(encryptedBackgroundBroadcastPayload)}")
 		val commandBroadcastHeader = CommandBroadcastHeaderPacket(0, sphereShortId, keyAccessLevel.accessLevel.num, encryptedBackgroundBroadcastPayload)
 		Log.v(TAG, "commandBroadcastHeader: $commandBroadcastHeader")
@@ -174,18 +207,18 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	}
 
 	/**
-	 * Get an encrypted background broadcast packet
+	 * Get an encrypted background broadcast payload packet.
 	 */
-	private fun getBackgroundBroadcast(sphereId: SphereId, sphereState: SphereState): ByteArray? {
+	internal fun getBackgroundPayload(sphereId: SphereId, sphereState: SphereState): ByteArray? {
 		val locationId = sphereState.locationId
 		val profileId = sphereState.profileId
 		val rssiOffset = getRssiOffset(sphereState.rssiOffset)
 		val tapToToggleEnabled = sphereState.tapToToggleEnabled
 
-		val backgroundBroadcast = BackgroundBroadcastPayloadPacket(0, locationId, profileId, rssiOffset, tapToToggleEnabled)
-		val backgroundBroadcastArr = backgroundBroadcast.getArray() ?: return null
-		Log.v(TAG, "backgroundBroadcast: $backgroundBroadcast = ${Conversion.bytesToString(backgroundBroadcastArr)}")
-		return encryptionManager.encryptRC5(sphereId, backgroundBroadcastArr)
+		val backgroundPayload = BackgroundBroadcastPayloadPacket(0, locationId, profileId, rssiOffset, tapToToggleEnabled)
+		val backgroundPayloadArr = backgroundPayload.getArray() ?: return null
+		Log.v(TAG, "backgroundBroadcast: $backgroundPayload = ${Conversion.bytesToString(backgroundPayloadArr)}")
+		return encryptionManager.encryptRC5(sphereId, backgroundPayloadArr)
 	}
 
 	/**
@@ -235,8 +268,15 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	 * Removes done items from queue.
 	 */
 	private fun cleanupQueue() {
-//		queue.removeIf { it.isDone() }
+//		queue.removeIf { it.isDone() } // Requires min API 24
 		var iter = queue.iterator()
+		while (iter.hasNext()) {
+			if (iter.next().isDone()) {
+				iter.remove()
+			}
+		}
+//		advertisedItems.removeIf({ it.isDone() }) // Requires min API 24
+		iter = advertisedItems.iterator()
 		while (iter.hasNext()) {
 			if (iter.next().isDone()) {
 				iter.remove()

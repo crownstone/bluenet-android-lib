@@ -46,26 +46,26 @@ class CommandBroadcastHeaderPacket(
 				((protocol and 0x07) shl (8+3)) +
 				((sphereShortId.toInt() and 0xFF) shl (3)) +
 				((accessLevel.toInt() and 0x07) shl (0))
-		println("data0 = ${(sequence0 and 0x03) shl (3+8+3)} + ${(protocol and 0x07) shl (8+3)} + ${(sphereShortId.toInt() and 0xFF) shl (3)} + ${(accessLevel.toInt() and 0x07) shl (0)} = $data0")
+//		println("data0 = ${(sequence0 and 0x03) shl (3+8+3)} + ${(protocol and 0x07) shl (8+3)} + ${(sphereShortId.toInt() and 0xFF) shl (3)} + ${(accessLevel.toInt() and 0x07) shl (0)} = $data0")
 		bb.putShort(Conversion.toUint16(data0))
 
 		val sequence1: Int = 1
 		val data1: Int = ((sequence1 and 0x03) shl (10+4)) +
 				((0 and 0x03FF) shl (4)) +
 				(((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0))
-		println("data1 = ${(sequence1 and 0x03) shl (10+4)} + ${(0 and 0x03FF) shl (4)} + ${((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0)} = $data1")
+//		println("data1 = ${(sequence1 and 0x03) shl (10+4)} + ${(0 and 0x03FF) shl (4)} + ${((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0)} = $data1")
 		bb.putShort(Conversion.toUint16(data1))
 
 		val sequence2: Int = 2
 		val data2: Int = ((sequence2 and 0x03) shl (14)) +
 				(((encryptedBackgroundPayloadInt shr (32-4-14)) and 0x3FFF) shl (0))
-		println("data2 = ${(sequence2 and 0x03) shl (14)} + ${((encryptedBackgroundPayloadInt shr (32-4-14)) and 0x3FFF) shl (0)} = $data2")
+//		println("data2 = ${(sequence2 and 0x03) shl (14)} + ${((encryptedBackgroundPayloadInt shr (32-4-14)) and 0x3FFF) shl (0)} = $data2")
 		bb.putShort(Conversion.toUint16(data2))
 
 		val sequence3: Int = 3
 		val data3: Int = ((sequence3 and 0x03) shl (14)) +
 				(((encryptedBackgroundPayloadInt shr (32-4-14-14)) and 0x3FFF) shl (0))
-		println("data3 = ${(sequence3 and 0x03) shl (14)} + ${((encryptedBackgroundPayloadInt shr (32-4-14-14)) and 0x3FFF) shl (0)} = $data3")
+//		println("data3 = ${(sequence3 and 0x03) shl (14)} + ${((encryptedBackgroundPayloadInt shr (32-4-14-14)) and 0x3FFF) shl (0)} = $data3")
 		bb.putShort(Conversion.toUint16(data3))
 
 		return true

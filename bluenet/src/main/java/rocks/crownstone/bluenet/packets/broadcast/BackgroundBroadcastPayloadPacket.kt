@@ -52,7 +52,7 @@ class BackgroundBroadcastPayloadPacket(
 				((rssiOffset.toInt() and 0x0F) shl (3)) +
 				((flags and 0x07) shl (0))
 		)
-		println("BackgroundBroadcastPayloadPacket: ${(locationId.toInt() and 0x3F) shl (3+4+3)} + ${(profileId.toInt() and 0x07) shl (4+3)} + ${(rssiOffset.toInt() and 0x0F) shl (3)} + ${(flags and 0x07) shl (0)} = $data")
+//		println("BackgroundBroadcastPayloadPacket: ${(locationId.toInt() and 0x3F) shl (3+4+3)} + ${(profileId.toInt() and 0x07) shl (4+3)} + ${(rssiOffset.toInt() and 0x0F) shl (3)} + ${(flags and 0x07) shl (0)} = $data")
 		bb.putShort(data)
 		bb.putShort(validationTimestamp)
 		return true

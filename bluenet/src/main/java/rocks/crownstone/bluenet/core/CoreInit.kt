@@ -104,6 +104,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 		bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		bleAdapter = bleManager.adapter
+		advertiser = bleAdapter.bluetoothLeAdvertiser
 //		bleAdapter = BluetoothAdapter.getDefaultAdapter()
 
 		// Register the broadcast receiver for bluetooth action state changes
