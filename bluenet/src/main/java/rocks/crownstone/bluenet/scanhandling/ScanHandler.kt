@@ -78,14 +78,14 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		}
 
 		// Validate or invalidate device
-		if (device.hasServiceData) {
+		val serviceData = device.serviceData
+		if (serviceData != null) {
 			val validator = getValidator(device)
 			if (validator.validate(device)) {
 				device.validated = true
 			}
 		}
 
-		val serviceData = device.serviceData
 		if (serviceData != null) {
 			serviceData.checkUnique(lastServiceDataMap[device.address])
 			lastServiceDataMap[device.address] = serviceData

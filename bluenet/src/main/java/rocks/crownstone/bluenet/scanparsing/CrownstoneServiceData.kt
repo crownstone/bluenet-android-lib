@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.servicedata.*
 import rocks.crownstone.bluenet.structs.*
+import rocks.crownstone.bluenet.util.getUint8
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*

@@ -284,7 +284,8 @@ enum class DeviceType(val num: Uint8) {
 	CROWNSTONE_PLUG(1),
 	GUIDESTONE(2),
 	CROWNSTONE_BUILTIN(3),
-	CROWNSTONE_DONGLE(4);
+	CROWNSTONE_DONGLE(4),
+	CROWNSTONE_BUILTIN_ONE(5);
 	companion object {
 		private val map = DeviceType.values().associateBy(DeviceType::num)
 		//		fun fromInt(type: Int) = map.getOrDefault(type, UNKNOWN)

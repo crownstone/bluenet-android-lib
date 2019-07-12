@@ -45,7 +45,9 @@ class Validator {
 				isValidated = false
 			}
 
-			OperationMode.SETUP,
+			OperationMode.SETUP -> {
+				isValidated = (device.serviceData?.parsedSuccess == true)
+			}
 			OperationMode.DFU -> {
 				isValidated = true
 			}
