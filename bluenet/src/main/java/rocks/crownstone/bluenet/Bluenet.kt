@@ -351,6 +351,15 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
+	 * Set the device token for a sphere.
+	 */
+	@Synchronized
+	fun setDeviceToken(sphereId: SphereId, token: Uint8) {
+		val state = libState[sphereId] ?: return
+		state.settings.deviceToken = token
+	}
+
+	/**
 	 * Set tap to toggle for a sphere.
 	 */
 	@Synchronized

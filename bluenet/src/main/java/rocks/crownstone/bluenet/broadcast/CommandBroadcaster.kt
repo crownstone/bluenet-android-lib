@@ -114,9 +114,19 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 			item.reject(Errors.BleNotReady())
 			return
 		}
+		increaseCommandCount(item.sphereId)
 		queue.add(item)
 		cancelBroadcast()
 		broadcastNext()
+	}
+
+	private fun increaseCommandCount(sphereId: SphereId) {
+		val sphereState = libState[sphereId]
+		if (sphereState == null) {
+			Log.w(TAG, "Missing state for sphere $sphereId")
+			return
+		}
+		sphereState.commandCount = Conversion.toUint8(sphereState.commandCount + 1) // Make sure it overflows
 	}
 
 	@Synchronized

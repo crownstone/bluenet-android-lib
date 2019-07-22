@@ -19,6 +19,7 @@ class CommandBroadcastHeaderPacket(
 		val protocol: Int,
 		val sphereShortId: SphereShortId,
 		val accessLevel: Uint8,
+		val deviceToken: Uint8,
 		val encryptedBackgroundPayload: ByteArray
 		): PacketInterface {
 	private val encryptedBackgroundPayloadInt: Int
@@ -50,8 +51,9 @@ class CommandBroadcastHeaderPacket(
 		bb.putShort(Conversion.toUint16(data0))
 
 		val sequence1: Int = 1
-		val data1: Int = ((sequence1 and 0x03) shl (10+4)) +
-				((0 and 0x03FF) shl (4)) +
+		val data1: Int = ((sequence1 and 0x03) shl (2+8+4)) +
+				((0 and 0x03) shl (8+4)) +
+				((deviceToken.toInt() and 0xFF) shl (4)) +
 				(((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0))
 //		println("data1 = ${(sequence1 and 0x03) shl (10+4)} + ${(0 and 0x03FF) shl (4)} + ${((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0)} = $data1")
 		bb.putShort(Conversion.toUint16(data1))
@@ -76,7 +78,7 @@ class CommandBroadcastHeaderPacket(
 	}
 
 	override fun toString(): String {
-		return "CommandBroadcastHeaderPacket(protocol=$protocol, sphereShortId=$sphereShortId, accessLevel=$accessLevel, encryptedBackgroundPayload=${Arrays.toString(encryptedBackgroundPayload)}, encryptedBackgroundPayloadInt=$encryptedBackgroundPayloadInt)"
+		return "CommandBroadcastHeaderPacket(protocol=$protocol, sphereShortId=$sphereShortId, accessLevel=$accessLevel, deviceToken=$deviceToken, encryptedBackgroundPayload=${Arrays.toString(encryptedBackgroundPayload)}, encryptedBackgroundPayloadInt=$encryptedBackgroundPayloadInt)"
 	}
 
 

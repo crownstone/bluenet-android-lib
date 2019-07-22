@@ -78,12 +78,14 @@ typealias SphereStateMap = HashMap<SphereId, SphereState>
  * @param meshKeySet         Mesh keys of the sphere.
  * @param ibeaconUuid        iBeacon UUID of the sphere, should be unique per sphere.
  * @param sphereShortId      Short ID of the sphere, not globally unique, but used as filter.
+ * @param deviceToken        Token of this device, should be a unique number for each device (phone) in the sphere.
  */
 data class SphereSettings(
 		val keySet: KeySet,
 		val meshKeySet: MeshKeySet?,
 		val ibeaconUuid: UUID,
-		var sphereShortId: SphereShortId = 0 // TODO: make this val, for now, this value isn't always known on init.
+		var sphereShortId: SphereShortId = 0, // TODO: make this val, for now, this value isn't always known on init.
+		var deviceToken: Uint8                // TODO: make this val, for now, this value isn't always known on init.
 )
 
 /**
@@ -97,6 +99,7 @@ data class SphereSettings(
  */
 data class SphereState(
 		var settings: SphereSettings,
+		var commandCount: Uint8 = 0,
 		var locationId: Uint8 = 0,
 		var profileId: Uint8 = 0,
 		var tapToToggleEnabled: Boolean = false,

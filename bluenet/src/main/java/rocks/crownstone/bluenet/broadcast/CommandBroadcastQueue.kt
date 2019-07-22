@@ -206,9 +206,10 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	 */
 	internal fun getCommandBroadcastHeader(sphereId: SphereId, sphereState: SphereState, keyAccessLevel: KeyAccessLevelPair): ByteArray? {
 		val sphereShortId = sphereState.settings.sphereShortId
+		val deviceToken = sphereState.settings.deviceToken
 		val encryptedBackgroundBroadcastPayload = getBackgroundPayload(sphereId, sphereState) ?: return null
 		Log.v(TAG, "encryptedBackgroundBroadcastPayload: ${Conversion.bytesToString(encryptedBackgroundBroadcastPayload)}")
-		val commandBroadcastHeader = CommandBroadcastHeaderPacket(0, sphereShortId, keyAccessLevel.accessLevel.num, encryptedBackgroundBroadcastPayload)
+		val commandBroadcastHeader = CommandBroadcastHeaderPacket(0, sphereShortId, keyAccessLevel.accessLevel.num, deviceToken, encryptedBackgroundBroadcastPayload)
 		Log.v(TAG, "commandBroadcastHeader: $commandBroadcastHeader")
 		return commandBroadcastHeader.getArray()
 	}
@@ -221,8 +222,9 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 		val profileId = sphereState.profileId
 		val rssiOffset = getRssiOffset(sphereState.rssiOffset)
 		val tapToToggleEnabled = sphereState.tapToToggleEnabled
+		val counter = sphereState.commandCount
 
-		val backgroundPayload = BackgroundBroadcastPayloadPacket(0, locationId, profileId, rssiOffset, tapToToggleEnabled)
+		val backgroundPayload = CommandBroadcastRC5Packet(counter, locationId, profileId, rssiOffset, tapToToggleEnabled)
 		val backgroundPayloadArr = backgroundPayload.getArray() ?: return null
 		Log.v(TAG, "backgroundBroadcast: $backgroundPayload = ${Conversion.bytesToString(backgroundPayloadArr)}")
 		return encryptionManager.encryptRC5(sphereId, backgroundPayloadArr)
