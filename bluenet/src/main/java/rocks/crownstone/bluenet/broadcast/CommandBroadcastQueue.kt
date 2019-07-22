@@ -27,10 +27,13 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 
 	/**
 	 * Add an item to the queue.
+	 *
+	 * @return True when an item in queue was overwritten.
 	 */
 	@Synchronized
-	fun add(item: CommandBroadcastItem) {
+	fun add(item: CommandBroadcastItem): Boolean {
 		Log.d(TAG, "add $item")
+		var overwritten = false
 		// Remove any items with same sphere, type, and stone id.
 		for (it in queue) {
 			if (it.sphereId == it.sphereId &&
@@ -38,6 +41,7 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 					it.stoneId != null &&
 					it.stoneId == item.stoneId
 			) {
+				overwritten = true
 				it.reject(Errors.Aborted())
 				queue.remove(it)
 				break
@@ -49,13 +53,15 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 					it.stoneId != null &&
 					it.stoneId == item.stoneId
 			) {
-				it.stoppedAdvertising(Errors.Aborted())
+				overwritten = true
+				it.stoppedAdvertising(0, Errors.Aborted())
 				advertisedItems.remove(it)
 				break
 			}
 		}
 		// Put item in front of the queue.
 		queue.addFirst(item)
+		return overwritten
 	}
 
 	/**
@@ -89,9 +95,9 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	 * To be called when advertisement has been advertised.
 	 */
 	@Synchronized
-	fun advertisementDone(error: java.lang.Exception?) {
+	fun advertisementDone(advertisedTimeMs: Int, error: java.lang.Exception?) {
 		for (it in advertisedItems) {
-			it.stoppedAdvertising(error)
+			it.stoppedAdvertising(advertisedTimeMs, error)
 			putItemBackInQueue(it)
 		}
 		advertisedItems.clear()
@@ -158,7 +164,7 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	 * Get next command broadcast packet, made from items in queue.
 	 */
 	internal fun getNextCommandBroadcastPacket(): CommandBroadcastPacket? {
-		Log.v(TAG, "getNextCommandBroadcastPacket")
+		Log.d(TAG, "getNextCommandBroadcastPacket")
 //		Log.v(TAG, "queue:")
 //		for (it in queue) {
 //			Log.v(TAG, "  $it")
@@ -189,6 +195,7 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 			advertisedItems.add(item)
 		}
 		for (it in advertisedItems) {
+			Log.d(TAG, "added item $it")
 			it.startedAdvertising()
 		}
 		return packet

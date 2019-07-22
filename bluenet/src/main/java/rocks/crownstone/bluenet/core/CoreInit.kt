@@ -45,9 +45,10 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	protected lateinit var advertiser: BluetoothLeAdvertiser
 
 	private var bleInitialized = false
+	private var bleEnabled = false // Keeps up whether bluetooth is enabled.
 	private var scannerInitialized = false
-	private var scannerSet = false // Keeps up whether the var "scanner" is set
-	private var advertiserInitialized = false
+	private var scannerSet = false // Keeps up whether the var "scanner" is set.
+	private var advertiserSet = false // Keeps up whether the var "advertiser" is set.
 	private var scannerReady = false
 
 	// Keep up promises
@@ -93,6 +94,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	fun initBle(): Boolean {
 		Log.i(TAG, "initBle")
 		if (bleInitialized) {
+			checkBleEnabled()
 			return true
 		}
 
@@ -104,8 +106,9 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 		bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 		bleAdapter = bleManager.adapter
-		advertiser = bleAdapter.bluetoothLeAdvertiser
 //		bleAdapter = BluetoothAdapter.getDefaultAdapter()
+		checkBleEnabled()
+		setAdvertiser()
 
 		// Register the broadcast receiver for bluetooth action state changes
 		// Must be done before attempting to enable bluetooth
@@ -168,6 +171,19 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 				scanner = testScanner
 				scannerSet = true
 				Log.i(TAG, "scanner set")
+			}
+		}
+	}
+
+	// Try to set the advertiser object
+	private fun setAdvertiser() {
+		Log.i(TAG, "setAdvertiser")
+		if (!advertiserSet) {
+			val testAdvertiser = bleAdapter.bluetoothLeAdvertiser
+			if (testAdvertiser != null) {
+				advertiser = testAdvertiser
+				advertiserSet = true
+				Log.i(TAG, "advertiser set")
 			}
 		}
 	}
@@ -426,6 +442,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 	private val enableBleTimeout = Runnable {
 		Log.i(TAG, "enableBleTimeout")
+		checkBleEnabled()
 		onEnableBleResult(isBleEnabled(), "timeout")
 	}
 
@@ -435,6 +452,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		handler.removeCallbacks(enableBleTimeout)
 		if (enabled) {
 			setScanner()
+			setAdvertiser()
 			enableBlePromise?.resolve()
 		}
 		else {
@@ -564,9 +582,9 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 
 	@Synchronized
-	fun isBleReady(): Boolean {
+	fun isBleReady(useCache: Boolean = false): Boolean {
 		Log.i(TAG, "isBleReady")
-		return (bleInitialized && isBleEnabled())
+		return (bleInitialized && isBleEnabled(useCache))
 	}
 
 	@Synchronized
@@ -633,17 +651,31 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	/**
 	 * Check if bluetooth is enabled. Can only be called after BLE is initialized
 	 *
+	 * @useCache True to use cached value (quicker, but might be wrong sometimes).
 	 * @return True if bluetooth is enabled.
 	 */
 	@Synchronized
-	fun isBleEnabled(): Boolean {
+	fun isBleEnabled(useCache: Boolean = false): Boolean {
 		if (!bleInitialized) {
 			Log.w(TAG, "isBleEnabled: BLE not initialized")
 			return false
 		}
+		if (useCache) {
+			return bleEnabled
+		}
+		val result = bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON
+		if (result != bleEnabled) {
+			Log.e(TAG, "BleEnabled cache is wrong: cache=$bleEnabled val=$result")
+			bleEnabled = result
+		}
+		return result
+	}
+
+	@Synchronized
+	fun checkBleEnabled() {
 		val result = bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON
 		Log.i(TAG, "isBleEnabled: $result (enabled=${bleAdapter.isEnabled}, state=${bleAdapter.state}, STATE_ON=${BluetoothAdapter.STATE_ON})")
-		return result
+		bleEnabled = result
 	}
 
 	/**
@@ -704,7 +736,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 					BluetoothAdapter.STATE_ON -> {
 						handler.post {
 							Log.i(TAG, "bluetooth on")
-
+							checkBleEnabled()
 							onEnableBleResult(true)
 							/*
 							// if bluetooth state turns on because of a reset, then reset was completed
@@ -729,6 +761,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 								_bluetoothAdapter.enable()
 							}
 							*/
+							checkBleEnabled()
 							eventBus.emit(BluenetEvent.BLE_TURNED_OFF)
 							checkScannerReady()
 						}

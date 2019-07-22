@@ -9,8 +9,10 @@ package rocks.crownstone.bluenet.broadcast
 
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
+import nl.komponents.kovenant.then
 import rocks.crownstone.bluenet.BleCore
 import rocks.crownstone.bluenet.BluenetConfig
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS
@@ -31,6 +33,7 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 	private val encryptionManager = encryptionManager
 	private val handler = Handler(looper)
 	private val queue = CommandBroadcastQueue(libState, encryptionManager)
+	private var startTime = 0L
 	private var broadcasting = false
 
 	init {
@@ -42,6 +45,7 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 	 */
 	@Synchronized
 	fun switch(sphereId: SphereId, stoneId: Uint8, switchValue: Uint8): Promise<Unit, Exception> {
+//		return Promise.ofSuccess(Unit)
 		val deferred = deferred<Unit, Exception>()
 		val commandItem = BroadcastSwitchItemPacket(stoneId, switchValue)
 		val item = CommandBroadcastItem(
@@ -50,7 +54,7 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 				CommandBroadcastItemType.SWITCH,
 				stoneId,
 				commandItem,
-				COMMAND_BROADCAST_TIME_MS / COMMAND_BROADCAST_INTERVAL_MS
+				COMMAND_BROADCAST_TIME_MS
 		)
 		add(item)
 		return deferred.promise
@@ -69,7 +73,7 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 				CommandBroadcastItemType.SET_TIME,
 				null,
 				commandItem,
-				COMMAND_BROADCAST_TIME_MS / COMMAND_BROADCAST_INTERVAL_MS
+				COMMAND_BROADCAST_TIME_MS
 		)
 		add(item)
 		return deferred.promise
@@ -91,7 +95,7 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 				CommandBroadcastItemType.SET_TIME,
 				stoneId,
 				commandItem,
-				COMMAND_BROADCAST_TIME_MS / COMMAND_BROADCAST_INTERVAL_MS,
+				COMMAND_BROADCAST_TIME_MS,
 				validationTimestamp
 		)
 		add(item)
@@ -100,20 +104,27 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 
 	/**
 	 * Add an item to the queue.
+	 *
+	 * If an item with same sphereId, stoneId, and type, was already in queue, it will be overwritten.
+	 * The current broadcast will be canceled, so that this newly added item will be broadcasted immediately.
 	 */
 	@Synchronized
 	private fun add(item: CommandBroadcastItem) {
-		if (!bleCore.isBleReady()) {
+		if (!bleCore.isBleReady(true)) {
 			item.reject(Errors.BleNotReady())
 			return
 		}
 		queue.add(item)
+		cancelBroadcast()
 		broadcastNext()
 	}
 
 	@Synchronized
 	private fun broadcastNext() {
-		Log.d(TAG, "broadcastNext")
+		if (broadcasting) {
+			return
+		}
+		Log.i(TAG, "broadcastNext")
 		if (!queue.hasNext()) {
 			return
 		}
@@ -123,8 +134,12 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 			return
 		}
 		broadcasting = true
-		bleCore.advertise(advertiseData, BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS)
-		handler.postDelayed(onBroadcastDoneRunnable, BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS.toLong())
+		bleCore.advertise(advertiseData, COMMAND_BROADCAST_INTERVAL_MS)
+				.success {
+					startTime = SystemClock.elapsedRealtime() // ms since boot
+					handler.postDelayed(onBroadcastDoneRunnable, COMMAND_BROADCAST_INTERVAL_MS.toLong())
+				}
+				.fail { queue.advertisementDone(0, it) }
 	}
 
 	private val onBroadcastDoneRunnable = Runnable {
@@ -134,9 +149,19 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 	@Synchronized
 	private fun onBroadcastDone() {
 		Log.i(TAG, "onBroadcastDone")
+		bleCore.stopAdvertise()
+		val now = SystemClock.elapsedRealtime() // ms since boot
+		val timeBroadcasted = (now - startTime).toInt()
 		broadcasting = false
-		queue.advertisementDone(null)
+		queue.advertisementDone(timeBroadcasted, null)
 		broadcastNext()
+	}
+
+	@Synchronized
+	private fun cancelBroadcast() {
+		Log.i(TAG, "cancelBroadcast")
+		handler.removeCallbacks(onBroadcastDoneRunnable)
+		onBroadcastDone()
 	}
 
 	@Synchronized

@@ -11,6 +11,7 @@ import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
+import android.os.Handler
 import android.os.Looper
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
@@ -21,6 +22,7 @@ import rocks.crownstone.bluenet.util.Log
 
 open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper) : CoreConnection(appContext, evtBus, looper) {
 	private var advertiserSettingsBuilder = AdvertiseSettings.Builder()
+	private var advertiseCallback: AdvertiseCallback? = null
 	init {
 		// Set maximum advertising frequency, and TX power, so that we can have a low timeout.
 		advertiserSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
@@ -34,10 +36,18 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	 * @return Promise that resolves when successfully started advertising.
 	 *         If promise fails with error busy, you can retry later.
 	 */
+	@Synchronized
 	fun advertise(data: AdvertiseData, timeoutMs: Int): Promise<Unit, Exception> {
 		Log.i(TAG, "advertise")
+		if (!isBleReady(true)) {
+			return Promise.ofFail(Errors.BleNotReady())
+		}
+		if (advertiseCallback != null) {
+			return Promise.ofFail(Errors.Busy())
+		}
 		val deferred = deferred<Unit, Exception>()
-		val advertiseCallback = object : AdvertiseCallback() {
+
+		advertiseCallback = object : AdvertiseCallback() {
 			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
 				super.onStartSuccess(settingsInEffect)
 				deferred.resolve()
@@ -60,4 +70,25 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 		advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
 		return deferred.promise
 	}
+
+	@Synchronized
+	fun stopAdvertise() {
+		if (advertiseCallback != null) {
+			Log.d(TAG, "stopAdvertise")
+			if (isBleReady(true)) {
+				advertiser.stopAdvertising(advertiseCallback)
+			}
+			advertiseCallback = null
+		}
+	}
+
+//	private val onAdvertiseDoneRunnable = Runnable {
+//		onAdvertiseDone()
+//	}
+//
+//	@Synchronized
+//	private fun onAdvertiseDone() {
+//		Log.i(TAG, "onAdvertiseDone")
+//		stop()
+//	}
 }

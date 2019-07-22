@@ -27,7 +27,7 @@ class CommandBroadcastItem(
 		val type: CommandBroadcastItemType,
 		val stoneId: Uint8?,
 		val payload: PacketInterface,
-		var timeoutCount: Int,
+		var timeLeftMs: Int,
 		val validationTimestamp: Uint32? = null
 ) {
 	private val TAG = this.javaClass.simpleName
@@ -38,16 +38,16 @@ class CommandBroadcastItem(
 	}
 
 	@Synchronized
-	fun stoppedAdvertising(error: java.lang.Exception?) {
+	fun stoppedAdvertising(broadcastedTimeMs: Int, error: java.lang.Exception?) {
 		Log.v(TAG, "stoppedAdvertising ${toString()}")
 		if (error != null) {
 			reject(error)
 			return
 		}
-		if (timeoutCount > 0) {
-			timeoutCount -= 1
+		if (timeLeftMs > 0) {
+			timeLeftMs -= broadcastedTimeMs
 		}
-		if (timeoutCount <= 0) {
+		if (timeLeftMs <= 0) {
 			Log.v(TAG, "resolve ${toString()}")
 			promise?.resolve()
 			promise = null
@@ -59,16 +59,16 @@ class CommandBroadcastItem(
 		Log.v(TAG, "reject ${toString()}")
 		promise?.reject(error)
 		promise = null
-		timeoutCount = 0
+		timeLeftMs = 0
 	}
 
 	@Synchronized
 	fun isDone(): Boolean {
-		return (timeoutCount <= 0)
+		return (timeLeftMs <= 0)
 	}
 
 	override fun toString(): String {
-		return "CommandBroadcastItem(promise=$promise, sphereId='$sphereId', type=$type, stoneId=$stoneId, timeoutCount=$timeoutCount, payload=$payload)"
+		return "CommandBroadcastItem(promise=$promise, sphereId='$sphereId', type=$type, stoneId=$stoneId, timeLeftMs=$timeLeftMs, payload=$payload)"
 	}
 
 
