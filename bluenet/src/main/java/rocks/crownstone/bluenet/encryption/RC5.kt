@@ -6,6 +6,7 @@ import rocks.crownstone.bluenet.structs.BluenetProtocol.RC5_NUM_SUBKEYS
 import rocks.crownstone.bluenet.structs.BluenetProtocol.RC5_ROUNDS
 import rocks.crownstone.bluenet.structs.BluenetProtocol.RC5_WORD_SIZE
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Log
 
 /**
  * Static class to perform RC5 encryption.
@@ -39,7 +40,8 @@ object RC5 {
 			L.add(0)
 		}
 		for (i in 0 until keyLenWords) {
-			L[i] = Conversion.toUint16((key[2*i+1].toInt() shl 8) + key[2*i])
+			L[i] = Conversion.toUint16((Conversion.toUint8(key[2*i+1]).toInt() shl 8) + Conversion.toUint8(key[2*i]))
+//			Log.i(TAG, "RC5 L[i]=${L[i]}: (${Conversion.toUint8(key[2*i+1]).toInt()} << 8 = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8)}) + ${Conversion.toUint8(key[2*i])} = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8) + Conversion.toUint8(key[2*i])}")
 		}
 
 		val subKeys = ArrayList<Uint16>(RC5_NUM_SUBKEYS)
@@ -53,12 +55,18 @@ object RC5 {
 		var a: Uint16 = 0
 		var b: Uint16 = 0
 		for (k in 0 until loops) {
+//			Log.i(TAG, "RC5 i=$i j=$j a=$a b=$b L[j]=${L[j]} subKeys[i]]${subKeys[i]}")
 			a = rotateLeft(subKeys[i] + a + b, 3)
 			subKeys[i] = a
 			b = rotateLeft(L[j] + a + b, (a+b) % 16)
 			L[j] = b
+//			Log.i(TAG, "  RC5 i=$i j=$j a=$a b=$b L[j]=${L[j]} subKeys[i]]${subKeys[i]}")
 			i = (i+1) % RC5_NUM_SUBKEYS
 			j = (j+1) % keyLenWords
+		}
+//		Log.i(TAG, "RC5 16B key=${Conversion.bytesToString(key)}")
+		for (i in 0 until RC5_NUM_SUBKEYS) {
+//			Log.i(TAG, "RC5 key[$i] = ${subKeys[i]}")
 		}
 		return subKeys
 	}

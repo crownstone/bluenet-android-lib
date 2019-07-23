@@ -42,12 +42,14 @@ class CommandBroadcastTest {
 				"meshKeyForStones"
 		)
 		val sphereShortId: Uint8 = 234
+		val commandCount: Uint8 = 253
 		val locationId: Uint8 = 60
 		val profileId: Uint8 = 6
 		val t2tEnabled = true
 		val rssiOffset = -10
-		val sphereSettings = SphereSettings(keySet, meshKeySet, UUID.randomUUID(), sphereShortId)
-		sphereState[sphereId] = SphereState(sphereSettings, locationId, profileId, t2tEnabled, rssiOffset)
+		val deviceToken: Uint8 = 254
+		val sphereSettings = SphereSettings(keySet, meshKeySet, UUID.randomUUID(), sphereShortId, deviceToken)
+		sphereState[sphereId] = SphereState(sphereSettings, commandCount, locationId, profileId, t2tEnabled, rssiOffset)
 		println("sphereState: $sphereState")
 		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
@@ -99,7 +101,7 @@ class CommandBroadcastTest {
 					addSwitchItem(6, 100)
 				}
 
-				commandBroadcastQueue.advertisementDone(null)
+				commandBroadcastQueue.advertisementDone(250, null)
 			}
 		}
 

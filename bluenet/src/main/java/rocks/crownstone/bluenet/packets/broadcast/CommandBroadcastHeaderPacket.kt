@@ -20,12 +20,12 @@ class CommandBroadcastHeaderPacket(
 		val sphereShortId: SphereShortId,
 		val accessLevel: Uint8,
 		val deviceToken: Uint8,
-		val encryptedBackgroundPayload: ByteArray
+		val encryptedRC5Payload: ByteArray
 		): PacketInterface {
-	private val encryptedBackgroundPayloadInt: Int
+	private val encryptedRC5PayloadInt: Int
 	init {
-		encryptedBackgroundPayloadInt = when (encryptedBackgroundPayload.size) {
-			4 -> Conversion.byteArrayToInt(encryptedBackgroundPayload)
+		encryptedRC5PayloadInt = when (encryptedRC5Payload.size) {
+			4 -> Conversion.byteArrayToInt(encryptedRC5Payload)
 			else -> 0
 		}
 	}
@@ -54,19 +54,19 @@ class CommandBroadcastHeaderPacket(
 		val data1: Int = ((sequence1 and 0x03) shl (2+8+4)) +
 				((0 and 0x03) shl (8+4)) +
 				((deviceToken.toInt() and 0xFF) shl (4)) +
-				(((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0))
+				(((encryptedRC5PayloadInt shr (32-4)) and 0x0F) shl (0))
 //		println("data1 = ${(sequence1 and 0x03) shl (10+4)} + ${(0 and 0x03FF) shl (4)} + ${((encryptedBackgroundPayloadInt shr (32-4)) and 0x0F) shl (0)} = $data1")
 		bb.putShort(Conversion.toUint16(data1))
 
 		val sequence2: Int = 2
 		val data2: Int = ((sequence2 and 0x03) shl (14)) +
-				(((encryptedBackgroundPayloadInt shr (32-4-14)) and 0x3FFF) shl (0))
+				(((encryptedRC5PayloadInt shr (32-4-14)) and 0x3FFF) shl (0))
 //		println("data2 = ${(sequence2 and 0x03) shl (14)} + ${((encryptedBackgroundPayloadInt shr (32-4-14)) and 0x3FFF) shl (0)} = $data2")
 		bb.putShort(Conversion.toUint16(data2))
 
 		val sequence3: Int = 3
 		val data3: Int = ((sequence3 and 0x03) shl (14)) +
-				(((encryptedBackgroundPayloadInt shr (32-4-14-14)) and 0x3FFF) shl (0))
+				(((encryptedRC5PayloadInt shr (32-4-14-14)) and 0x3FFF) shl (0))
 //		println("data3 = ${(sequence3 and 0x03) shl (14)} + ${((encryptedBackgroundPayloadInt shr (32-4-14-14)) and 0x3FFF) shl (0)} = $data3")
 		bb.putShort(Conversion.toUint16(data3))
 
@@ -78,7 +78,7 @@ class CommandBroadcastHeaderPacket(
 	}
 
 	override fun toString(): String {
-		return "CommandBroadcastHeaderPacket(protocol=$protocol, sphereShortId=$sphereShortId, accessLevel=$accessLevel, deviceToken=$deviceToken, encryptedBackgroundPayload=${Arrays.toString(encryptedBackgroundPayload)}, encryptedBackgroundPayloadInt=$encryptedBackgroundPayloadInt)"
+		return "CommandBroadcastHeaderPacket(protocol=$protocol, sphereShortId=$sphereShortId, accessLevel=$accessLevel, deviceToken=$deviceToken, encryptedRC5Payload=${Conversion.bytesToString(encryptedRC5Payload)}, encryptedRC5PayloadInt=$encryptedRC5PayloadInt)"
 	}
 
 
