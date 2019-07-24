@@ -19,6 +19,7 @@ import nl.komponents.kovenant.resolve
 import rocks.crownstone.bluenet.structs.Errors
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
+import java.lang.IllegalStateException
 
 open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper) : CoreConnection(appContext, evtBus, looper) {
 	private var advertiserSettingsBuilder = AdvertiseSettings.Builder()
@@ -76,7 +77,13 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 		if (advertiseCallback != null) {
 			Log.d(TAG, "stopAdvertise")
 			if (isBleReady(true)) {
-				advertiser.stopAdvertising(advertiseCallback)
+				try {
+					advertiser.stopAdvertising(advertiseCallback)
+				}
+				catch (e: IllegalStateException) {
+					Log.e(TAG, "Ble not ready, cache was wrong.")
+					checkBleEnabled()
+				}
 			}
 			advertiseCallback = null
 		}
