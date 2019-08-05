@@ -7,6 +7,8 @@
 
 package rocks.crownstone.bluenet.scanparsing
 
+import rocks.crownstone.bluenet.encryption.AccessLevel
+import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.servicedata.*
@@ -103,14 +105,14 @@ class CrownstoneServiceData {
 	 *
 	 * @return true when data format and size is correct
 	 */
-	internal fun parse(key: ByteArray?): Boolean {
+	internal fun parse(keySet: KeySet?): Boolean {
 		if (parsedSuccess) {
 			return true
 		}
 		if (parseFailed) {
 			return false
 		}
-		if (parseRemaining(key)) {
+		if (parseRemaining(keySet)) {
 			parsedSuccess = true
 			return true
 		}
@@ -136,18 +138,20 @@ class CrownstoneServiceData {
 			ServiceDataVersion.V4 -> return V4.parseHeader(byteBuffer, this)
 			ServiceDataVersion.V5 -> return V5.parseHeader(byteBuffer, this)
 			ServiceDataVersion.V6 -> return V6.parseHeader(byteBuffer, this)
+			ServiceDataVersion.V7 -> return V5.parseHeader(byteBuffer, this)
 			else -> return false
 		}
 	}
 
-	private fun parseRemaining(key: ByteArray?): Boolean {
+	private fun parseRemaining(keySet: KeySet?): Boolean {
 		Log.v(TAG, "parseRemaining version=$version remaining=${byteBuffer.remaining()}")
 		when (version) {
-			ServiceDataVersion.V1-> return V1.parse(byteBuffer, this, key)
-			ServiceDataVersion.V3-> return V3.parse(byteBuffer, this, key)
-			ServiceDataVersion.V4-> return V4.parse(byteBuffer, this, key)
-			ServiceDataVersion.V5-> return V5.parse(byteBuffer, this, key)
-			ServiceDataVersion.V6-> return V6.parse(byteBuffer, this, key)
+			ServiceDataVersion.V1-> return V1.parse(byteBuffer, this, keySet?.getKey(AccessLevel.GUEST))
+			ServiceDataVersion.V3-> return V3.parse(byteBuffer, this, keySet?.getKey(AccessLevel.GUEST))
+			ServiceDataVersion.V4-> return V4.parse(byteBuffer, this, keySet?.getKey(AccessLevel.GUEST))
+			ServiceDataVersion.V5-> return V5.parse(byteBuffer, this, keySet?.getKey(AccessLevel.GUEST))
+			ServiceDataVersion.V6-> return V6.parse(byteBuffer, this, keySet?.getKey(AccessLevel.GUEST))
+			ServiceDataVersion.V7-> return V5.parse(byteBuffer, this, keySet?.getKey(AccessLevel.SERVICE_DATA))
 			else -> {
 				Log.v(TAG, "invalid version")
 				return false

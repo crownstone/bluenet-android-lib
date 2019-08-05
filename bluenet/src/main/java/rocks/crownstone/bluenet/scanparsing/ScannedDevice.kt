@@ -8,6 +8,7 @@
 package rocks.crownstone.bluenet.scanparsing
 
 import android.bluetooth.le.ScanResult
+import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
@@ -74,12 +75,12 @@ class ScannedDevice(result: ScanResult) {
 	/**
 	 * Parses the crownstone service data.
 	 */
-	internal fun parseServiceData(key: ByteArray?) {
+	internal fun parseServiceData(keySet: KeySet?) {
 		Log.v(TAG, "parseServiceData")
 		if (!_getServiceData().headerParsedSuccess && !_getServiceData().headerParseFailed) {
 			parseServiceDataHeader()
 		}
-		_getServiceData().parse(key)
+		_getServiceData().parse(keySet)
 	}
 
 	/**

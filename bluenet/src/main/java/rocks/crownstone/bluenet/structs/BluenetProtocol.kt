@@ -309,7 +309,8 @@ enum class ServiceDataVersion(val num: Uint8) {
 	V3(3),
 	V4(4),
 	V5(5),
-	V6(6);
+	V6(6),
+	V7(7);
 	companion object {
 		private val map = ServiceDataVersion.values().associateBy(ServiceDataVersion::num)
 		fun fromNum(action: Uint8): ServiceDataVersion {

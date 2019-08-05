@@ -61,9 +61,9 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		when (device.operationMode) {
 				OperationMode.NORMAL -> {
 					device.sphereId = encryptionManager.getSphereId(device)
-					val key = encryptionManager.getKeySet(device)?.guestKeyBytes
-					if (key != null) {
-						device.parseServiceData(key)
+					val keySet = encryptionManager.getKeySet(device)
+					if (keySet != null) {
+						device.parseServiceData(keySet)
 					}
 				}
 				OperationMode.SETUP -> {
