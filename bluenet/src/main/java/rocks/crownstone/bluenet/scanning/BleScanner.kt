@@ -39,7 +39,10 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private val handler = Handler(looper) // Own handler, as we call removeCallbacksAndMessages(null)
 	val filterManager = ScanFilterManager(::onScanFilterUpdate)
 
+	// True when currently interval-scanning.
 	private var running = false
+
+	// True when currently not interval-scanning, but it was (or, should be).
 	private var wasRunning = false
 	private var scanPause: Long = 100
 	private var scanDuration: Long  = 120 * 1000 // Restart every 2 minutes
@@ -131,7 +134,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 			if ((lastStartTimes.size >= BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) && (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD)) {
 				// We're starting too often, delay this start.
 				handler.removeCallbacksAndMessages(null)
-				Log.d(TAG, "delay for ${BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now} ms")
+				Log.i(TAG, "delay for ${BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now} ms")
 				handler.postDelayed(startScanRunnable, BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
 //				startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
 				return
@@ -142,7 +145,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 				lastStartTimes.removeFirst()
 			}
 			core.startScan()
-			if (scanPause > 0) {
+			if (scanDuration > 0) {
 				handler.postDelayed(stopScanRunnable, scanDuration)
 			}
 		}
