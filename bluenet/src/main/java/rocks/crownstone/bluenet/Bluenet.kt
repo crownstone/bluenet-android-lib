@@ -185,8 +185,8 @@ class Bluenet(looper: Looper? = null) {
 	 *         When resolved, you can already call startScanning(), but it will give no result until scanner is ready.
 	 */
 	@Synchronized
-	fun initScanner(activity: Activity): Promise<Unit, Exception> {
-		Log.i(TAG, "initScanner")
+	fun initScanner(activity: Activity?): Promise<Unit, Exception> {
+		Log.i(TAG, "initScanner promise")
 		return bleCore.getLocationPermission(activity)
 				.success {
 					initScanner()
@@ -195,6 +195,7 @@ class Bluenet(looper: Looper? = null) {
 
 	@Synchronized
 	private fun initScanner() {
+		Log.i(TAG, "initScanner")
 		bleCore.initScanner()
 		if (bleScanner == null) {
 			bleScanner = BleScanner(eventBus, bleCore, looper)
@@ -233,6 +234,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun isScannerReady(): Boolean {
+		Log.v(TAG, "isScannerReady initialized=$initialized bleScanner=$bleScanner")
 		return (initialized) && (bleScanner != null) && (bleCore.isScannerReady())
 	}
 
@@ -252,6 +254,7 @@ class Bluenet(looper: Looper? = null) {
 
 	@Synchronized
 	private fun checkReady(deferred: Deferred<Unit, Exception>) {
+		Log.v(TAG, "checkReady")
 		if (isScannerReady()) {
 			deferred.resolve()
 			return
@@ -270,7 +273,7 @@ class Bluenet(looper: Looper? = null) {
 	 *                 and from there call Bluenet.handleActivityResult().
 	 */
 	@Synchronized
-	fun tryMakeScannerReady(activity: Activity) {
+	fun tryMakeScannerReady(activity: Activity?) {
 		initScanner(activity)
 		bleCore.tryMakeScannerReady(activity)
 	}

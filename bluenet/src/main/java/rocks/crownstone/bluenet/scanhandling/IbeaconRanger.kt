@@ -167,6 +167,7 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 		val deviceData = deviceMap.getOrPut(device.address, { DeviceData(ibeaconData, IbeaconRssiAverager()) })
 		deviceData.averager.add(device.rssi)
 		if (!isTimeoutRunning) {
+			Log.v(TAG, "set timeout")
 			isTimeoutRunning = handler.postDelayed(timeoutRunnable, IBEACON_SCAN_INTERVAL_MS)
 		}
 	}

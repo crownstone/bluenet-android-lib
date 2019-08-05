@@ -214,7 +214,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * @param activity Activity to be used to ask for requests.
 	 */
 	@Synchronized
-	fun tryMakeScannerReady(activity: Activity) {
+	fun tryMakeScannerReady(activity: Activity?) {
 		Log.i(TAG, "tryMakeScannerReady")
 		initBle()
 		getLocationPermission(activity)
@@ -295,7 +295,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * @return Promise that will be resolved when permissions are granted.
 	 */
 	@Synchronized
-	fun getLocationPermission(activity: Activity): Promise<Unit, Exception> {
+	fun getLocationPermission(activity: Activity?): Promise<Unit, Exception> {
 		Log.i(TAG, "getLocationPermission activity=$activity")
 		val deferred = deferred<Unit, Exception>()
 		val promise = deferred.promise
@@ -305,7 +305,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 			return promise
 		}
 
-		if (!isActivityValid(activity)) {
+		if (activity == null || !isActivityValid(activity)) {
 			deferred.reject(Exception("Invalid activity"))
 			return promise
 		}
@@ -583,13 +583,14 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 	@Synchronized
 	fun isBleReady(useCache: Boolean = false): Boolean {
-		Log.i(TAG, "isBleReady")
-		return (bleInitialized && isBleEnabled(useCache))
+		val bleEnabledResult = isBleEnabled(useCache)
+		Log.v(TAG, "isBleReady bleInitialized=$bleInitialized isBleEnabled=$bleEnabledResult")
+		return (bleInitialized && bleEnabledResult)
 	}
 
 	@Synchronized
 	fun isScannerReady(): Boolean {
-		Log.i(TAG, "isScannerReady")
+		Log.v(TAG, "isScannerReady scannerInitialized=$scannerInitialized scannerSet=$scannerSet")
 //		return (scannerInitialized && isBleReady() && isLocationPermissionGranted() && isLocationServiceEnabled())
 		if (scannerInitialized && scannerSet && isBleReady() && isLocationServiceEnabled()) {
 //			scannerReady = true
