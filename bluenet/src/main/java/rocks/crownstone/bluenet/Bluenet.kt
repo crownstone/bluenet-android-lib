@@ -274,7 +274,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun tryMakeScannerReady(activity: Activity?) {
-		initScanner(activity)
+		// The scanner will be initialized when core scanner is ready event is sent.
 		bleCore.tryMakeScannerReady(activity)
 	}
 

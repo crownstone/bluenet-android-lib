@@ -650,7 +650,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	}
 
 	/**
-	 * Check if bluetooth is enabled. Can only be called after BLE is initialized
+	 * Check if bluetooth is enabled. Can only be called after BLE is initialized.
 	 *
 	 * @useCache True to use cached value (quicker, but might be wrong sometimes).
 	 * @return True if bluetooth is enabled.
@@ -672,6 +672,9 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		return result
 	}
 
+	/**
+	 * Check if bluetooth is enabled to update the cache. Can only be called after BLE is initialized.
+	 */
 	@Synchronized
 	fun checkBleEnabled() {
 		val result = bleAdapter.isEnabled && bleAdapter.state == BluetoothAdapter.STATE_ON
