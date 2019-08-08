@@ -100,7 +100,7 @@ class KeySet() {
 		}
 		val guestKey = this.guestKeyBytes
 		if (guestKey != null) {
-			KeyAccessLevelPair(guestKey, AccessLevel.GUEST)
+			return KeyAccessLevelPair(guestKey, AccessLevel.GUEST)
 		}
 		return null
 	}
