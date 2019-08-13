@@ -68,7 +68,12 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 		}
 		advertiserSettingsBuilder.setTimeout(timeoutMs)
-		advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
+		try {
+			advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
+		}
+		catch (e: IllegalStateException) {
+			deferred.reject(e)
+		}
 		return deferred.promise
 	}
 
