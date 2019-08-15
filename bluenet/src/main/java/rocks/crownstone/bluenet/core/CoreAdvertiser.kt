@@ -72,6 +72,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 			advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
 		}
 		catch (e: IllegalStateException) {
+			Log.w(TAG, "Advertise couldn't start: $e")
 			deferred.reject(e)
 		}
 		return deferred.promise
