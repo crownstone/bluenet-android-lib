@@ -252,11 +252,11 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		if (hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
 			mode = CrownstoneMode.SETUP
 		}
-		else if (hasService(BluenetProtocol.DFU_SERVICE_UUID)) {
-			mode = CrownstoneMode.DFU
-		}
 		else if (hasService(BluenetProtocol.CROWNSTONE_SERVICE_UUID)) {
 			mode = CrownstoneMode.NORMAL
+		}
+		else if (hasService(BluenetProtocol.DFU_SERVICE_UUID) || hasService(BluenetProtocol.DFU2_SERVICE_UUID)) {
+			mode = CrownstoneMode.DFU
 		}
 		else {
 			mode = CrownstoneMode.UNKNOWN

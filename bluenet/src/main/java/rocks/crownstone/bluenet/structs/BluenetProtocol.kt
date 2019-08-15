@@ -7,6 +7,7 @@
 
 package rocks.crownstone.bluenet.structs
 
+import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Util
 import java.util.UUID
 
@@ -15,6 +16,7 @@ object BluenetProtocol {
 	val SERVICE_DATA_UUID_CROWNSTONE_BUILTIN = UUID.fromString("0000C002-0000-1000-8000-00805F9B34FB")
 	val SERVICE_DATA_UUID_GUIDESTONE         = UUID.fromString("0000C003-0000-1000-8000-00805F9B34FB")
 	val SERVICE_DATA_UUID_DFU                = UUID.fromString("00001530-1212-efde-1523-785feabcd123")
+	val SERVICE_DATA_UUID_DFU2               = Conversion.stringToUuid("FE59")!!
 
 	val SETUP_IBEACON_UUID = UUID.fromString("A643423E-E175-4AF0-A2E4-31E32f729A8A")
 
@@ -55,6 +57,12 @@ object BluenetProtocol {
 	// DFU service
 	val DFU_SERVICE_UUID = UUID.fromString("00001530-1212-efde-1523-785feabcd123")
 	val CHAR_DFU_CONTROL_UUID = UUID.fromString("00001531-1212-efde-1523-785feabcd123")
+	val DFU_RESET_COMMAND = byteArrayOf(0x06)
+
+	// DFU service 2
+	val DFU2_SERVICE_UUID = UUID.fromString("00001530-1212-efde-1523-785feabcd123")
+	val CHAR_DFU2_CONTROL_UUID = UUID.fromString("00001531-1212-efde-1523-785feabcd123")
+	val DFU2_RESET_COMMAND = byteArrayOf(0x0C)
 
 	val DESCRIPTOR_CHAR_CONFIG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 

@@ -115,9 +115,11 @@ class ScannedDevice(result: ScanResult) {
 				val data = scanRecord.getServiceData(uuid)
 				val dataStr = Conversion.bytesToString(data)
 				Log.v(TAG, "parseDfu: serviceUuid=$uuid data=$dataStr")
-				if (uuid.uuid == BluenetProtocol.SERVICE_DATA_UUID_DFU) {
-					operationMode = OperationMode.DFU
-					return
+				when (uuid.uuid) {
+					BluenetProtocol.SERVICE_DATA_UUID_DFU, BluenetProtocol.SERVICE_DATA_UUID_DFU2 -> {
+						operationMode = OperationMode.DFU
+						return
+					}
 				}
 			}
 		}

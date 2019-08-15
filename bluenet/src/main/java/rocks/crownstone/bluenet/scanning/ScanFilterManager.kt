@@ -138,6 +138,9 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		if (addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)) {
 			update = true
 		}
+		if (addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU2, false)) {
+			update = true
+		}
 		if (update) {
 			updateCallback(getFilters())
 		}
@@ -157,6 +160,9 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 			update = true
 		}
 		if (remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)) {
+			update = true
+		}
+		if (remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU2, false)) {
 			update = true
 		}
 		if (update) {

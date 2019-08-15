@@ -18,6 +18,7 @@ import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.Util
+import java.util.*
 
 
 /**
@@ -94,20 +95,51 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 	@Synchronized
 	fun reset(): Promise<Unit, Exception> {
 		Log.i(TAG, "reset")
-		return connection.subscribe(BluenetProtocol.DFU_SERVICE_UUID, BluenetProtocol.CHAR_DFU_CONTROL_UUID, {})
-				.then {
-					Util.recoverableUnitPromise(
-							connection.write(BluenetProtocol.DFU_SERVICE_UUID, BluenetProtocol.CHAR_DFU_CONTROL_UUID, byteArrayOf(6), AccessLevel.ENCRYPTION_DISABLED),
-							{
-								Log.i(TAG, "Write error expected, as bootloader resets.")
-								true
-							}
-					)
-				}.unwrap()
-				.then {
-					// Disconnect and clear cache, as services are expected to change.
-					connection.disconnect(true)
-				}.unwrap()
+		if (connection.hasService(BluenetProtocol.DFU_SERVICE_UUID)) {
+			return connection.subscribe(BluenetProtocol.DFU_SERVICE_UUID, BluenetProtocol.CHAR_DFU_CONTROL_UUID, {})
+					.then {
+						Util.recoverableUnitPromise(
+								connection.write(BluenetProtocol.DFU_SERVICE_UUID, BluenetProtocol.CHAR_DFU_CONTROL_UUID, BluenetProtocol.DFU_RESET_COMMAND, AccessLevel.ENCRYPTION_DISABLED),
+								{
+									Log.i(TAG, "Write error expected, as bootloader resets.")
+									true
+								}
+						)
+					}.unwrap()
+					.then {
+						// Disconnect and clear cache, as services are expected to change.
+						connection.disconnect(true)
+					}.unwrap()
+		}
+		else if (connection.hasService(BluenetProtocol.DFU2_SERVICE_UUID)) {
+			return Util.recoverableUnitPromise(
+					connection.write(BluenetProtocol.DFU2_SERVICE_UUID, BluenetProtocol.CHAR_DFU2_CONTROL_UUID, BluenetProtocol.DFU2_RESET_COMMAND, AccessLevel.ENCRYPTION_DISABLED),
+					{
+						Log.i(TAG, "Write error expected, as bootloader resets.")
+						true
+					}
+			)
+					.then {
+						// Disconnect and clear cache, as services are expected to change.
+						connection.disconnect(true)
+					}.unwrap()
+
+//			return connection.subscribe(BluenetProtocol.DFU2_SERVICE_UUID, BluenetProtocol.CHAR_DFU2_CONTROL_UUID, {})
+//					.then {
+//						Util.recoverableUnitPromise(
+//								connection.write(BluenetProtocol.DFU2_SERVICE_UUID, BluenetProtocol.CHAR_DFU2_CONTROL_UUID, BluenetProtocol.DFU2_RESET_COMMAND, AccessLevel.ENCRYPTION_DISABLED),
+//								{
+//									Log.i(TAG, "Write error expected, as bootloader resets.")
+//									true
+//								}
+//						)
+//					}.unwrap()
+//					.then {
+//						// Disconnect and clear cache, as services are expected to change.
+//						connection.disconnect(true)
+//					}.unwrap()
+		}
+		return Promise.ofFail(Errors.CharacteristicNotFound())
 	}
 
 	/**
