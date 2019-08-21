@@ -78,8 +78,9 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 		}
 
 		// Validate or invalidate device
+		// TODO: do we really have to check if serviceData != null ?
 		val serviceData = device.serviceData
-		if (serviceData != null) {
+		if (serviceData != null || device.operationMode == OperationMode.DFU) {
 			val validator = getValidator(device)
 			if (validator.validate(device)) {
 				device.validated = true
