@@ -60,8 +60,8 @@ object BluenetProtocol {
 	val DFU_RESET_COMMAND = byteArrayOf(0x06)
 
 	// DFU service 2
-	val DFU2_SERVICE_UUID = UUID.fromString("00001530-1212-efde-1523-785feabcd123")
-	val CHAR_DFU2_CONTROL_UUID = UUID.fromString("00001531-1212-efde-1523-785feabcd123")
+	val DFU2_SERVICE_UUID = Conversion.stringToUuid("FE59")!!
+	val CHAR_DFU2_CONTROL_UUID = UUID.fromString("8EC90001-F315-4F60-9FB8-838830DAEA50")
 	val DFU2_RESET_COMMAND = byteArrayOf(0x0C)
 
 	val DESCRIPTOR_CHAR_CONFIG_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
