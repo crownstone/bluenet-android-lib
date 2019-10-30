@@ -44,7 +44,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	@Synchronized
 	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return connectionAttempt(address, timeoutMs, retries)
+		val deferred = deferred<Unit, Exception>()
+		connectionAttempt(address, timeoutMs, retries)
 				.then {
 					mode = CrownstoneMode.UNKNOWN
 					bleCore.discoverServices(false)
@@ -54,7 +55,12 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}.unwrap()
 				.success {
 //					isConnected = true
+					deferred.resolve()
 				}
+				.fail {
+					disconnect().always { deferred.reject(it) }
+				}
+		return deferred.promise
 	}
 
 	private fun connectionAttempt(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int): Promise<Unit, Exception> {
