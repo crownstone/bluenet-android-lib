@@ -14,11 +14,7 @@ import android.os.Looper
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.structs.*
-import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.EventBus
-import rocks.crownstone.bluenet.util.Log
-import rocks.crownstone.bluenet.util.SubscriptionId
-import rocks.crownstone.bluenet.util.Util.waitPromise
+import rocks.crownstone.bluenet.util.*
 import java.util.*
 
 /**
@@ -142,7 +138,8 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
-				deferred.resolve()
+				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
+						.success { deferred.resolve() }
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
 				if (promises.isBusy()) {
@@ -261,7 +258,10 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			BluetoothProfile.STATE_DISCONNECTED -> {
 				notificationEventBus.reset()
 				when (promises.getAction()) {
-					Action.DISCONNECT -> promises.resolve(Action.DISCONNECT)
+					Action.DISCONNECT -> {
+						wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
+								.success { promises.resolve(Action.DISCONNECT) }
+					}
 					else -> promises.reject(Errors.gattError(status))
 				}
 			}
@@ -296,13 +296,17 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
 				closeFinal(clearCache)
-				deferred.resolve()
+				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
+						.success { deferred.resolve() }
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
 				disconnect()
 						.always {
-							closeFinal(clearCache)
-							deferred.resolve()
+							wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
+									. success {
+										closeFinal(clearCache)
+										deferred.resolve()
+									}
 						}
 			}
 			else -> {
@@ -829,7 +833,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	@Synchronized
 	fun wait(timeMs: Long): Promise<Unit, Exception> {
 		Log.i(TAG, "wait $timeMs ms")
-		return waitPromise(timeMs, handler)
+		return Util.waitPromise(timeMs, handler)
 	}
 
 

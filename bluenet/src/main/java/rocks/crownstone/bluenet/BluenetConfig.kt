@@ -9,15 +9,16 @@ package rocks.crownstone.bluenet
 
 object BluenetConfig {
 	// Timeouts in ms
-	val TIMEOUT_CONNECT: Long =       8000
-	val TIMEOUT_DISCONNECT: Long =    3000
-	val TIMEOUT_DISCOVER: Long =      8000
-	val TIMEOUT_READ: Long =          3000
-	val TIMEOUT_WRITE: Long =         4000
-	val TIMEOUT_SUBSCRIBE: Long =     4000
-	val TIMEOUT_UNSUBSCRIBE: Long =   4000
-	val TIMEOUT_REFRESH_CACHE: Long = 3000
-	val TIMEOUT_CONNECT_RETRY: Long = 3000 // Only retry when connect failed in less than this time.
+	val TIMEOUT_CONNECT: Long =             12000 // 8000 wasn't enough for the lenovo P2.
+	val TIMEOUT_DISCONNECT: Long =          3000
+	val TIMEOUT_DISCOVER: Long =            8000
+	val TIMEOUT_READ: Long =                3000
+	val TIMEOUT_WRITE: Long =               4000
+	val TIMEOUT_SUBSCRIBE: Long =           4000
+	val TIMEOUT_UNSUBSCRIBE: Long =         4000
+	val TIMEOUT_REFRESH_CACHE: Long =       3000
+	val TIMEOUT_CONNECT_RETRY: Long =       3000 // Only retry when connect failed in less than this time.
+	val DELAY_AFTER_DISCONNECT: Long =      200 // Time to wait after disconnect. The lenovo P2 seemed to need this.
 
 	val TIMEOUT_GET_CONFIG: Long = 5000
 	val TIMEOUT_GET_STATE: Long = 5000
