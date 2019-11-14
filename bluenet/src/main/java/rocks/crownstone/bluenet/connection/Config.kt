@@ -12,7 +12,7 @@ import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
 import nl.komponents.kovenant.unwrap
 import rocks.crownstone.bluenet.*
-import rocks.crownstone.bluenet.packets.ConfigPacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.ConfigPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus

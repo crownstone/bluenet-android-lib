@@ -5,8 +5,9 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets
+package rocks.crownstone.bluenet.packets.wrappers.v3
 
+import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.structs.OpcodeType
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.*

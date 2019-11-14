@@ -5,18 +5,18 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets
+package rocks.crownstone.bluenet.packets.wrappers.v4
 
+import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.wrappers.PayloadWrapperPacket
 import rocks.crownstone.bluenet.structs.StateTypeV2
 import rocks.crownstone.bluenet.structs.Uint16
-import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.getUint16
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class StatePacketV2(type: StateTypeV2, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+open class StatePacket(type: StateTypeV2, payload: PacketInterface?): PayloadWrapperPacket(payload) {
 	override val TAG = this.javaClass.simpleName
 	companion object {
 		const val SIZE = 2

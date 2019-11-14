@@ -5,8 +5,11 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets
+package rocks.crownstone.bluenet.packets.wrappers.v4
 
+import rocks.crownstone.bluenet.packets.ByteArrayPacket
+import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.wrappers.PayloadWrapperPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer

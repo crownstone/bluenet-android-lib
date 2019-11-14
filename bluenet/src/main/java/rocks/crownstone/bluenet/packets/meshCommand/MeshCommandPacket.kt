@@ -9,8 +9,8 @@ package rocks.crownstone.bluenet.packets.meshCommand
 
 import rocks.crownstone.bluenet.structs.MeshCommandType
 import rocks.crownstone.bluenet.structs.Uint8
-import rocks.crownstone.bluenet.packets.ConfigPacket
-import rocks.crownstone.bluenet.packets.ControlPacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.ConfigPacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacket
 import rocks.crownstone.bluenet.util.put
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.util.Conversion

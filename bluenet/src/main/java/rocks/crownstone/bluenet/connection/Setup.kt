@@ -10,7 +10,7 @@ package rocks.crownstone.bluenet.connection
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.encryption.MeshKeySet
-import rocks.crownstone.bluenet.packets.CommandResultPacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.CommandResultPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
 import rocks.crownstone.bluenet.packets.SetupPacketV2
 import rocks.crownstone.bluenet.structs.*

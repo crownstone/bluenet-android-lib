@@ -3,7 +3,7 @@ package rocks.crownstone.bluenet
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import rocks.crownstone.bluenet.packets.StatePacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.StatePacket
 import rocks.crownstone.bluenet.packets.schedule.ScheduleListPacket
 import rocks.crownstone.bluenet.structs.StateType
 import rocks.crownstone.bluenet.util.Conversion

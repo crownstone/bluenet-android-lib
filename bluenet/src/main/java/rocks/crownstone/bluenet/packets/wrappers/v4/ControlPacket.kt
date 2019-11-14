@@ -5,14 +5,17 @@
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
-package rocks.crownstone.bluenet.packets
+package rocks.crownstone.bluenet.packets.wrappers.v4
 
+import rocks.crownstone.bluenet.packets.ByteArrayPacket
+import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.wrappers.PayloadWrapperPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class ControlPacketV2(type: ControlV2Type, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+open class ControlPacket(type: ControlV2Type, payload: PacketInterface?): PayloadWrapperPacket(payload) {
 	constructor():                                         this(ControlV2Type.UNKNOWN, null)
 	constructor(type: ControlV2Type):                      this(type, null)
 	constructor(type: ControlV2Type, data: ByteArray):     this(type, ByteArrayPacket(data))

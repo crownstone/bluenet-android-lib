@@ -8,15 +8,12 @@
 package rocks.crownstone.bluenet.packets
 
 import rocks.crownstone.bluenet.structs.IbeaconData
-import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.encryption.MeshKeySet
-import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.put
-import rocks.crownstone.bluenet.util.putInt
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
