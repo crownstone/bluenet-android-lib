@@ -36,6 +36,9 @@ object BluenetProtocol {
 	val CHAR_STATE_READ_UUID =     UUID.fromString("24f00007-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SESSION_NONCE_UUID =  UUID.fromString("24f00008-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_RECOVERY_UUID =       UUID.fromString("24f00009-7d10-4805-bfc1-7663a01c3bff")
+	// protocol v4
+	val CHAR_CONTROL4_UUID =       UUID.fromString("24f0000a-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_RESULT_UUID =         UUID.fromString("24f0000b-7d10-4805-bfc1-7663a01c3bff")
 
 	// Setup service
 	val SETUP_SERVICE_UUID =             UUID.fromString("24f10000-7d10-4805-bfc1-7663a01c3bff")
@@ -48,6 +51,9 @@ object BluenetProtocol {
 	val CHAR_SETUP_SESSION_NONCE_UUID =  UUID.fromString("24f10008-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SETUP_CONTROL2_UUID =       UUID.fromString("24f10007-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SETUP_CONTROL3_UUID =       UUID.fromString("24f10009-7d10-4805-bfc1-7663a01c3bff")
+	// protocol v4
+	val CHAR_SETUP_CONTROL4_UUID =       UUID.fromString("24f1000a-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_SETUP_RESULT_UUID =         UUID.fromString("24f1000b-7d10-4805-bfc1-7663a01c3bff")
 
 	// Device Information Service
 	val DEVICE_INFO_SERVICE_UUID =    UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
@@ -195,6 +201,37 @@ enum class ControlType(val num: Uint8) {
 	}
 }
 
+enum class ControlV2Type(val num: Uint16) {
+	SETUP(0),
+	FACTORY_RESET(1),
+	GET_STATE(2),
+	SET_STATE(3),
+	RESET(10),
+	GOTO_DFU(11),
+	NOOP(12),
+	DISCONNECT(13),
+	SWITCH(20),
+	MULTI_SWITCH(21),
+	DIMMER(22),
+	RELAY(23),
+	SET_TIME(30),
+	INCREASE_TX(31),
+	RESET_STATE_ERRORS(32),
+	MESH_COMMAND(33),
+	ALLOW_DIMMING(40),
+	LOCK_SWITCH(41),
+	ENABLE_SWITCHCRAFT(42),
+	UART_MSG(50),
+	UART_ENABLE(51),
+	UNKNOWN(0xFFFF);
+	companion object {
+		private val map = ControlV2Type.values().associateBy(ControlV2Type::num)
+		fun fromNum(type: Uint16): ControlV2Type {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
 enum class StateType(val num: Uint8) {
 	RESET_COUNTER(128),
 	SWITCH_STATE(129),
@@ -282,6 +319,74 @@ enum class ConfigType(val num: Uint8) {
 	companion object {
 		private val map = ConfigType.values().associateBy(ConfigType::num)
 		fun fromNum(type: Uint8): ConfigType {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class StateTypeV2(val num: Uint16) {
+	PWM_PERIOD(5),
+	IBEACON_MAJOR(6),
+	IBEACON_MINOR(7),
+	IBEACON_PROXIMITY_UUID(8),
+	IBEACON_TXPOWER(9),
+	TX_POWER(11),
+	ADV_INTERVAL(12),
+	SCAN_DURATION(16),
+	SCAN_BREAK_DURATION(18),
+	BOOT_DELAY(19),
+	MAX_CHIP_TEMP(20),
+	MESH_ENABLED(24),
+	ENCRYPTION_ENABLED(25),
+	IBEACON_ENABLED(26),
+	SCANNER_ENABLED(27),
+	POWER_SAMPLE_CONT_NUM_SAMPLES(33),
+	CROWNSTONE_ID(34),
+	KEY_ADMIN(35),
+	KEY_MEMBER(36),
+	KEY_GUEST(37),
+	DEFAULT_ON(38),
+	SCAN_INTERVAL(39),
+	SCAN_WINDOW(40),
+	RELAY_HIGH_DURATION(41),
+	LOW_TX_POWER(42),
+	VOLTAGE_MULTIPLIER(43),
+	CURRENT_MULTIPLIER(44),
+	VOLTAGE_ZERO(45),
+	CURRENT_ZERO(46),
+	POWER_ZERO(47),
+	CURRENT_THRESHOLD(50),
+	CURRENT_THRESHOLD_DIMMER(51),
+	DIMMER_TEMP_UP(52),
+	DIMMER_TEMP_DOWN(53),
+	DIMMING_ALLOWED(54),
+	SWITCH_LOCKED(55),
+	SWITCHCRAFT_ENABLED(56),
+	SWITCHCRAFT_THRESHOLD(57),
+	UART_ENABLED(59),
+	NAME(60),
+	KEY_SERVICE_DATA(61),
+	KEY_MESH_DEVICE(62),
+	KEY_MESH_APP(63),
+	KEY_MESH_NETWORK(64),
+	KEY_LOCALIZATION(65),
+	START_DIMMER_ON_ZERO_CROSSING(66),
+	TAP_TO_TOGGLE_ENABLED(67),
+	TAP_TO_TOGGLE_RSSI_THRESHOLD(68),
+
+	RESET_COUNTER(128),
+	SWITCH_STATE(129),
+	ACCUMULATED_ENERGY(130),
+	POWER_USAGE(131),
+	OPERATION_MODE(134),
+	TEMPERATURE(135),
+	TIME(136),
+	ERRORS(139),
+
+	UNKNOWN(0xFFFF);
+	companion object {
+		private val map = StateTypeV2.values().associateBy(StateTypeV2::num)
+		fun fromNum(type: Uint16): StateTypeV2 {
 			return map[type] ?: return UNKNOWN
 		}
 	}

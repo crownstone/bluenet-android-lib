@@ -11,9 +11,24 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 interface PacketInterface {
+	/**
+	 * Get size of the packet in bytes.
+	 */
 	fun getPacketSize(): Int
+
+	/**
+	 * Serialize packet to buffer.
+	 */
 	fun toBuffer(bb: ByteBuffer): Boolean
+
+	/**
+	 * Deserialize packet from buffer.
+	 */
 	fun fromBuffer(bb: ByteBuffer): Boolean
+
+	/**
+	 * Serialize packet to byte array.
+	 */
 	fun getArray(): ByteArray? {
 		val arr = ByteArray(getPacketSize())
 		val bb = ByteBuffer.wrap(arr)
@@ -25,6 +40,10 @@ interface PacketInterface {
 		}
 		return bb.array()
 	}
+
+	/**
+	 * Deserialize packet from byte array.
+	 */
 	fun fromArray(array: ByteArray): Boolean {
 		if (array.size < getPacketSize()) {
 			return false
