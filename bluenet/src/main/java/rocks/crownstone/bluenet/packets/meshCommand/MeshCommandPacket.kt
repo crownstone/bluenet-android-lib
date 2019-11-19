@@ -10,9 +10,10 @@ package rocks.crownstone.bluenet.packets.meshCommand
 import rocks.crownstone.bluenet.structs.MeshCommandType
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.packets.wrappers.v3.ConfigPacket
-import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacketV3
 import rocks.crownstone.bluenet.util.put
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 import rocks.crownstone.bluenet.util.Conversion
 import java.nio.ByteBuffer
 
@@ -22,7 +23,8 @@ open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
 	var bitmask: Uint8 = 0
 	init {
 		type = when (payload::class) {
-			ControlPacket::class -> MeshCommandType.CONTROL
+			ControlPacketV3::class -> MeshCommandType.CONTROL
+			ControlPacketV4::class -> MeshCommandType.CONTROL
 			ConfigPacket::class -> MeshCommandType.CONFIG
 			MeshBeaconConfigPacket.BeaconConfigPacket::class -> MeshCommandType.BEACON_CONFIG
 			else -> MeshCommandType.UNKNOWN

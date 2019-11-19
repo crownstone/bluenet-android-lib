@@ -9,19 +9,26 @@ package rocks.crownstone.bluenet.connection
 
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.encryption.AccessLevel
-import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacket
+import rocks.crownstone.bluenet.packets.ByteArrayPacket
+import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacketV3
 import rocks.crownstone.bluenet.packets.SetupPacket
 import rocks.crownstone.bluenet.packets.SetupPacketV2
 import rocks.crownstone.bluenet.packets.keepAlive.KeepAlivePacket
 import rocks.crownstone.bluenet.packets.keepAlive.MultiKeepAlivePacket
 import rocks.crownstone.bluenet.packets.meshCommand.MeshCommandPacket
+import rocks.crownstone.bluenet.packets.multiSwitch.MultiSwitchItemPacket
+import rocks.crownstone.bluenet.packets.multiSwitch.MultiSwitchLegacyPacket
 import rocks.crownstone.bluenet.packets.multiSwitch.MultiSwitchPacket
 import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
+import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.Util
+import java.util.*
 
 /**
  * Class to interact with the control characteristic of the crownstone service.
@@ -42,7 +49,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setSwitch(value: Uint8): Promise<Unit, Exception> {
 		Log.i(TAG, "setSwitch $value")
-		return writeCommand(ControlType.SWITCH, value)
+		return writeCommand(ControlType.SWITCH, ControlTypeV4.SWITCH, value)
 	}
 
 	/**
@@ -55,7 +62,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setRelay(value: Boolean): Promise<Unit, Exception> {
 		Log.i(TAG, "setRelay $value")
-		return writeCommand(ControlType.RELAY, value)
+		return writeCommand(ControlType.RELAY, ControlTypeV4.RELAY, value)
 	}
 
 	/**
@@ -68,7 +75,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setDimmer(value: Uint8): Promise<Unit, Exception> {
 		Log.i(TAG, "setDimmer $value")
-		return writeCommand(ControlType.PWM, value)
+		return writeCommand(ControlType.PWM, ControlTypeV4.DIMMER, value)
 	}
 
 	/**
@@ -97,7 +104,6 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @param valueOn The value to set the switch to if the switch is currently off.
 	 * @return Promise with the current switch value as result.
 	 */
-	@Deprecated("It's unlikely the value that's set will be returned in the future, use toggleSwitch() instead.")
 	@Synchronized
 	fun toggleSwitchReturnValueSet(valueOn: Uint8): Promise<Uint8, Exception> {
 		Log.i(TAG, "toggleSwitchReturnValueSet $valueOn")
@@ -120,13 +126,36 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	/**
 	 * Set the switch value of multiple crownstones.
 	 *
-	 * @param packet MultiSwitchPacket, with a MultiSwitchListPacket as payload.
+	 * @param packet Packet with switch values.
+	 * @return Promise that resolves when the connected crownstone received the command.
+	 */
+	@Deprecated("This is the legacy multi switch")
+	@Synchronized
+	fun multiSwitch(packet: MultiSwitchLegacyPacket): Promise<Unit, Exception> {
+		Log.i(TAG, "multiSwtich $packet")
+		if (getPacketProtocol() == 3) {
+			return writeCommand(ControlType.MULTI_SWITCH, ControlTypeV4.UNKNOWN, packet)
+		}
+		else {
+			val newPacket = MultiSwitchPacket()
+			for (item in packet.list) {
+				val newItem = MultiSwitchItemPacket(item.id, item.switchValue)
+				newPacket.add(newItem)
+			}
+			return multiSwitch(newPacket)
+		}
+	}
+
+	/**
+	 * Set the switch value of multiple crownstones.
+	 *
+	 * @param packet Packet with switch values.
 	 * @return Promise that resolves when the connected crownstone received the command.
 	 */
 	@Synchronized
-	fun multiSwtich(packet: MultiSwitchPacket): Promise<Unit, Exception> {
+	fun multiSwitch(packet: MultiSwitchPacket): Promise<Unit, Exception> {
 		Log.i(TAG, "multiSwtich $packet")
-		return writeCommand(ControlPacket(ControlType.MULTI_SWITCH, packet))
+		return writeCommand(ControlType.UNKNOWN, ControlTypeV4.MULTI_SWITCH, packet)
 	}
 
 	/**
@@ -138,7 +167,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setTime(timestamp: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setTime $timestamp")
-		return writeCommand(ControlType.SET_TIME, timestamp)
+		return writeCommand(ControlType.SET_TIME, ControlTypeV4.SET_TIME, timestamp)
 	}
 
 	/**
@@ -150,7 +179,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun allowDimming(allow: Boolean): Promise<Unit, Exception> {
 		Log.i(TAG, "allowDimming $allow")
-		return writeCommand(ControlType.ALLOW_DIMMING, allow)
+		return writeCommand(ControlType.ALLOW_DIMMING, ControlTypeV4.ALLOW_DIMMING, allow)
 	}
 
 	/**
@@ -162,35 +191,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun lockSwitch(lock: Boolean): Promise<Unit, Exception> {
 		Log.i(TAG, "lockSwitch $lock")
-		return writeCommand(ControlType.LOCK_SWITCH, lock)
+		return writeCommand(ControlType.LOCK_SWITCH, ControlTypeV4.LOCK_SWITCH, lock)
 	}
-
-	/**
-	 * Enable or disable switchcraft.
-	 *
-	 * @param enable True to enable switchcraft.
-	 * @return Promise
-	 */
-	@Synchronized
-	fun enableSwitchCraft(enable: Boolean): Promise<Unit, Exception> {
-		Log.i(TAG, "enableSwitchCraft $enable")
-		return writeCommand(ControlType.ENABLE_SWITCHCRAFT, enable)
-	}
-
-	/**
-	 * Set the UART mode.
-	 *
-	 * @param mode Which mode to set it to.
-	 * @return Promise
-	 */
-	@Synchronized
-	fun setUart(mode: UartMode): Promise<Unit, Exception> {
-		Log.i(TAG, "setUart $mode")
-		return writeCommand(ControlType.UART_ENABLE, mode)
-	}
-
-//	fun uartMessage(): Promise<Unit, Exception> // TODO
-
 
 	/**
 	 * Make the crownstone reboot into DFU mode.
@@ -200,7 +202,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun goToDfu(): Promise<Unit, Exception> {
 		Log.i(TAG, "goToDfu")
-		return writeCommand(ControlType.GOTO_DFU)
+		return writeCommand(ControlType.GOTO_DFU, ControlTypeV4.GOTO_DFU)
 	}
 
 	/**
@@ -211,7 +213,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun reset(): Promise<Unit, Exception> {
 		Log.i(TAG, "reset")
-		return writeCommand(ControlType.RESET)
+		return writeCommand(ControlType.RESET, ControlTypeV4.RESET)
 	}
 
 	/**
@@ -226,7 +228,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun keepAliveAction(action: KeepAliveAction, switchValue: Uint8, timeout: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "keepAliveAction action=$action switchValue=$switchValue timeout=$timeout")
 		val keepAlivePacket = KeepAlivePacket(action, switchValue, timeout)
-		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_STATE, keepAlivePacket))
+		return writeCommand(ControlType.KEEP_ALIVE_STATE, ControlTypeV4.UNKNOWN, keepAlivePacket)
 	}
 
 	/**
@@ -238,7 +240,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun keepAlive(): Promise<Unit, Exception> {
 		Log.i(TAG, "keepAlive")
-		return writeCommand(ControlType.KEEP_ALIVE)
+		return writeCommand(ControlType.KEEP_ALIVE, ControlTypeV4.UNKNOWN)
 	}
 
 	/**
@@ -252,7 +254,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setSchedule(packet: ScheduleCommandPacket): Promise<Unit, Exception> {
 		Log.i(TAG, "setSchedule $packet")
-		return writeCommand(ControlPacket(ControlType.SCHEDULE_ENTRY_SET, packet))
+		return writeCommand(ControlType.SCHEDULE_ENTRY_SET, ControlTypeV4.UNKNOWN, packet)
 	}
 
 	/**
@@ -264,7 +266,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun removeSchedule(id: Uint8): Promise<Unit, Exception> {
 		Log.i(TAG, "removeSchedule $id")
-		return writeCommand(ControlType.SCHEDULE_ENTRY_REMOVE, id)
+		return writeCommand(ControlType.SCHEDULE_ENTRY_REMOVE, ControlTypeV4.UNKNOWN, id)
 	}
 
 	/**
@@ -279,7 +281,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "disconnect")
 		val deferred = deferred<Unit, Exception>()
 		Util.recoverableUnitPromise(
-			writeCommand(ControlType.DISCONNECT),
+			writeCommand(ControlType.DISCONNECT, ControlTypeV4.DISCONNECT),
 			fun (error: Exception): Boolean {
 				return when(error) {
 					is Errors.Timeout -> true // Assume the write callback was never called because the ack didn't arrive?
@@ -309,7 +311,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun noop(): Promise<Unit, Exception> {
 		Log.i(TAG, "noop")
-		return writeCommand(ControlType.NOOP)
+		return writeCommand(ControlType.NOOP, ControlTypeV4.NOOP)
 	}
 
 	/**
@@ -320,7 +322,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun increaseTx(): Promise<Unit, Exception> {
 		Log.i(TAG, "increaseTx")
-		return writeCommand(ControlType.INCREASE_TX)
+		return writeCommand(ControlType.INCREASE_TX, ControlTypeV4.INCREASE_TX)
 	}
 
 	/**
@@ -346,7 +348,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 
 	private fun resetErrors(bitmask: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "resetErrors $bitmask")
-		return writeCommand(ControlType.RESET_STATE_ERRORS, bitmask)
+		return writeCommand(ControlType.RESET_STATE_ERRORS, ControlTypeV4.RESET_STATE_ERRORS, bitmask)
 	}
 
 	/**
@@ -360,7 +362,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun factoryReset(): Promise<Unit, Exception> {
 		Log.i(TAG, "factoryReset")
-		return writeCommand(ControlType.FACTORY_RESET, BluenetProtocol.FACTORY_RESET_CODE)
+		return writeCommand(ControlType.FACTORY_RESET, ControlTypeV4.FACTORY_RESET, BluenetProtocol.FACTORY_RESET_CODE)
 				.then { connection.disconnect(true) }.unwrap()
 	}
 
@@ -374,7 +376,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun keepAliveMeshRepeat(): Promise<Unit, Exception> {
 		Log.i(TAG, "keepAliveMeshRepeat")
-		return writeCommand(ControlType.KEEP_ALIVE_REPEAT_LAST)
+		return writeCommand(ControlType.KEEP_ALIVE_REPEAT_LAST, ControlTypeV4.UNKNOWN)
 	}
 
 	/**
@@ -386,7 +388,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun keepAliveMeshAction(packet: MultiKeepAlivePacket): Promise<Unit, Exception> {
 		Log.i(TAG, "keepAliveMeshAction $packet")
-		return writeCommand(ControlPacket(ControlType.KEEP_ALIVE_MESH, packet))
+		return writeCommand(ControlType.KEEP_ALIVE_MESH, ControlTypeV4.UNKNOWN, packet)
 	}
 
 	/**
@@ -396,9 +398,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise that resolves when the connected crownstone received the command.
 	 */
 	@Synchronized
+	@Deprecated("Use Mesh class instead")
 	fun meshCommand(packet: MeshCommandPacket): Promise<Unit, Exception> {
 		Log.i(TAG, "meshCommand $packet")
-		return writeCommand(ControlPacket(ControlType.MESH_COMMAND, packet))
+		return writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, packet)
 	}
 
 	/**
@@ -470,46 +473,140 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 
 	@Synchronized
 	internal fun validateSetup(): Promise<Unit, Exception> {
-		return writeCommand(ControlType.VALIDATE_SETUP)
+		return writeCommand(ControlType.VALIDATE_SETUP, ControlTypeV4.UNKNOWN)
 	}
 
 	@Synchronized
-	internal fun setup(packet: SetupPacket): Promise<Unit, Exception> {
-		val controlPacket = ControlPacket(ControlType.SETUP, packet)
-		return writeCommand(controlPacket)
+	internal fun writeSetup(packet: SetupPacket): Promise<Unit, Exception> {
+		return writeCommand(ControlType.SETUP, ControlTypeV4.UNKNOWN, packet)
 	}
 
 	@Synchronized
-	internal fun setup(packet: SetupPacketV2): Promise<Unit, Exception> {
-		val controlPacket = ControlPacket(ControlType.SETUP, packet)
-		return writeCommand(controlPacket)
+	internal fun writeSetup(packet: SetupPacketV2): Promise<Unit, Exception> {
+		return writeCommand(ControlType.SETUP, ControlTypeV4.SETUP, packet)
+	}
+
+	@Synchronized
+	internal fun writeSetState(packet: StatePacketV4): Promise<Unit, Exception> {
+		return writeCommand(ControlType.UNKNOWN, ControlTypeV4.SET_STATE, packet)
+	}
+
+	@Synchronized
+	internal fun writeGetState(type: StateTypeV4): Promise<Unit, Exception> {
+		return writeCommand(ControlType.UNKNOWN, ControlTypeV4.GET_STATE, type.num)
+	}
+
+//	private fun checkValidType(type: ControlType, type4: ControlTypeV4): Promise<Unit, Exception> {
+//		when (getPacketProtocol()) {
+//			3 -> {
+//				if (type == ControlType.UNKNOWN) {
+//					return Promise.ofFail(Errors.TypeWrong(type.name))
+//				}
+//			}
+//			else -> {
+//				if (type4 == ControlTypeV4.UNKNOWN) {
+//					return Promise.ofFail(Errors.TypeWrong(type4.name))
+//				}
+//			}
+//		}
+//		return Promise.ofSuccess(Unit)
+//	}
+
+	private fun isValidType(type: ControlType, type4: ControlTypeV4): Boolean {
+		when (getPacketProtocol()) {
+			3 -> return (type != ControlType.UNKNOWN)
+			else -> return (type4 != ControlTypeV4.UNKNOWN)
+		}
 	}
 
 	// Commands without payload
-	private fun writeCommand(type: ControlType): Promise<Unit, Exception> {
-		return writeCommand(ControlPacket(type))
+	private fun writeCommand(type: ControlType, type4: ControlTypeV4): Promise<Unit, Exception> {
+		if (!isValidType(type, type4)) {
+			return Promise.ofFail(Errors.TypeWrong("$type or $type4"))
+		}
+		val packet = when (getPacketProtocol()) {
+			3 -> ControlPacketV3(type)
+			else -> ControlPacketV4(type4)
+		}
+		return writeCommand(packet.getArray())
 	}
 
 	// Commands with simple value
-	private inline fun <reified T> writeCommand(type: ControlType, value: T): Promise<Unit, Exception> {
-		val packet = ControlPacket(type, Conversion.toByteArray(value))
-		return writeCommand(packet)
+	internal inline fun <reified T> writeCommand(type: ControlType, type4: ControlTypeV4, value: T): Promise<Unit, Exception> {
+		return writeCommand(type, type4, ByteArrayPacket(Conversion.toByteArray(value)))
 	}
 
-	private fun writeCommand(packet: ControlPacket): Promise<Unit, Exception> {
-		val array = packet.getArray() ?: return Promise.ofFail(Errors.ValueWrong())
+	// Commands with packet
+	private fun writeCommand(type: ControlType, type4: ControlTypeV4, packet: PacketInterface): Promise<Unit, Exception> {
+		if (!isValidType(type, type4)) {
+			return Promise.ofFail(Errors.TypeWrong("$type or $type4"))
+		}
+		val packet = when (getPacketProtocol()) {
+			3 -> ControlPacketV3(type, packet)
+			else -> ControlPacketV4(type4, packet)
+		}
+		return writeCommand(packet.getArray())
+	}
+
+	private fun writeCommand(array: ByteArray?): Promise<Unit, Exception> {
+		if (array == null) {
+			return Promise.ofFail(Errors.ValueWrong())
+		}
 		Log.i(TAG, "writeCommand ${Conversion.bytesToString(array)}")
+		val characteristic = getControlCharacteristic()
 		if (connection.mode == CrownstoneMode.SETUP) {
-			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
-				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID, array, AccessLevel.SETUP)
+			return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, characteristic, array, AccessLevel.SETUP)
+		}
+		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, characteristic, array, AccessLevel.HIGHEST_AVAILABLE)
+	}
+
+	private fun getControlCharacteristic(): UUID {
+		if (connection.mode == CrownstoneMode.SETUP) {
+			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
+				return BluenetProtocol.CHAR_SETUP_CONTROL_UUID
 			}
 			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID, array, AccessLevel.SETUP)
+				return BluenetProtocol.CHAR_SETUP_CONTROL2_UUID
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+				return BluenetProtocol.CHAR_SETUP_CONTROL3_UUID
 			}
 			else {
-				return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID, array, AccessLevel.SETUP)
+				return BluenetProtocol.CHAR_SETUP_CONTROL4_UUID
 			}
 		}
-		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID, array, AccessLevel.HIGHEST_AVAILABLE)
+		else {
+			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
+				return BluenetProtocol.CHAR_CONTROL_UUID
+			}
+			else {
+				return BluenetProtocol.CHAR_CONTROL4_UUID
+			}
+		}
+	}
+
+	private fun getPacketProtocol(): Int {
+		if (connection.mode == CrownstoneMode.SETUP) {
+			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
+				return 3
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+				return 3
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+				return 3
+			}
+			else {
+				return 4
+			}
+		}
+		else {
+			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
+				return 3
+			}
+			else {
+				return 4
+			}
+		}
 	}
 }

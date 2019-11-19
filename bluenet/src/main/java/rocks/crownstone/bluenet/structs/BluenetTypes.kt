@@ -10,6 +10,7 @@ package rocks.crownstone.bluenet.structs
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.encryption.MeshKeySet
+import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Util
 import java.util.*
@@ -128,6 +129,8 @@ enum class ScanMode(val num: Int) {
 }
 
 typealias ProcessCallback = (ByteArray) -> ProcessResult
+
+typealias ResultProcessCallback = (ResultPacketV4) -> ProcessResult
 
 //data class BleNotification(val characteristicUuid: UUID, val data: ByteArray)
 

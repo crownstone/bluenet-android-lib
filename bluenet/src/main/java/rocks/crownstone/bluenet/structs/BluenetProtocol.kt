@@ -201,7 +201,7 @@ enum class ControlType(val num: Uint8) {
 	}
 }
 
-enum class ControlV2Type(val num: Uint16) {
+enum class ControlTypeV4(val num: Uint16) {
 	SETUP(0),
 	FACTORY_RESET(1),
 	GET_STATE(2),
@@ -220,13 +220,11 @@ enum class ControlV2Type(val num: Uint16) {
 	MESH_COMMAND(33),
 	ALLOW_DIMMING(40),
 	LOCK_SWITCH(41),
-	ENABLE_SWITCHCRAFT(42),
 	UART_MSG(50),
-	UART_ENABLE(51),
 	UNKNOWN(0xFFFF);
 	companion object {
-		private val map = ControlV2Type.values().associateBy(ControlV2Type::num)
-		fun fromNum(type: Uint16): ControlV2Type {
+		private val map = ControlTypeV4.values().associateBy(ControlTypeV4::num)
+		fun fromNum(type: Uint16): ControlTypeV4 {
 			return map[type] ?: return UNKNOWN
 		}
 	}
@@ -324,7 +322,7 @@ enum class ConfigType(val num: Uint8) {
 	}
 }
 
-enum class StateTypeV2(val num: Uint16) {
+enum class StateTypeV4(val num: Uint16) {
 	PWM_PERIOD(5),
 	IBEACON_MAJOR(6),
 	IBEACON_MINOR(7),
@@ -385,8 +383,8 @@ enum class StateTypeV2(val num: Uint16) {
 
 	UNKNOWN(0xFFFF);
 	companion object {
-		private val map = StateTypeV2.values().associateBy(StateTypeV2::num)
-		fun fromNum(type: Uint16): StateTypeV2 {
+		private val map = StateTypeV4.values().associateBy(StateTypeV4::num)
+		fun fromNum(type: Uint16): StateTypeV4 {
 			return map[type] ?: return UNKNOWN
 		}
 	}

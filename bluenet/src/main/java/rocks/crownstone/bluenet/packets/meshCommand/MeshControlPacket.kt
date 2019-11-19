@@ -7,6 +7,11 @@
 
 package rocks.crownstone.bluenet.packets.meshCommand
 
-import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacketV3
+import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 
-class MeshControlPacket(controlPacket: ControlPacket): MeshCommandPacket(controlPacket)
+class MeshControlPacket: MeshCommandPacket {
+	constructor(controlPacket: ControlPacketV3): super(controlPacket)
+	constructor(controlPacket: ControlPacketV4): super(controlPacket)
+}
+

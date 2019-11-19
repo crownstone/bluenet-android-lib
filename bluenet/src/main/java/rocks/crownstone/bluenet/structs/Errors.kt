@@ -78,6 +78,7 @@ object Errors {
 	class OpcodeWrong: Exception("wrong opcode")
 	class SizeWrong: Exception("wrong size")
 	class ValueWrong: Exception("wrong value")
+	class TypeWrong(type: String): Exception("wrong type: $type")
 
 	class Full: Exception("full")
 

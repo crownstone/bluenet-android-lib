@@ -12,7 +12,10 @@ import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
 import nl.komponents.kovenant.unwrap
 import rocks.crownstone.bluenet.*
+import rocks.crownstone.bluenet.packets.ByteArrayPacket
+import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.v3.ConfigPacket
+import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
@@ -45,7 +48,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	fun setCrownstoneId(id: Uint8): Promise<Unit, Exception> {
 		Log.i(TAG, "setCrownstoneId $id")
 		val stoneId = Conversion.toUint16(id) // Is still uint16
-		return setConfigValue(ConfigType.CROWNSTONE_ID, stoneId)
+		return setConfigValue(ConfigType.CROWNSTONE_ID, StateTypeV4.CROWNSTONE_ID, stoneId)
 	}
 
 	/**
@@ -58,7 +61,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setAdminKey(key: ByteArray): Promise<Unit, Exception> {
 		Log.i(TAG, "setAdminKey $key")
-		return setConfig(ConfigPacket(ConfigType.KEY_ADMIN, key))
+		return setConfig(ConfigType.KEY_ADMIN, StateTypeV4.KEY_ADMIN, ByteArrayPacket(key))
 	}
 
 	/**
@@ -71,7 +74,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setMemberKey(key: ByteArray): Promise<Unit, Exception> {
 		Log.i(TAG, "setMemberKey $key")
-		return setConfig(ConfigPacket(ConfigType.KEY_MEMBER, key))
+		return setConfig(ConfigType.KEY_MEMBER, StateTypeV4.KEY_MEMBER, ByteArrayPacket(key))
 	}
 
 	/**
@@ -84,7 +87,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setGuestKey(key: ByteArray): Promise<Unit, Exception> {
 		Log.i(TAG, "setGuestKey $key")
-		return setConfig(ConfigPacket(ConfigType.KEY_GUEST, key))
+		return setConfig(ConfigType.KEY_GUEST, StateTypeV4.KEY_GUEST, ByteArrayPacket(key))
 	}
 
 	/**
@@ -97,7 +100,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setIbeaconUuid(uuid: UUID): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconUuid $uuid")
-		return setConfig(ConfigPacket(ConfigType.IBEACON_PROXIMITY_UUID, Conversion.uuidToBytes(uuid)))
+		return setConfig(ConfigType.IBEACON_PROXIMITY_UUID, StateTypeV4.IBEACON_PROXIMITY_UUID, ByteArrayPacket(Conversion.uuidToBytes(uuid)))
 	}
 
 	/**
@@ -110,7 +113,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setIbeaconMajor(major: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconMajor $major")
-		return setConfigValue(ConfigType.IBEACON_MAJOR, major)
+		return setConfigValue(ConfigType.IBEACON_MAJOR, StateTypeV4.IBEACON_MAJOR, major)
 	}
 
 	/**
@@ -123,7 +126,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setIbeaconMinor(minor: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconMinor $minor")
-		return setConfigValue(ConfigType.IBEACON_MINOR, minor)
+		return setConfigValue(ConfigType.IBEACON_MINOR, StateTypeV4.IBEACON_MINOR, minor)
 	}
 
 
@@ -141,7 +144,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setMeshAccessAddress(address: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setMeshAccessAddress $address")
-		return setConfigValue(ConfigType.MESH_ACCESS_ADDRESS, address)
+		return setConfigValue(ConfigType.MESH_ACCESS_ADDRESS, StateTypeV4.UNKNOWN, address)
 	}
 
 	/**
@@ -152,7 +155,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getMeshAccessAddress(): Promise<Uint32, Exception> {
 		Log.i(TAG, "getMeshAccessAddress")
-		return getConfigValue(ConfigType.MESH_ACCESS_ADDRESS)
+		return getConfigValue(ConfigType.MESH_ACCESS_ADDRESS, StateTypeV4.UNKNOWN)
 	}
 
 	/**
@@ -165,7 +168,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	fun setMeshChannel(channel: Uint8): Promise<Unit, Exception> {
 		Log.i(TAG, "setMeshChannel $channel")
 		return when (channel.toInt()) {
-			37, 38, 39 -> setConfigValue(ConfigType.MESH_CHANNEL, channel)
+			37, 38, 39 -> setConfigValue(ConfigType.MESH_CHANNEL, StateTypeV4.UNKNOWN, channel)
 			else -> Promise.ofFail(Errors.ValueWrong())
 		}
 	}
@@ -178,7 +181,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getMeshChannel(): Promise<Uint8, Exception> {
 		Log.i(TAG, "getMeshChannel")
-		return getConfigValue(ConfigType.MESH_CHANNEL)
+		return getConfigValue(ConfigType.MESH_CHANNEL, StateTypeV4.UNKNOWN)
 	}
 
 	/**
@@ -191,7 +194,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	fun setTxPower(power: Int8): Promise<Unit, Exception> {
 		Log.i(TAG, "setTxPower $power")
 		return when (power.toInt()) {
-			-40, -20, -16, -12, -8, -4, 0, 4 -> setConfigValue(ConfigType.TX_POWER, power)
+			-40, -20, -16, -12, -8, -4, 0, 4 -> setConfigValue(ConfigType.TX_POWER, StateTypeV4.TX_POWER, power)
 			else -> Promise.ofFail(Errors.ValueWrong())
 		}
 	}
@@ -204,7 +207,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getTxPower(): Promise<Int8, Exception> {
 		Log.i(TAG, "getTxPower")
-		return getConfigValue(ConfigType.TX_POWER)
+		return getConfigValue(ConfigType.TX_POWER, StateTypeV4.TX_POWER)
 	}
 
 	/**
@@ -218,7 +221,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "setUartEnabled $mode")
 		return when (mode) {
 			UartMode.UNKNOWN -> Promise.ofFail(Errors.ValueWrong())
-			else -> setConfigValue(ConfigType.UART_ENABLED, mode.num)
+			else -> setConfigValue(ConfigType.UART_ENABLED, StateTypeV4.UART_ENABLED, mode.num)
 		}
 	}
 
@@ -230,7 +233,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getUartEnabled(): Promise<UartMode, Exception> {
 		Log.i(TAG, "getUartEnabled")
-		return getConfigValue<Uint8>(ConfigType.UART_ENABLED)
+		return getConfigValue<Uint8>(ConfigType.UART_ENABLED, StateTypeV4.UART_ENABLED)
 				.then { UartMode.fromNum(it) }
 	}
 
@@ -243,18 +246,18 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setSwitchCraftThreshold(value: Float): Promise<Unit, Exception> {
 		Log.i(TAG, "setSwitchCraftThreshold $value")
-		return setConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, value)
+		return setConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, StateTypeV4.SWITCHCRAFT_THRESHOLD, value)
 	}
 
 	/**
-	 * Set switchcraft threshold.
+	 * Get switchcraft threshold.
 	 *
 	 * @return Promise with threshold as value.
 	 */
 	@Synchronized
-	fun getSwitchCraftThreshold(): Promise<Unit, Exception> {
+	fun getSwitchCraftThreshold(): Promise<Float, Exception> {
 		Log.i(TAG, "getSwitchCraftThreshold")
-		return setConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, Float)
+		return getConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, StateTypeV4.SWITCHCRAFT_THRESHOLD)
 	}
 
 
@@ -267,7 +270,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setRelayHigh(timeMs: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setRelayHigh $timeMs")
-		return setConfigValue(ConfigType.RELAY_HIGH_DURATION, timeMs)
+		return setConfigValue(ConfigType.RELAY_HIGH_DURATION, StateTypeV4.RELAY_HIGH_DURATION, timeMs)
 	}
 
 	/**
@@ -278,7 +281,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getRelayHigh(): Promise<Uint16, Exception> {
 		Log.i(TAG, "getRelayHigh")
-		return getConfigValue(ConfigType.RELAY_HIGH_DURATION)
+		return getConfigValue(ConfigType.RELAY_HIGH_DURATION, StateTypeV4.RELAY_HIGH_DURATION)
 	}
 
 
@@ -291,7 +294,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setPwmPeriod(timeUs: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setPwmPeriod $timeUs")
-		return setConfigValue(ConfigType.PWM_PERIOD, timeUs)
+		return setConfigValue(ConfigType.PWM_PERIOD, StateTypeV4.PWM_PERIOD, timeUs)
 	}
 
 	/**
@@ -302,7 +305,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getPwmPeriod(): Promise<Uint32, Exception> {
 		Log.i(TAG, "getPwmPeriod")
-		return getConfigValue(ConfigType.PWM_PERIOD)
+		return getConfigValue(ConfigType.PWM_PERIOD, StateTypeV4.PWM_PERIOD)
 	}
 
 
@@ -315,7 +318,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setBootDelay(timeMs: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setBootDelay $timeMs")
-		return setConfigValue(ConfigType.BOOT_DELAY, timeMs)
+		return setConfigValue(ConfigType.BOOT_DELAY, StateTypeV4.BOOT_DELAY, timeMs)
 	}
 
 	/**
@@ -326,7 +329,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getBootDelay(): Promise<Uint16, Exception> {
 		Log.i(TAG, "getBootDelay")
-		return getConfigValue(ConfigType.BOOT_DELAY)
+		return getConfigValue(ConfigType.BOOT_DELAY, StateTypeV4.BOOT_DELAY)
 	}
 
 
@@ -339,7 +342,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setCurrentThreshold(value: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setCurrentThreshold $value")
-		return setConfigValue(ConfigType.CURRENT_THRESHOLD, value)
+		return setConfigValue(ConfigType.CURRENT_THRESHOLD, StateTypeV4.CURRENT_THRESHOLD, value)
 	}
 
 	/**
@@ -350,7 +353,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getCurrentThreshold(): Promise<Uint16, Exception> {
 		Log.i(TAG, "getCurrentThreshold")
-		return getConfigValue(ConfigType.CURRENT_THRESHOLD)
+		return getConfigValue(ConfigType.CURRENT_THRESHOLD, StateTypeV4.CURRENT_THRESHOLD)
 	}
 
 	/**
@@ -362,7 +365,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setCurrentThresholdDimmer(value: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setCurrentThresholdDimmer $value")
-		return setConfigValue(ConfigType.CURRENT_THRESHOLD_DIMMER, value)
+		return setConfigValue(ConfigType.CURRENT_THRESHOLD_DIMMER, StateTypeV4.CURRENT_THRESHOLD_DIMMER, value)
 	}
 
 	/**
@@ -373,7 +376,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getCurrentThresholdDimmer(): Promise<Uint16, Exception> {
 		Log.i(TAG, "getCurrentThresholdDimmer")
-		return getConfigValue(ConfigType.CURRENT_THRESHOLD_DIMMER)
+		return getConfigValue(ConfigType.CURRENT_THRESHOLD_DIMMER, StateTypeV4.CURRENT_THRESHOLD_DIMMER)
 	}
 
 
@@ -386,7 +389,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setMaxChipTemp(celcius: Int8): Promise<Unit, Exception> {
 		Log.i(TAG, "setMaxChipTemp $celcius")
-		return setConfigValue(ConfigType.MAX_CHIP_TEMP, celcius)
+		return setConfigValue(ConfigType.MAX_CHIP_TEMP, StateTypeV4.MAX_CHIP_TEMP, celcius)
 	}
 
 	/**
@@ -397,7 +400,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getMaxChipTemp(): Promise<Int8, Exception> {
 		Log.i(TAG, "getMaxChipTemp")
-		return getConfigValue(ConfigType.MAX_CHIP_TEMP)
+		return getConfigValue(ConfigType.MAX_CHIP_TEMP, StateTypeV4.MAX_CHIP_TEMP)
 	}
 
 	/**
@@ -409,7 +412,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setDimmerTempUpThreshold(value: Float): Promise<Unit, Exception> {
 		Log.i(TAG, "setDimmerTempUpThreshold $value")
-		return setConfigValue(ConfigType.DIMMER_TEMP_UP, value)
+		return setConfigValue(ConfigType.DIMMER_TEMP_UP, StateTypeV4.DIMMER_TEMP_UP, value)
 	}
 
 	/**
@@ -420,7 +423,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getDimmerTempUpThreshold(): Promise<Float, Exception> {
 		Log.i(TAG, "getDimmerTempUpThreshold")
-		return getConfigValue(ConfigType.DIMMER_TEMP_UP)
+		return getConfigValue(ConfigType.DIMMER_TEMP_UP, StateTypeV4.DIMMER_TEMP_UP)
 	}
 
 	/**
@@ -432,7 +435,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setDimmerTempDownThreshold(value: Float): Promise<Unit, Exception> {
 		Log.i(TAG, "setDimmerTempDownThreshold $value")
-		return setConfigValue(ConfigType.DIMMER_TEMP_DOWN, value)
+		return setConfigValue(ConfigType.DIMMER_TEMP_DOWN, StateTypeV4.DIMMER_TEMP_DOWN, value)
 	}
 
 	/**
@@ -443,7 +446,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getDimmerTempDownThreshold(): Promise<Float, Exception> {
 		Log.i(TAG, "getDimmerTempDownThreshold")
-		return getConfigValue(ConfigType.DIMMER_TEMP_DOWN)
+		return getConfigValue(ConfigType.DIMMER_TEMP_DOWN, StateTypeV4.DIMMER_TEMP_DOWN)
 	}
 
 	/**
@@ -455,7 +458,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setVoltageMultiplier(value: Float): Promise<Unit, Exception> {
 		Log.i(TAG, "setVoltageMultiplier $value")
-		return setConfigValue(ConfigType.VOLTAGE_MULTIPLIER, value)
+		return setConfigValue(ConfigType.VOLTAGE_MULTIPLIER, StateTypeV4.VOLTAGE_MULTIPLIER, value)
 	}
 
 	/**
@@ -466,7 +469,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getVoltageMultiplier(): Promise<Float, Exception> {
 		Log.i(TAG, "getVoltageMultiplier")
-		return getConfigValue(ConfigType.VOLTAGE_MULTIPLIER)
+		return getConfigValue(ConfigType.VOLTAGE_MULTIPLIER, StateTypeV4.VOLTAGE_MULTIPLIER)
 	}
 
 	/**
@@ -478,7 +481,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setCurrentMultiplier(value: Float): Promise<Unit, Exception> {
 		Log.i(TAG, "setCurrentMultiplier $value")
-		return setConfigValue(ConfigType.CURRENT_MULTIPLIER, value)
+		return setConfigValue(ConfigType.CURRENT_MULTIPLIER, StateTypeV4.CURRENT_MULTIPLIER, value)
 	}
 
 	/**
@@ -489,7 +492,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getCurrentMultiplier(): Promise<Float, Exception> {
 		Log.i(TAG, "getCurrentMultiplier")
-		return getConfigValue(ConfigType.CURRENT_MULTIPLIER)
+		return getConfigValue(ConfigType.CURRENT_MULTIPLIER, StateTypeV4.CURRENT_MULTIPLIER)
 	}
 
 	/**
@@ -501,7 +504,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setPowerZero(milliWatt: Int32): Promise<Unit, Exception> {
 		Log.i(TAG, "setPowerZero $milliWatt")
-		return setConfigValue(ConfigType.POWER_ZERO, milliWatt)
+		return setConfigValue(ConfigType.POWER_ZERO, StateTypeV4.POWER_ZERO, milliWatt)
 	}
 
 	/**
@@ -512,7 +515,43 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getPowerZero(): Promise<Int32, Exception> {
 		Log.i(TAG, "getPowerZero")
-		return getConfigValue(ConfigType.POWER_ZERO)
+		return getConfigValue(ConfigType.POWER_ZERO, StateTypeV4.POWER_ZERO)
+	}
+
+	/**
+	 * Enable or disable switchcraft.
+	 *
+	 * @param enable True to enable switchcraft.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setSwitchCraftEnabled(enable: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "enableSwitchCraft $enable")
+		if (getPacketProtocol() == 3) {
+			val controlClass = Control(eventBus, connection)
+			return controlClass.writeCommand(ControlType.ENABLE_SWITCHCRAFT, ControlTypeV4.UNKNOWN, enable)
+		}
+		else {
+			return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.SWITCHCRAFT_ENABLED, enable)
+		}
+	}
+
+	/**
+	 * Set the UART mode.
+	 *
+	 * @param mode Which mode to set it to.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setUartMode(mode: UartMode): Promise<Unit, Exception> {
+		Log.i(TAG, "setUart $mode")
+		if (getPacketProtocol() == 3) {
+			val controlClass = Control(eventBus, connection)
+			return controlClass.writeCommand(ControlType.UART_ENABLE, ControlTypeV4.UNKNOWN, mode)
+		}
+		else {
+			return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.UART_ENABLED, mode)
+		}
 	}
 
 
@@ -520,18 +559,39 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	// --- helper functions --- //
 	// ------------------------ //
 
-	private inline fun <reified T>getConfigValue(type: ConfigType): Promise<T, Exception> {
-		return getConfig(type)
+	private inline fun <reified T>getConfigValue(type: ConfigType, type4: StateTypeV4): Promise<T, Exception> {
+		if (getPacketProtocol() == 3) {
+			return getConfig(type)
+					.then {
+						val arr = it.getPayload()
+						if (arr == null) {
+							return@then Promise.ofFail<T, Exception>(Errors.Parse("config payload expected"))
+						}
+						try {
+							val value = Conversion.byteArrayTo<T>(arr)
+							return@then Promise.ofSuccess<T, Exception>(value)
+						} catch (ex: Exception) {
+							return@then Promise.ofFail<T, Exception>(ex)
+						}
+					}.unwrap()
+		}
+		else {
+			return getStateValue(type4)
+		}
+	}
+
+	internal inline fun <reified T>getStateValue(type: StateTypeV4): Promise<T, Exception> {
+		val arrPacket = ByteArrayPacket()
+		return getState(type, arrPacket)
 				.then {
 					val arr = it.getPayload()
 					if (arr == null) {
-						return@then Promise.ofFail<T, Exception>(Errors.Parse("config payload expected"))
+						return@then Promise.ofFail<T, Exception>(Errors.Parse("payload missing"))
 					}
 					try {
 						val value = Conversion.byteArrayTo<T>(arr)
 						return@then Promise.ofSuccess<T, Exception>(value)
-					}
-					catch (ex: Exception) {
+					} catch (ex: Exception) {
 						return@then Promise.ofFail<T, Exception>(ex)
 					}
 				}.unwrap()
@@ -547,6 +607,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 					val configPacket = ConfigPacket()
 					if (!configPacket.fromArray(it) || configPacket.type != type.num) {
 						deferred.reject(Errors.Parse("can't make a ConfigPacket from ${Conversion.bytesToString(it)}"))
+						return@success
 					}
 					deferred.resolve(configPacket)
 				}
@@ -556,17 +617,48 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	private inline fun <reified T>setConfigValue(type: ConfigType, value: T): Promise<Unit, Exception> {
-		val config = ConfigPacket(type, Conversion.toByteArray(value))
-		return setConfig(config)
+	internal fun getState(stateType: StateTypeV4, statePayloadPacket: PacketInterface): Promise<StatePacketV4, Exception> {
+		val resultClass = Result(eventBus, connection)
+		val controlClass = Control(eventBus, connection)
+		val writeCommand = fun (): Promise<Unit, Exception> {
+			return controlClass.writeGetState(stateType)
+		}
+		val deferred = deferred<StatePacketV4, Exception>()
+		val statePacket = StatePacketV4(stateType, statePayloadPacket)
+		resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
+				.success {
+					if (statePacket.type != stateType) {
+						deferred.reject(Errors.Parse("Wrong state type: req=$stateType rec=${statePacket.type}"))
+						return@success
+					}
+					deferred.resolve(statePacket)
+				}
+				.fail {
+					deferred.reject(it)
+				}
+		return deferred.promise
 	}
 
-	private fun setConfig(config: ConfigPacket): Promise<Unit, Exception> {
-		Log.i(TAG, "setConfig $config")
-		if (config.opCode != OpcodeType.WRITE) {
-			return Promise.ofFail(Errors.OpcodeWrong())
+	private inline fun <reified T>setConfigValue(type: ConfigType, type4: StateTypeV4, value: T): Promise<Unit, Exception> {
+		return setConfig(type, type4, ByteArrayPacket(Conversion.toByteArray(value)))
+	}
+
+	private fun setConfig(type: ConfigType, type4: StateTypeV4, packet: PacketInterface): Promise<Unit, Exception> {
+		if (getPacketProtocol() == 3) {
+			val configPacket = ConfigPacket(type, packet)
+			Log.i(TAG, "setConfig $configPacket")
+			return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), configPacket.getArray())
 		}
-		return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), config.getArray())
+		else {
+			return setState(type4, packet)
+		}
+	}
+
+	internal fun setState(type: StateTypeV4, packet: PacketInterface): Promise<Unit, Exception> {
+		val statePacket = StatePacketV4(type, packet)
+		val controlClass = Control(eventBus, connection)
+		Log.i(TAG, "setState $statePacket")
+		return controlClass.writeSetState(statePacket)
 	}
 
 	private fun getServiceUuid(): UUID {
@@ -577,16 +669,59 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	private fun getCharacteristicWriteUuid(): UUID {
-		return when (connection.mode) {
-			CrownstoneMode.SETUP -> BluenetProtocol.CHAR_SETUP_CONFIG_CONTROL_UUID
-			else -> BluenetProtocol.CHAR_CONFIG_CONTROL_UUID
+		val packetProtocol = getPacketProtocol()
+		if (connection.mode == CrownstoneMode.SETUP) {
+			return when (packetProtocol) {
+				3 -> BluenetProtocol.CHAR_SETUP_CONFIG_CONTROL_UUID
+				else -> BluenetProtocol.CHAR_SETUP_CONTROL4_UUID
+			}
+		}
+		else {
+			return when (packetProtocol) {
+				3 -> BluenetProtocol.CHAR_CONFIG_CONTROL_UUID
+				else -> BluenetProtocol.CHAR_CONTROL4_UUID
+			}
 		}
 	}
 
 	private fun getCharacteristicReadUuid(): UUID {
-		return when (connection.mode) {
-			CrownstoneMode.SETUP -> BluenetProtocol.CHAR_SETUP_CONFIG_READ_UUID
-			else -> BluenetProtocol.CHAR_CONFIG_READ_UUID
+		val packetProtocol = getPacketProtocol()
+		if (connection.mode == CrownstoneMode.SETUP) {
+			return when (packetProtocol) {
+				3 -> BluenetProtocol.CHAR_SETUP_CONFIG_READ_UUID
+				else -> BluenetProtocol.CHAR_SETUP_RESULT_UUID
+			}
+		}
+		else {
+			return when (packetProtocol) {
+				3 -> BluenetProtocol.CHAR_CONFIG_READ_UUID
+				else -> BluenetProtocol.CHAR_RESULT_UUID
+			}
+		}
+	}
+
+	private fun getPacketProtocol(): Int {
+		if (connection.mode == CrownstoneMode.SETUP) {
+			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
+				return 3
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+				return 3
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+				return 3
+			}
+			else {
+				return 4
+			}
+		}
+		else {
+			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
+				return 3
+			}
+			else {
+				return 4
+			}
 		}
 	}
 }

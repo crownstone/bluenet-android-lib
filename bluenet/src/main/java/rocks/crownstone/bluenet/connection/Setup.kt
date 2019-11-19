@@ -13,6 +13,7 @@ import rocks.crownstone.bluenet.encryption.MeshKeySet
 import rocks.crownstone.bluenet.packets.wrappers.v3.CommandResultPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
 import rocks.crownstone.bluenet.packets.SetupPacketV2
+import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
@@ -101,7 +102,10 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 			return Promise.ofFail(Errors.ValueWrong())
 		}
 
-		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL4_UUID)) {
+			return fastSetupV4(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
+		}
+		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
 			return fastSetupV2(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
@@ -209,35 +213,26 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	private fun fastSetup(stoneId: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val packet = SetupPacket(0, stoneId, keySet, meshAccessAddress, ibeaconData)
 		val control = Control(eventBus, connection)
-		val writeCommand = fun (): Promise<Unit, Exception> { return control.setup(packet) }
-		return performFastSetup(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)
+		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
+		return performFastSetupV2(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)
 	}
 
 	private fun fastSetupV2(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshKeys, ibeaconData)
 		val control = Control(eventBus, connection)
-		val writeCommand = fun (): Promise<Unit, Exception> { return control.setup(packet) }
-		return performFastSetup(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)
+		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
+		return performFastSetupV2(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)
 	}
 
-	/**
-	 * Perform the fast setup
-	 *
-	 * Subscribes, then writes the setup command, then waits for notifications, then disconnects.
-	 * If notifications time out, we assume a success, because the crownstone probably rebooted before sending the notifications.
-	 */
-	private fun performFastSetup(writeCommand: () -> Promise<Unit, Exception>, characteristicUuid: UUID): Promise<Unit, Exception> {
-		val deferred = deferred<Unit, Exception>()
-		var step = FastSetupStep.START
+	private fun fastSetupV4(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshKeys, ibeaconData)
+		val control = Control(eventBus, connection)
+		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
+		return performFastSetupV4(writeCommand)
+	}
 
-		fun sendProgress(progress: FastSetupStep, isDone: Boolean) {
-			Log.i(TAG, "progress ${progress.name}")
-			if (!isDone) {
-				step = progress
-				val progressDouble = progress.num / 13.0
-				eventBus.emit(BluenetEvent.SETUP_PROGRESS, progressDouble)
-			}
-		}
+	private fun performFastSetupV2(writeCommand: () -> Promise<Unit, Exception>, characteristicUuid: UUID): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
 
 		// Process notifications
 		val processCallback = fun (data: ByteArray): ProcessResult {
@@ -246,32 +241,87 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 				return ProcessResult.ERROR
 			}
 			val result = resultPacket.resultCode
-			Log.i(TAG, "result: ${result.name}")
-			when (result) {
-				ResultType.WAIT_FOR_SUCCESS -> {
-					sendProgress(FastSetupStep.WAIT_FOR_SUCCESS, deferred.promise.isDone())
-					return ProcessResult.NOT_DONE
-				}
-				ResultType.SUCCESS -> {
-					sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
-					return ProcessResult.DONE
-				}
-				else -> {
-					if (!deferred.promise.isDone()) {
-						deferred.reject(Errors.Result(result))
-					}
-					return ProcessResult.ERROR
-				}
-			}
+			return handleResult(result, deferred)
 		}
 
-		// Subscribe for notifications
-		Util.recoverablePromise(
+		// Subscribe and write command
+		performFastSetup(
 				connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, characteristicUuid, writeCommand, processCallback, 3000),
+				deferred
+		)
+
+		return deferred.promise
+	}
+
+	private fun performFastSetupV4(writeCommand: () -> Promise<Unit, Exception>): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+
+		// Process notifications
+		val processCallback = fun (resultPacket: ResultPacketV4): ProcessResult {
+			val result = resultPacket.resultCode
+			return handleResult(result, deferred)
+		}
+
+		// Subscribe and write command
+		val resultClass = Result(eventBus, connection)
+		performFastSetup(
+				resultClass.getMultipleResults(writeCommand, processCallback, 3000),
+				deferred
+		)
+
+		return deferred.promise
+	}
+
+	/**
+	 * Send progress
+	 */
+	private fun sendProgress(progress: FastSetupStep, isDone: Boolean) {
+		Log.i(TAG, "progress ${progress.name}")
+		if (!isDone) {
+			val progressDouble = progress.num / 13.0
+			eventBus.emit(BluenetEvent.SETUP_PROGRESS, progressDouble)
+		}
+	}
+
+	/**
+	 * Handle result codes.
+	 *
+	 * Also sends progress updates.
+	 */
+	private fun handleResult(resultCode: ResultType, deferred: Deferred<Unit, Exception>): ProcessResult {
+		Log.i(TAG, "result: ${resultCode.name}")
+		when (resultCode) {
+			ResultType.WAIT_FOR_SUCCESS -> {
+				sendProgress(FastSetupStep.WAIT_FOR_SUCCESS, deferred.promise.isDone())
+				return ProcessResult.NOT_DONE
+			}
+			ResultType.SUCCESS -> {
+				sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
+				return ProcessResult.DONE
+			}
+			else -> {
+				if (!deferred.promise.isDone()) {
+					deferred.reject(Errors.Result(resultCode))
+				}
+				return ProcessResult.ERROR
+			}
+		}
+	}
+
+	/**
+	 * Perform the fast setup.
+	 *
+	 * Subscribes, then writes the setup command, then waits for notifications, then disconnects.
+	 * If notifications time out, we assume a success, because the crownstone probably rebooted before sending the notifications.
+	 *
+	 * Also sends progress updates.
+	 */
+	private fun performFastSetup(notificationPromise: Promise<Unit, Exception>, deferred: Deferred<Unit, Exception>) {
+		Util.recoverablePromise(
+				notificationPromise,
 				fun (error: Exception): Promise<Unit, Exception> {
 					// If the promise failed with a timeout error, assume it was a success (because we assume the crownstone rebooted before sending the notification).
 					if (error is Errors.Timeout) {
-//						if (step) ...
 						sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
 						return Promise.ofSuccess(Unit)
 					}
@@ -290,6 +340,5 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 						deferred.reject(it)
 					}
 				}
-		return deferred.promise
 	}
 }

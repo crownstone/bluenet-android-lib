@@ -1,44 +1,73 @@
 /**
  * Author: Crownstone Team
  * Copyright: Crownstone (https://crownstone.rocks)
- * Date: Jan 15, 2019
+ * Date: Nov 14, 2019
  * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
  */
 
 package rocks.crownstone.bluenet.packets.multiSwitch
 
-import rocks.crownstone.bluenet.structs.MultiSwitchType
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.put
 import java.nio.ByteBuffer
 
-class MultiSwitchPacket(val payload: PacketInterface): PacketInterface {
-	val type: MultiSwitchType
+class MultiSwitchPacket: PacketInterface {
+	val list = ArrayList<MultiSwitchItemPacket>()
+
 	companion object {
-		val SIZE = 1
+		const val HEADER_SIZE = 1
 	}
-	init {
-		when (payload::class) {
-			MultiSwitchListPacket::class -> type = MultiSwitchType.LIST
-			else -> type = MultiSwitchType.UNKNOWN
-		}
+
+	fun add(item: MultiSwitchItemPacket): Boolean {
+		list.add(item)
+		// TODO: return false when list is too large
+		return true
 	}
 
 	override fun getPacketSize(): Int {
-		val payloadSize = payload?.getPacketSize() ?: 0
-		return SIZE + payloadSize
+		return HEADER_SIZE + list.size * MultiSwitchItemPacket.SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
-		val payload = this.payload
-		if (payload == null || type == MultiSwitchType.UNKNOWN || bb.remaining() < getPacketSize()) {
+		if (list.isEmpty() || bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.put(type.num)
-		return payload.toBuffer(bb)
+		bb.put(list.size.toByte())
+		for (it in list) {
+			if (!it.toBuffer(bb)) {
+				return false
+			}
+		}
+		return true
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		// Not implemented yet (no need?)
+		return false
+	}
+}
+
+class MultiSwitchItemPacket(var id: Uint8, var switchValue: Uint8): PacketInterface {
+	companion object {
+		const val SIZE = 2
+	}
+
+	override fun getPacketSize(): Int {
+		return SIZE
+	}
+
+	override fun toBuffer(bb: ByteBuffer): Boolean {
+		if (bb.remaining() < getPacketSize()) {
+			return false
+		}
+		bb.put(id)
+		bb.put(switchValue)
+		return true
+	}
+
+	override fun fromBuffer(bb: ByteBuffer): Boolean {
+		// Not implemented yet (no need?)
+		return false
 	}
 }

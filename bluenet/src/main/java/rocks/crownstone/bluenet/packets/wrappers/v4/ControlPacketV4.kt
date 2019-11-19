@@ -15,20 +15,20 @@ import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class ControlPacket(type: ControlV2Type, payload: PacketInterface?): PayloadWrapperPacket(payload) {
-	constructor():                                         this(ControlV2Type.UNKNOWN, null)
-	constructor(type: ControlV2Type):                      this(type, null)
-	constructor(type: ControlV2Type, data: ByteArray):     this(type, ByteArrayPacket(data))
-	constructor(type: ControlV2Type, byte: Byte):          this(type, byteArrayOf(byte))
-	constructor(type: ControlV2Type, short: Short):        this(type, Conversion.int16ToByteArray(short))
-	constructor(type: ControlV2Type, int: Int):            this(type, Conversion.int32ToByteArray(int))
-	constructor(type: ControlV2Type, float: Float):        this(type, Conversion.floatToByteArray(float))
+open class ControlPacketV4(type: ControlTypeV4, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+	constructor():                                         this(ControlTypeV4.UNKNOWN, null)
+	constructor(type: ControlTypeV4):                      this(type, null)
+	constructor(type: ControlTypeV4, data: ByteArray):     this(type, ByteArrayPacket(data))
+	constructor(type: ControlTypeV4, byte: Byte):          this(type, byteArrayOf(byte))
+	constructor(type: ControlTypeV4, short: Short):        this(type, Conversion.int16ToByteArray(short))
+	constructor(type: ControlTypeV4, int: Int):            this(type, Conversion.int32ToByteArray(int))
+	constructor(type: ControlTypeV4, float: Float):        this(type, Conversion.floatToByteArray(float))
 
 	override val TAG = this.javaClass.simpleName
 	companion object {
 		const val SIZE = 2+2
 	}
-	var type: Uint16 = type.num
+	var type: ControlTypeV4 = type
 		protected set
 	protected var dataSize: Uint16 = 0
 	init {
@@ -45,13 +45,13 @@ open class ControlPacket(type: ControlV2Type, payload: PacketInterface?): Payloa
 
 	override fun headerToBuffer(bb: ByteBuffer): Boolean {
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-		bb.putShort(type)
+		bb.putShort(type.num)
 		bb.putShort(dataSize)
 		return true
 	}
 
 	override fun headerFromBuffer(bb: ByteBuffer): Boolean {
-		type = bb.getUint16()
+		type = ControlTypeV4.fromNum(bb.getUint16())
 		dataSize = bb.getUint16()
 		return true
 	}

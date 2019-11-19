@@ -37,7 +37,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getResetCount(): Promise<Uint16, Exception> {
 		Log.i(TAG, "getResetCount")
-		return getStateValue(StateType.RESET_COUNTER)
+		return getStateValue(StateType.RESET_COUNTER, StateTypeV4.RESET_COUNTER)
 	}
 
 	/**
@@ -53,7 +53,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 //				.success { deferred.resolve(SwitchState(it)) }
 //				.fail { deferred.reject(it) }
 //		return deferred.promise
-		return getStateValue<Uint8>(StateType.SWITCH_STATE)
+		return getStateValue<Uint8>(StateType.SWITCH_STATE, StateTypeV4.SWITCH_STATE)
 				.then { SwitchState(it) }
 	}
 
@@ -65,20 +65,6 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getScheduleList(): Promise<ScheduleListPacket, Exception> {
 		Log.i(TAG, "getScheduleList")
-//		return getState(StateType.SCHEDULE)
-//				.then {
-//					val arr = it.getPayload()
-//					if (arr == null) {
-//						return@then Promise.ofFail<ScheduleListPacket, Exception>(Errors.Parse("state payload expected"))
-//					}
-//					val list = ScheduleListPacket()
-//					if (!list.fromArray(arr)) {
-//						return@then Promise.ofFail<ScheduleListPacket, Exception>(Errors.Parse("state payload expected"))
-//					}
-//					return@then Promise.ofSuccess<ScheduleListPacket, Exception>(list)
-//				}.unwrap()
-
-		// TODO: make this a generic function for payload type T (a ScheduleListPacket in this case)
 		val type = StateType.SCHEDULE
 		val writeCommand = fun (): Promise<Unit, Exception> {
 			return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_CONTROL_UUID, StatePacket(type).getArray())
@@ -128,7 +114,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getTemperature(): Promise<Int32, Exception> {
 		Log.i(TAG, "getTemperature")
-		return getStateValue(StateType.TEMPERATURE)
+		return getStateValue(StateType.TEMPERATURE, StateTypeV4.TEMPERATURE)
 	}
 
 	/**
@@ -140,7 +126,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	fun getTime(): Promise<Uint32, Exception> {
 		Log.i(TAG, "getTime")
 		// TODO: time conversion
-		return getStateValue(StateType.TIME)
+		return getStateValue(StateType.TIME, StateTypeV4.TIME)
 	}
 
 	/**
@@ -151,7 +137,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getErrors(): Promise<ErrorState, Exception> {
 		Log.i(TAG, "getErrors")
-		val promise: Promise<Uint32, Exception> = getStateValue(StateType.ERRORS)
+		val promise: Promise<Uint32, Exception> = getStateValue(StateType.ERRORS, StateTypeV4.ERRORS)
 		return promise.then {
 			ErrorState(it)
 		}
@@ -212,21 +198,26 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 
-	inline private fun <reified T>getStateValue(type: StateType): Promise<T, Exception> {
-		return getState(type)
-				.then {
-					val arr = it.getPayload()
-					if (arr == null) {
-						return@then Promise.ofFail<T, Exception>(Errors.Parse("state payload expected"))
-					}
-					try {
-						val value = Conversion.byteArrayTo<T>(arr)
-						return@then Promise.ofSuccess<T, Exception>(value)
-					}
-					catch (ex: Exception) {
-						return@then Promise.ofFail<T, Exception>(ex)
-					}
-				}.unwrap()
+	private inline fun <reified T>getStateValue(type: StateType, type4: StateTypeV4): Promise<T, Exception> {
+		if (getPacketProtocol() == 3) {
+			return getState(type)
+					.then {
+						val arr = it.getPayload()
+						if (arr == null) {
+							return@then Promise.ofFail<T, Exception>(Errors.Parse("state payload expected"))
+						}
+						try {
+							val value = Conversion.byteArrayTo<T>(arr)
+							return@then Promise.ofSuccess<T, Exception>(value)
+						} catch (ex: Exception) {
+							return@then Promise.ofFail<T, Exception>(ex)
+						}
+					}.unwrap()
+		}
+		else {
+			val configClass = Config(eventBus, connection)
+			return configClass.getStateValue(type4)
+		}
 	}
 
 
@@ -247,5 +238,31 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 					deferred.reject(it)
 				}
 		return deferred.promise
+	}
+
+
+	private fun getPacketProtocol(): Int {
+		if (connection.mode == CrownstoneMode.SETUP) {
+			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
+				return 3
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+				return 3
+			}
+			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+				return 3
+			}
+			else {
+				return 4
+			}
+		}
+		else {
+			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
+				return 3
+			}
+			else {
+				return 4
+			}
+		}
 	}
 }

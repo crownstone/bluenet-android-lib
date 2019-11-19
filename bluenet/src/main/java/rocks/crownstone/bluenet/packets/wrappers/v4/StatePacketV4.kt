@@ -9,19 +9,19 @@ package rocks.crownstone.bluenet.packets.wrappers.v4
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.PayloadWrapperPacket
-import rocks.crownstone.bluenet.structs.StateTypeV2
+import rocks.crownstone.bluenet.structs.StateTypeV4
 import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.util.getUint16
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class StatePacket(type: StateTypeV2, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+open class StatePacketV4(type: StateTypeV4, payload: PacketInterface?): PayloadWrapperPacket(payload) {
 	override val TAG = this.javaClass.simpleName
 	companion object {
 		const val SIZE = 2
 	}
-	var type: Uint16 = type.num
+	var type = type
 		protected set
 
 	override fun getHeaderSize(): Int {
@@ -34,12 +34,12 @@ open class StatePacket(type: StateTypeV2, payload: PacketInterface?): PayloadWra
 
 	override fun headerToBuffer(bb: ByteBuffer): Boolean {
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-		bb.putShort(type)
+		bb.putShort(type.num)
 		return true
 	}
 
 	override fun headerFromBuffer(bb: ByteBuffer): Boolean {
-		type = bb.getUint16()
+		type = StateTypeV4.fromNum(bb.getUint16())
 		return true
 	}
 

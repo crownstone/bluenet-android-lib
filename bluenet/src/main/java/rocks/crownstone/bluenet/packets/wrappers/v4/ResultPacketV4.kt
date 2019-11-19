@@ -15,22 +15,22 @@ import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class ResultPacket(type: ControlV2Type, resultCode: ResultType, payload: PacketInterface?): PayloadWrapperPacket(payload) {
-	constructor():                                                                      this(ControlV2Type.UNKNOWN, ResultType.UNKNOWN, null)
-	constructor(type: ControlV2Type, resultCode: ResultType):                           this(type, resultCode, null)
-	constructor(type: ControlV2Type, resultCode: ResultType, data: ByteArray):          this(type, resultCode, ByteArrayPacket(data))
-	constructor(type: ControlV2Type, resultCode: ResultType, byte: Byte):               this(type, resultCode, byteArrayOf(byte))
-	constructor(type: ControlV2Type, resultCode: ResultType, short: Short):             this(type, resultCode, Conversion.int16ToByteArray(short))
-	constructor(type: ControlV2Type, resultCode: ResultType, int: Int):                 this(type, resultCode, Conversion.int32ToByteArray(int))
-	constructor(type: ControlV2Type, resultCode: ResultType, float: Float):             this(type, resultCode, Conversion.floatToByteArray(float))
+open class ResultPacketV4(type: ControlTypeV4, resultCode: ResultType, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+	constructor():                                                                      this(ControlTypeV4.UNKNOWN, ResultType.UNKNOWN, null)
+	constructor(type: ControlTypeV4, resultCode: ResultType):                           this(type, resultCode, null)
+	constructor(type: ControlTypeV4, resultCode: ResultType, data: ByteArray):          this(type, resultCode, ByteArrayPacket(data))
+	constructor(type: ControlTypeV4, resultCode: ResultType, byte: Byte):               this(type, resultCode, byteArrayOf(byte))
+	constructor(type: ControlTypeV4, resultCode: ResultType, short: Short):             this(type, resultCode, Conversion.int16ToByteArray(short))
+	constructor(type: ControlTypeV4, resultCode: ResultType, int: Int):                 this(type, resultCode, Conversion.int32ToByteArray(int))
+	constructor(type: ControlTypeV4, resultCode: ResultType, float: Float):             this(type, resultCode, Conversion.floatToByteArray(float))
 
 	override val TAG = this.javaClass.simpleName
 	companion object {
 		const val SIZE = 2+2+2
 	}
-	var type: Uint16 = type.num
+	var type = type
 		protected set
-	var resultCode: Uint16 = resultCode.num
+	var resultCode = resultCode
 		protected set
 	protected var dataSize: Uint16 = 0
 	init {
@@ -47,15 +47,15 @@ open class ResultPacket(type: ControlV2Type, resultCode: ResultType, payload: Pa
 
 	override fun headerToBuffer(bb: ByteBuffer): Boolean {
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-		bb.putShort(type)
-		bb.putShort(resultCode)
+		bb.putShort(type.num)
+		bb.putShort(resultCode.num)
 		bb.putShort(dataSize)
 		return true
 	}
 
 	override fun headerFromBuffer(bb: ByteBuffer): Boolean {
-		type = bb.getUint16()
-		resultCode = bb.getUint16()
+		type = ControlTypeV4.fromNum(bb.getUint16())
+		resultCode = ResultType.fromNum(bb.getUint16())
 		dataSize = bb.getUint16()
 		return true
 	}

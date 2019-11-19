@@ -58,6 +58,7 @@ class Bluenet(looper: Looper? = null) {
 	lateinit var control: Control; private set
 	lateinit var config: Config; private set
 	lateinit var state: State; private set
+	lateinit var mesh: Mesh; private set
 	lateinit var deviceInfo: DeviceInfo; private set
 	lateinit var dfu: Dfu; private set
 	lateinit var broadCast: CommandBroadcaster; private set
@@ -137,6 +138,7 @@ class Bluenet(looper: Looper? = null) {
 		control = Control(eventBus, connection)
 		config = Config(eventBus, connection)
 		state = State(eventBus, connection)
+		mesh = Mesh(eventBus, connection)
 		deviceInfo = DeviceInfo(eventBus, connection)
 		dfu = Dfu(eventBus, connection, context)
 		iBeaconRanger = IbeaconRanger(eventBus, looper)

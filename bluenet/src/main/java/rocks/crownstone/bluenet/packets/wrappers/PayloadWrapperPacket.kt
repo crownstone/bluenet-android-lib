@@ -94,6 +94,10 @@ abstract class PayloadWrapperPacket(payload: PacketInterface?): PacketInterface 
 		return payload?.getArray()
 	}
 
+	fun getPayloadPacket(): PacketInterface? {
+		return payload
+	}
+
 	override fun toString(): String {
 		return "payloadSize=${payload?.getPacketSize() ?: 0} data=${Conversion.bytesToString(getPayload())}"
 	}

@@ -11,8 +11,7 @@ import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 
-//typealias ControlPacket = StreamPacket
-open class ControlPacket(type: ControlType, data: ByteArray?, payload: PacketInterface?): StreamPacket(type.num, data, payload, OpcodeType.WRITE) {
+open class ControlPacketV3(type: ControlType, data: ByteArray?, payload: PacketInterface?): StreamPacket(type.num, data, payload, OpcodeType.WRITE) {
 
 
 	constructor(): this(ControlType.UNKNOWN, null, null)
@@ -24,7 +23,3 @@ open class ControlPacket(type: ControlType, data: ByteArray?, payload: PacketInt
 	constructor(type: ControlType, int: Int):                 this(type, Conversion.int32ToByteArray(int), null)
 	constructor(type: ControlType, float: Float):             this(type, Conversion.floatToByteArray(float), null)
 }
-
-class ControlPacketUint8(type: ControlType, value: Uint8): ControlPacket(type, value.toByte())
-class ControlPacketUint16(type: ControlType, value: Uint16): ControlPacket(type, value.toShort())
-class ControlPacketUint32(type: ControlType, value: Uint32): ControlPacket(type, value.toInt())
