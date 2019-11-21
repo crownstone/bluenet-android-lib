@@ -244,30 +244,6 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	/**
-	 * Set switchcraft threshold.
-	 *
-	 * @param value The threshold.
-	 * @return Promise
-	 */
-	@Synchronized
-	fun setSwitchCraftThreshold(value: Float): Promise<Unit, Exception> {
-		Log.i(TAG, "setSwitchCraftThreshold $value")
-		return setConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, StateTypeV4.SWITCHCRAFT_THRESHOLD, value)
-	}
-
-	/**
-	 * Get switchcraft threshold.
-	 *
-	 * @return Promise with threshold as value.
-	 */
-	@Synchronized
-	fun getSwitchCraftThreshold(): Promise<Float, Exception> {
-		Log.i(TAG, "getSwitchCraftThreshold")
-		return getConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, StateTypeV4.SWITCHCRAFT_THRESHOLD)
-	}
-
-
-	/**
 	 * Set relay high duration.
 	 *
 	 * @param timeMs Time in ms.
@@ -578,7 +554,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun setSwitchCraftEnabled(enable: Boolean): Promise<Unit, Exception> {
-		Log.i(TAG, "enableSwitchCraft $enable")
+		Log.i(TAG, "setSwitchCraftEnabled $enable")
 		if (getPacketProtocol() == 3) {
 			val controlClass = Control(eventBus, connection)
 			return controlClass.writeCommand(ControlType.ENABLE_SWITCHCRAFT, ControlTypeV4.UNKNOWN, enable)
@@ -586,6 +562,86 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		else {
 			return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.SWITCHCRAFT_ENABLED, enable)
 		}
+	}
+
+	/**
+	 * Get switchcraft enabled.
+	 *
+	 * @return Promise with enabled as value.
+	 */
+	@Synchronized
+	fun getSwitchCraftEnabled(enable: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "getSwitchCraftEnabled $enable")
+		return getConfigValue(ConfigType.SWITCHCRAFT_ENABLED, StateTypeV4.SWITCHCRAFT_ENABLED)
+	}
+
+	/**
+	 * Set switchcraft threshold.
+	 *
+	 * @param value The threshold.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setSwitchCraftThreshold(value: Float): Promise<Unit, Exception> {
+		Log.i(TAG, "setSwitchCraftThreshold $value")
+		return setConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, StateTypeV4.SWITCHCRAFT_THRESHOLD, value)
+	}
+
+	/**
+	 * Get switchcraft threshold.
+	 *
+	 * @return Promise with threshold as value.
+	 */
+	@Synchronized
+	fun getSwitchCraftThreshold(): Promise<Float, Exception> {
+		Log.i(TAG, "getSwitchCraftThreshold")
+		return getConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, StateTypeV4.SWITCHCRAFT_THRESHOLD)
+	}
+
+	/**
+	 * Enable or disable tap to toggle.
+	 *
+	 * @param value True to enable.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setTapToToggleEnabled(value: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "setTapToToggleEnabled $value")
+		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.TAP_TO_TOGGLE_ENABLED, value)
+	}
+
+	/**
+	 * Get tap to toggle enabled.
+	 *
+	 * @return Promise with enabled as value.
+	 */
+	@Synchronized
+	fun getTapToToggleEnabled(): Promise<Boolean, Exception> {
+		Log.i(TAG, "getTapToToggleEnabled")
+		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.TAP_TO_TOGGLE_ENABLED)
+	}
+
+	/**
+	 * Set tap to toggle rssi threshold offset.
+	 *
+	 * @param value The offset.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setTapToToggleRssiThresholdOffset(value: Int8): Promise<Unit, Exception> {
+		Log.i(TAG, "setTapToToggleRssiThresholdOffset $value")
+		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.TAP_TO_TOGGLE_RSSI_THRESHOLD_OFFSET, value)
+	}
+
+	/**
+	 * Get tap to toggle rssi threshold offset.
+	 *
+	 * @return Promise with offset as value.
+	 */
+	@Synchronized
+	fun getTapToToggleRssiThresholdOffset(): Promise<Int8, Exception> {
+		Log.i(TAG, "getTapToToggleRssiThresholdOffset")
+		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.TAP_TO_TOGGLE_RSSI_THRESHOLD_OFFSET)
 	}
 
 
