@@ -219,9 +219,15 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setUartEnabled(mode: UartMode): Promise<Unit, Exception> {
 		Log.i(TAG, "setUartEnabled $mode")
-		return when (mode) {
-			UartMode.UNKNOWN -> Promise.ofFail(Errors.ValueWrong())
-			else -> setConfigValue(ConfigType.UART_ENABLED, StateTypeV4.UART_ENABLED, mode.num)
+		if (mode == UartMode.UNKNOWN) {
+			return Promise.ofFail(Errors.ValueWrong())
+		}
+		if (getPacketProtocol() == 3) {
+			val controlClass = Control(eventBus, connection)
+			return controlClass.writeCommand(ControlType.UART_ENABLE, ControlTypeV4.UNKNOWN, mode.num)
+		}
+		else {
+			return setConfigValue(ConfigType.UART_ENABLED, StateTypeV4.UART_ENABLED, mode.num)
 		}
 	}
 
