@@ -187,7 +187,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private fun onScanFail() {
 		Log.e(TAG, "onScanFail: TODO")
 		synchronized(this) {
-			// TODO
+			// 2019-11-19 don't do anything, let the app tell the user to reset bluetooth instead.
 		}
 	}
 

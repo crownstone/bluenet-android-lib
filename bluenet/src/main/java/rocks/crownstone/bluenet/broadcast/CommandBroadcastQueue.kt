@@ -1,9 +1,5 @@
 package rocks.crownstone.bluenet.broadcast
 
-import android.bluetooth.le.AdvertiseData
-import android.os.ParcelUuid
-import rocks.crownstone.bluenet.encryption.Encryption
-import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.packets.broadcast.*
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
@@ -15,13 +11,11 @@ import kotlin.collections.ArrayList
 /**
  * Class that keeps up a queue of broadcast items.
  *
- * Selects which items to broadcast next and build an AdvertiseData packet to be advertised.
+ * Selects which items to broadcast next.
  * Each item can have a promise that will be resolved when it has been advertised long enough.
  */
-class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: EncryptionManager) {
+class CommandBroadcastQueue {
 	private val TAG = this.javaClass.simpleName
-	private val encryptionManager = encryptionManager
-	private val libState = state
 	private val queue = LinkedList<CommandBroadcastItem>()
 	private val advertisedItems = ArrayList<CommandBroadcastItem>()
 
@@ -73,25 +67,6 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	}
 
 	/**
-	 * Get next advertisement data, made from items in queue.
-	 *
-	 * Should not be called when items are already being broadcasted.
-	 */
-	@Synchronized
-	fun getNextAdvertisement(): AdvertiseData? {
-		Log.d(TAG, "getNextAdvertisement")
-		if (advertisedItems.isNotEmpty()) {
-			Log.w(TAG, "Items are already being advertised.")
-		}
-		val advertiseUuids = getNextAdvertisementUuids() ?: return null
-		val advertiseBuilder = AdvertiseData.Builder()
-		for (uuid in advertiseUuids) {
-			advertiseBuilder.addServiceUuid(ParcelUuid(uuid))
-		}
-		return advertiseBuilder.build()
-	}
-
-	/**
 	 * To be called when advertisement has been advertised.
 	 */
 	@Synchronized
@@ -121,54 +96,18 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 	}
 
 	/**
-	 * Get next service data uuids to advertise.
-	 */
-	internal fun getNextAdvertisementUuids(): List<UUID>? {
-		val commandBroadcast = getNextCommandBroadcastPacket()
-		if (commandBroadcast == null) {
-			return null
-		}
-		val sphereId = commandBroadcast.sphereId
-		val keySet = encryptionManager.getKeySet(sphereId)
-		val keyAccessLevel = keySet?.getHighestKey()
-		if (keyAccessLevel == null) {
-			Log.w(TAG, "Missing key for sphere $sphereId")
-			return null
-		}
-
-		val sphereState = libState[sphereId]
-		if (sphereState == null) {
-			Log.w(TAG, "Missing state for sphere $sphereId")
-			return null
-		}
-
-		val commandBroadcastHeader = getCommandBroadcastHeader(sphereId, sphereState, keyAccessLevel) ?: return null
-		val commandBroadcastBytes = commandBroadcast.getArray() ?: return null
-		Log.v(TAG, "commandBroadcastHeader: ${Conversion.bytesToString(commandBroadcastHeader)}")
-		Log.v(TAG, "commandBroadcast: commandBroadcast = ${Conversion.bytesToString(commandBroadcastBytes)}")
-		val encryptedCommandBroadcast = Encryption.encryptCtr(commandBroadcastBytes, 0, 0, commandBroadcastHeader, keyAccessLevel.key) ?: return null
-		Log.v(TAG, "encryptedCommandBroadcast: ${Conversion.bytesToString(encryptedCommandBroadcast)}")
-
-		val advertiseUuids = ArrayList<UUID>()
-		val commandBroadcastUuid = Conversion.bytesToUuid(encryptedCommandBroadcast) ?: return null
-		advertiseUuids.add(commandBroadcastUuid)
-
-		for (i in 0 until 4) {
-			val uuid = Conversion.bytesToUuid2(commandBroadcastHeader, i*2) ?: return null
-			advertiseUuids.add(uuid)
-		}
-		return advertiseUuids
-	}
-
-	/**
 	 * Get next command broadcast packet, made from items in queue.
 	 */
-	internal fun getNextCommandBroadcastPacket(): CommandBroadcastPacket? {
+	@Synchronized
+	fun getNextCommandBroadcastPacket(): CommandBroadcastPacket? {
 		Log.d(TAG, "getNextCommandBroadcastPacket")
 //		Log.v(TAG, "queue:")
 //		for (it in queue) {
 //			Log.v(TAG, "  $it")
 //		}
+		if (advertisedItems.isNotEmpty()) {
+			Log.w(TAG, "Items are already being advertised.")
+		}
 		val firstItem = getNextItemFromQueue() ?: return null
 
 		val payload = when (firstItem.type) {
@@ -199,35 +138,6 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 			it.startedAdvertising()
 		}
 		return packet
-	}
-
-	/**
-	 * Get a command broadcast header.
-	 */
-	internal fun getCommandBroadcastHeader(sphereId: SphereId, sphereState: SphereState, keyAccessLevel: KeyAccessLevelPair): ByteArray? {
-		val sphereShortId = sphereState.settings.sphereShortId
-		val deviceToken = sphereState.settings.deviceToken
-		val encryptedBackgroundBroadcastPayload = getBackgroundPayload(sphereId, sphereState) ?: return null
-		Log.v(TAG, "encryptedCommandBroadcastRC5Packet: ${Conversion.bytesToString(encryptedBackgroundBroadcastPayload)}")
-		val commandBroadcastHeader = CommandBroadcastHeaderPacket(0, sphereShortId, keyAccessLevel.accessLevel.num, deviceToken, encryptedBackgroundBroadcastPayload)
-		Log.v(TAG, "commandBroadcastHeader: $commandBroadcastHeader")
-		return commandBroadcastHeader.getArray()
-	}
-
-	/**
-	 * Get an encrypted background broadcast payload packet.
-	 */
-	internal fun getBackgroundPayload(sphereId: SphereId, sphereState: SphereState): ByteArray? {
-		val locationId = sphereState.locationId
-		val profileId = sphereState.profileId
-		val rssiOffset = getRssiOffset(sphereState.rssiOffset)
-		val tapToToggleEnabled = sphereState.tapToToggleEnabled
-		val counter = sphereState.commandCount
-
-		val rc5Payload = CommandBroadcastRC5Packet(counter, locationId, profileId, rssiOffset, tapToToggleEnabled)
-		val rc5PayloadArr = rc5Payload.getArray() ?: return null
-		Log.v(TAG, "backgroundBroadcast: $rc5Payload = ${Conversion.bytesToString(rc5PayloadArr)}")
-		return encryptionManager.encryptRC5(sphereId, rc5PayloadArr)
 	}
 
 	/**
@@ -293,10 +203,16 @@ class CommandBroadcastQueue(state: SphereStateMap, encryptionManager: Encryption
 		}
 	}
 
-	/**
-	 * Get "compressed" rssi offset, a 4 bit uint.
-	 */
-	private fun getRssiOffset(offset: Int): Uint8 {
-		return Conversion.toUint8(offset / 2 + 8)
-	}
+//	/**
+//	 * Get encoded rssi offset, a 4 bit uint.
+//	 */
+//	private fun getEncodedRssiOffset(offset: Int): Uint8 {
+//		var encodedOffset = offset / 2 + 8
+//		encodedOffset = when {
+//			encodedOffset < 0 -> 0
+//			encodedOffset > 15 -> 15
+//			else -> encodedOffset
+//		}
+//		return Conversion.toUint8(encodedOffset)
+//	}
 }

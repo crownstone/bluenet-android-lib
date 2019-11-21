@@ -47,6 +47,7 @@ enum class BluenetEvent {
 	IBEACON_ENTER_REGION,              // Region was entered. IbeaconRegionEventData as data.
 	IBEACON_EXIT_REGION,               // Region was exited. IbeaconRegionEventData as data.
 	DFU_PROGRESS,                      // DfuProgress as data.
+	LOCATION_CHANGE,                   // Location changed. Location as data.
 }
 
 typealias Int8 = Byte
@@ -71,6 +72,11 @@ typealias SphereShortId = Uint8
 typealias Keys = HashMap<SphereId, KeyData>
 typealias SphereSettingsMap = HashMap<SphereId, SphereSettings>
 typealias SphereStateMap = HashMap<SphereId, SphereState>
+
+data class BluenetState(
+		val sphereState: SphereStateMap,
+		var currentSphere: SphereId
+)
 
 /**
  * Struct that holds sphere settings.
@@ -133,6 +139,8 @@ typealias ProcessCallback = (ByteArray) -> ProcessResult
 typealias ResultProcessCallback = (ResultPacketV4) -> ProcessResult
 
 //data class BleNotification(val characteristicUuid: UUID, val data: ByteArray)
+
+data class Location(val sphereId: SphereId, val locationId: Uint8)
 
 /**
  * Class that holds a key with its access level

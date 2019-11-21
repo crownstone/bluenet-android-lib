@@ -17,6 +17,7 @@ import rocks.crownstone.bluenet.BleCore
 import rocks.crownstone.bluenet.BluenetConfig
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_TIME_MS
+import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.packets.broadcast.*
 import rocks.crownstone.bluenet.structs.*
@@ -25,14 +26,22 @@ import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import java.lang.Exception
 
-class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
+/**
+ * Class to broadcast command advertisements.
+ *
+ * Each command will be put in queue and advertised multiple times to increase likeliness it is received.
+ * If there are more commands in queue, they will be merged if possible.
+ * If there are many commands in queue, they will be advertised interleaved.
+ */
+class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val libState = state
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
 	private val handler = Handler(looper)
-	private val queue = CommandBroadcastQueue(libState, encryptionManager)
+	private val queue = CommandBroadcastQueue()
+	private val broadcastPacketBuilder = BroadcastPacketBuilder(libState, encryptionManager)
 	private var startTime = 0L
 	private var broadcasting = false
 
@@ -121,7 +130,7 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 	}
 
 	private fun increaseCommandCount(sphereId: SphereId) {
-		val sphereState = libState[sphereId]
+		val sphereState = libState.sphereState[sphereId]
 		if (sphereState == null) {
 			Log.w(TAG, "Missing state for sphere $sphereId")
 			return
@@ -138,7 +147,13 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 		if (!queue.hasNext()) {
 			return
 		}
-		val advertiseData = queue.getNextAdvertisement()
+
+		val commandBroadcast = queue.getNextCommandBroadcastPacket()
+		if (commandBroadcast == null) {
+			broadcastNext()
+			return
+		}
+		val advertiseData = broadcastPacketBuilder.getCommandBroadcastAdvertisement(commandBroadcast.sphereId, AccessLevel.HIGHEST_AVAILABLE, commandBroadcast)
 		if (advertiseData == null) {
 			broadcastNext()
 			return
@@ -149,7 +164,10 @@ class CommandBroadcaster(evtBus: EventBus, state: SphereStateMap, bleCore: BleCo
 					startTime = SystemClock.elapsedRealtime() // ms since boot
 					handler.postDelayed(onBroadcastDoneRunnable, COMMAND_BROADCAST_INTERVAL_MS.toLong())
 				}
-				.fail { queue.advertisementDone(0, it) }
+				.fail {
+					broadcasting = false
+					queue.advertisementDone(0, it)
+				}
 	}
 
 	private val onBroadcastDoneRunnable = Runnable {

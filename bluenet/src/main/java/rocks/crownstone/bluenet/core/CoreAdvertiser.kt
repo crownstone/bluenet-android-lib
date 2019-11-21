@@ -24,11 +24,17 @@ import java.lang.IllegalStateException
 open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper) : CoreConnection(appContext, evtBus, looper) {
 	private var advertiserSettingsBuilder = AdvertiseSettings.Builder()
 	private var advertiseCallback: AdvertiseCallback? = null
+	private var backgroundAdvertiserSettingsBuilder = AdvertiseSettings.Builder()
+	private var backgroundAdvertiseCallback: AdvertiseCallback? = null
 	init {
 		// Set maximum advertising frequency, and TX power, so that we can have a low timeout.
 		advertiserSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
 		advertiserSettingsBuilder.setConnectable(false)
 		advertiserSettingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+		backgroundAdvertiserSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+		backgroundAdvertiserSettingsBuilder.setConnectable(false)
+		backgroundAdvertiserSettingsBuilder.setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+		backgroundAdvertiserSettingsBuilder.setTimeout(0)
 	}
 
 	/**
@@ -104,4 +110,58 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 //		Log.i(TAG, "onAdvertiseDone")
 //		stop()
 //	}
+
+	@Synchronized
+	fun backgroundAdvertise(data: AdvertiseData): Promise<Unit, Exception> {
+		Log.i(TAG, "advertise")
+		if (!isBleReady(true)) {
+			return Promise.ofFail(Errors.BleNotReady())
+		}
+		val deferred = deferred<Unit, Exception>()
+
+		backgroundAdvertiseCallback = object : AdvertiseCallback() {
+			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+				super.onStartSuccess(settingsInEffect)
+				deferred.resolve()
+			}
+
+			override fun onStartFailure(errorCode: Int) {
+				super.onStartFailure(errorCode)
+				val err = when (errorCode) {
+					ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
+					ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
+					ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy()
+//					ADVERTISE_FAILED_INTERNAL_ERROR
+//					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
+					else -> java.lang.Exception("Advertise failure err=$errorCode")
+				}
+				deferred.reject(err)
+			}
+		}
+		try {
+			advertiser.startAdvertising(backgroundAdvertiserSettingsBuilder.build(), data, backgroundAdvertiseCallback)
+		}
+		catch (e: IllegalStateException) {
+			Log.w(TAG, "Advertise couldn't start: $e")
+			deferred.reject(e)
+		}
+		return deferred.promise
+	}
+
+	@Synchronized
+	fun stopBackgroundAdvertise() {
+		if (backgroundAdvertiseCallback != null) {
+			Log.d(TAG, "stopBackgroundAdvertise")
+			if (isBleReady(true)) {
+				try {
+					advertiser.stopAdvertising(backgroundAdvertiseCallback)
+				}
+				catch (e: IllegalStateException) {
+					Log.e(TAG, "Ble not ready, cache was wrong.")
+					checkBleEnabled()
+				}
+			}
+			backgroundAdvertiseCallback = null
+		}
+	}
 }

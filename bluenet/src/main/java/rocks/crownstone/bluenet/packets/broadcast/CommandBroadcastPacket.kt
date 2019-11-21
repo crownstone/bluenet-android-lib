@@ -16,6 +16,7 @@ import rocks.crownstone.bluenet.util.putInt
 import java.nio.ByteBuffer
 
 enum class CommandBroadcastType(val num: Uint8) {
+	NO_OP(0),
 	MULTI_SWITCH(1),
 	SET_TIME(2),
 	UNKNOWN(255);

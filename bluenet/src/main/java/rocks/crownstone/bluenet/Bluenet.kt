@@ -14,6 +14,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import nl.komponents.kovenant.*
+import rocks.crownstone.bluenet.broadcast.BackgroundBroadcaster
 import rocks.crownstone.bluenet.broadcast.CommandBroadcaster
 import rocks.crownstone.bluenet.connection.*
 import rocks.crownstone.bluenet.encryption.EncryptionManager
@@ -34,7 +35,7 @@ import java.util.*
  */
 class Bluenet(looper: Looper? = null) {
 	private val TAG = this.javaClass.simpleName
-	private val libState = SphereStateMap()
+	private val libState = BluenetState(SphereStateMap(), "none")
 	private val eventBus = EventBus()
 	private val looper: Looper
 	private val handler: Handler
@@ -62,6 +63,7 @@ class Bluenet(looper: Looper? = null) {
 	lateinit var deviceInfo: DeviceInfo; private set
 	lateinit var dfu: Dfu; private set
 	lateinit var broadCast: CommandBroadcaster; private set
+	lateinit var backgroundBroadcaster: BackgroundBroadcaster; private set
 
 	// Public variables
 	lateinit var iBeaconRanger: IbeaconRanger; private set
@@ -143,6 +145,7 @@ class Bluenet(looper: Looper? = null) {
 		dfu = Dfu(eventBus, connection, context)
 		iBeaconRanger = IbeaconRanger(eventBus, looper)
 		broadCast = CommandBroadcaster(eventBus, libState, bleCore, encryptionManager, looper)
+		backgroundBroadcaster = BackgroundBroadcaster(eventBus, libState, bleCore, encryptionManager, looper)
 
 		service = BackgroundServiceManager(appContext, eventBus, looper)
 		if (notificationId == null || notification == null) {
@@ -314,16 +317,16 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun setSphereSettings(sphereSettings: SphereSettingsMap) {
-		libState.clear()
+		libState.sphereState.clear()
 		for ((sphereId, settings) in sphereSettings) {
-			libState[sphereId] = SphereState(settings)
+			libState.sphereState[sphereId] = SphereState(settings)
 		}
 		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
 
 	@Synchronized
 	fun clearSphereSettings() {
-		libState.clear()
+		libState.sphereState.clear()
 		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
 
@@ -333,7 +336,7 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	@Deprecated("Sphere short id should be known at init and not change.")
 	fun setSphereShortId(sphereId: SphereId, id: Uint8) {
-		val state = libState[sphereId] ?: return
+		val state = libState.sphereState[sphereId] ?: return
 		state.settings.sphereShortId = id
 	}
 
@@ -342,8 +345,19 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun setLocation(sphereId: SphereId, location: Uint8) {
-		val state = libState[sphereId] ?: return
+		val state = libState.sphereState[sphereId] ?: return
 		state.locationId = location
+	}
+
+	/**
+	 * Set sphere that we're currently in.
+	 */
+	@Synchronized
+	fun setCurrentSphere(sphereId: SphereId) {
+		if (libState.sphereState[sphereId] == null) {
+			return
+		}
+		libState.currentSphere = sphereId
 	}
 
 	/**
@@ -351,7 +365,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun setProfile(sphereId: SphereId, profile: Uint8) {
-		val state = libState[sphereId] ?: return
+		val state = libState.sphereState[sphereId] ?: return
 		state.profileId = profile
 	}
 
@@ -360,7 +374,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun setDeviceToken(sphereId: SphereId, token: Uint8) {
-		val state = libState[sphereId] ?: return
+		val state = libState.sphereState[sphereId] ?: return
 		state.settings.deviceToken = token
 	}
 
@@ -370,13 +384,13 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun setTapToToggle(sphereId: SphereId?, enabled: Boolean, rssiOffset: Int) {
 		if (sphereId == null) {
-			for (state in libState) {
+			for (state in libState.sphereState) {
 				state.value.tapToToggleEnabled = enabled
 				state.value.rssiOffset = rssiOffset
 			}
 		}
 		else {
-			val state = libState[sphereId] ?: return
+			val state = libState.sphereState[sphereId] ?: return
 			state.tapToToggleEnabled = enabled
 			state.rssiOffset = rssiOffset
 		}

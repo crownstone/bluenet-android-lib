@@ -17,7 +17,7 @@ import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
 
-class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
+class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 	private val TAG = this.javaClass.simpleName
 
 	private val eventBus = evtBus
@@ -47,7 +47,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 		Log.i(TAG, "setKeys")
 		uuids.clear()
 		addresses.clear()
-		for ((sphereId, state) in libState) {
+		for ((sphereId, state) in libState.sphereState) {
 			uuids.put(state.settings.ibeaconUuid, sphereId)
 			rc5subKeysMap.put(sphereId, RC5.expandKey(state.settings.keySet.localizationKeyBytes))
 			Log.d(TAG, "sphereId=$sphereId ibeaconUuid=${state.settings.ibeaconUuid} keys=${state.settings.keySet}")
@@ -85,7 +85,7 @@ class EncryptionManager(evtBus: EventBus, state: SphereStateMap) {
 //		if (libState.get(id)?.settings == null) {
 //			Log.w(TAG, "no settings for sphereId $id")
 //		}
-		return libState.get(id)?.settings?.keySet
+		return libState.sphereState.get(id)?.settings?.keySet
 //		return keys?.get(id)?.keySet
 	}
 
