@@ -496,6 +496,52 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	/**
+	 * Set voltage zero offset.
+	 *
+	 * @param value The voltage zero offset
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setVoltageZero(value: Int32): Promise<Unit, Exception> {
+		Log.i(TAG, "setVoltageZero $value")
+		return setConfigValue(ConfigType.VOLTAGE_ZERO, StateTypeV4.VOLTAGE_ZERO, value)
+	}
+
+	/**
+	 * Get voltage zero offset.
+	 *
+	 * @return Promise with voltage zero offset as value.
+	 */
+	@Synchronized
+	fun getVoltageZero(): Promise<Int32, Exception> {
+		Log.i(TAG, "getVoltageZero")
+		return getConfigValue(ConfigType.VOLTAGE_ZERO, StateTypeV4.VOLTAGE_ZERO)
+	}
+
+	/**
+	 * Set current zero offset.
+	 *
+	 * @param value The current zero offset
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setCurrentZero(value: Int32): Promise<Unit, Exception> {
+		Log.i(TAG, "setCurrentZero $value")
+		return setConfigValue(ConfigType.CURRENT_ZERO, StateTypeV4.CURRENT_ZERO, value)
+	}
+
+	/**
+	 * Get current zero offset.
+	 *
+	 * @return Promise with current zero offset as value.
+	 */
+	@Synchronized
+	fun getCurrentZero(): Promise<Int32, Exception> {
+		Log.i(TAG, "getCurrentZero")
+		return getConfigValue(ConfigType.CURRENT_ZERO, StateTypeV4.CURRENT_ZERO)
+	}
+
+	/**
 	 * Set power measurement offset.
 	 *
 	 * @param value The offset in mW.
@@ -533,24 +579,6 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		}
 		else {
 			return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.SWITCHCRAFT_ENABLED, enable)
-		}
-	}
-
-	/**
-	 * Set the UART mode.
-	 *
-	 * @param mode Which mode to set it to.
-	 * @return Promise
-	 */
-	@Synchronized
-	fun setUartMode(mode: UartMode): Promise<Unit, Exception> {
-		Log.i(TAG, "setUart $mode")
-		if (getPacketProtocol() == 3) {
-			val controlClass = Control(eventBus, connection)
-			return controlClass.writeCommand(ControlType.UART_ENABLE, ControlTypeV4.UNKNOWN, mode)
-		}
-		else {
-			return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.UART_ENABLED, mode)
 		}
 	}
 
