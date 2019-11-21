@@ -79,12 +79,14 @@ internal object Shared {
 	}
 
 	private fun parseFlags(flags: Uint8, servicedata: CrownstoneServiceData) {
-		servicedata.flagDimmingAvailable = Util.isBitSet(flags, 0)
-		servicedata.flagDimmable         = Util.isBitSet(flags, 1)
-		servicedata.flagError            = Util.isBitSet(flags, 2)
-		servicedata.flagSwitchLocked     = Util.isBitSet(flags, 3)
-		servicedata.flagTimeSet          = Util.isBitSet(flags, 4)
-		servicedata.flagSwitchCraft      = Util.isBitSet(flags, 5)
+		servicedata.flagDimmingAvailable    = Util.isBitSet(flags, 0)
+		servicedata.flagDimmable            = Util.isBitSet(flags, 1)
+		servicedata.flagError               = Util.isBitSet(flags, 2)
+		servicedata.flagSwitchLocked        = Util.isBitSet(flags, 3)
+		servicedata.flagTimeSet             = Util.isBitSet(flags, 4)
+		servicedata.flagSwitchCraft         = Util.isBitSet(flags, 5)
+		servicedata.flagTapToToggleEnabled         = Util.isBitSet(flags, 6)
+		servicedata.flagBehaviourOverridden = Util.isBitSet(flags, 7)
 	}
 
 	private fun parseErrorBitmask(bitmask: Uint32, servicedata: CrownstoneServiceData) {

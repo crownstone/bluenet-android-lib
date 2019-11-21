@@ -55,14 +55,16 @@ class CrownstoneServiceData {
 	internal var validation = false
 
 	// Flags
-	var flagExternalData = false;     internal set       // True when this service data is from another crownstone.
+	var flagExternalData = false;        internal set    // True when this service data is from another crownstone.
 	internal var flagSetup = false
-	var flagDimmingAvailable = false; internal set       // True when dimming is available (hardware).
-	var flagDimmable = false;         internal set       // True when dimming is allowed via config.
-	var flagError = false;            internal set       // True when there is an error.
-	var flagSwitchLocked = false;     internal set       // True when the switch is locked via config.
-	var flagTimeSet = false;          internal set       // True when the time is set.
-	var flagSwitchCraft = false;      internal set       // True when switchcraft is enabled via config.
+	var flagDimmingAvailable = false;    internal set    // True when dimming is available (hardware).
+	var flagDimmable = false;            internal set    // True when dimming is allowed via config.
+	var flagError = false;               internal set    // True when there is an error.
+	var flagSwitchLocked = false;        internal set    // True when the switch is locked via config.
+	var flagTimeSet = false;             internal set    // True when the time is set.
+	var flagSwitchCraft = false;         internal set    // True when switchcraft is enabled via config.
+	var flagTapToToggleEnabled = false;  internal set    // True when tap to toggle is enabled.
+	var flagBehaviourOverridden = false; internal set    // True when behaviour is overridden.
 
 	// Errors
 	var errorOverCurrent = false;       internal set     // Too much current went through the crownstone.
