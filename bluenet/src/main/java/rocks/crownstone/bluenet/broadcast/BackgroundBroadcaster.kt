@@ -1,8 +1,10 @@
 package rocks.crownstone.bluenet.broadcast
 
+import android.bluetooth.le.AdvertiseData
 import android.os.Handler
 import android.os.Looper
 import nl.komponents.kovenant.Promise
+import nl.komponents.kovenant.then
 import rocks.crownstone.bluenet.BleCore
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
@@ -15,6 +17,13 @@ import rocks.crownstone.bluenet.util.Util
 import java.lang.Exception
 
 class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
+	enum class BroadcastingState {
+		STOPPED,
+		STOPPING,
+		STARTED,
+		STARTING
+	}
+
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val libState = state
@@ -22,7 +31,7 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	private val encryptionManager = encryptionManager
 	private val handler = Handler(looper)
 	private val broadcastPacketBuilder = BroadcastPacketBuilder(libState, encryptionManager)
-	private var broadcasting = false
+	private var broadcasting = BroadcastingState.STOPPED
 	private var started = false
 
 	init {
@@ -62,37 +71,66 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 		val advertiseData = broadcastPacketBuilder.getCommandBroadcastAdvertisement(commandBroadcast.sphereId, AccessLevel.HIGHEST_AVAILABLE, commandBroadcast)
 		if (advertiseData == null) {
 			Log.d(TAG, "Nothing to broadcast")
+			retryUpdateLater()
 			return
 		}
-		stopBroadcasting()
+		when (broadcasting) {
+			BroadcastingState.STOPPED -> {
+				startBroadcasting(advertiseData)
+			}
+			BroadcastingState.STARTED -> {
+				stopBroadcasting()
+						.success { retryUpdateLater(100) }
+			}
+			BroadcastingState.STARTING -> { retryUpdateLater() }
+			BroadcastingState.STOPPING -> { retryUpdateLater() }
+		}
+	}
+
+	@Synchronized
+	private fun startBroadcasting(advertiseData: AdvertiseData) {
+		if (broadcasting != BroadcastingState.STOPPED) {
+			Log.w(TAG, "Wrong state: $broadcasting")
+			retryUpdateLater()
+		}
+		broadcasting = BroadcastingState.STARTING
+		bleCore.backgroundAdvertise(advertiseData)
 				.success {
-					broadcasting = true
-					bleCore.backgroundAdvertise(advertiseData)
-							.success {
-								Log.d(TAG, "Started broadcasting")
-							}
-							.fail {
-								Log.w(TAG, "Failed to start broadcasting: $it")
-								broadcasting = false
-								retryUpdate()
-							}
+					Log.d(TAG, "Started broadcasting")
+					broadcasting = BroadcastingState.STARTED
 				}
 				.fail {
-					Log.w(TAG, "Failed to stop broadcasting: $it")
-					retryUpdate()
+					Log.w(TAG, "Failed to start broadcasting: $it")
+					broadcasting = BroadcastingState.STOPPED
+					retryUpdateLater()
 				}
 	}
 
 	@Synchronized
-	private fun retryUpdate() {
+	private fun stopBroadcasting(): Promise<Unit, Exception> {
+		if (broadcasting != BroadcastingState.STARTED) {
+			Log.w(TAG, "Wrong state: $broadcasting")
+			retryUpdateLater()
+		}
+		broadcasting = BroadcastingState.STOPPING
+		bleCore.stopBackgroundAdvertise()
+		Log.d(TAG, "Stopped broadcasting")
+		return Util.waitPromise(100, handler)
+				.then { broadcasting = BroadcastingState.STOPPED }
+	}
+
+	@Synchronized
+	private fun retryUpdateLater(delayMs: Long = 500) {
+		Log.d(TAG, "retryUpdate")
 		cancelRetry()
 		if (started) {
-			handler.postDelayed(retryRunnable, 500)
+			handler.postDelayed(retryRunnable, delayMs)
 		}
 	}
 
 	@Synchronized
 	private fun cancelRetry() {
+		Log.d(TAG, "cancelRetry")
 		handler.removeCallbacks(retryRunnable)
 	}
 
@@ -101,23 +139,15 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	}
 
 	@Synchronized
-	private fun stopBroadcasting(): Promise<Unit, Exception> {
-		if (broadcasting) {
-			bleCore.stopBackgroundAdvertise()
-			return Util.waitPromise(100, handler)
-		}
-		return Promise.ofSuccess(Unit)
-	}
-
-	@Synchronized
 	private fun onBleTurnedOff(data: Any) {
 		// Advertising is automatically stopped
-		broadcasting = false
+		broadcasting = BroadcastingState.STOPPED
 	}
 
 	@Synchronized
 	private fun onBleTurnedOn(data: Any) {
 		// Start background advertising
+		update()
 	}
 
 	@Synchronized
