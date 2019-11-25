@@ -35,11 +35,10 @@ class NearestDevices(evtBus: EventBus) {
 	internal val nearestValidatedSetup = NearestDeviceList()
 
 	init {
-		eventBus.subscribe(BluenetEvent.SCAN_RESULT, ::onScan)
+		eventBus.subscribe(BluenetEvent.SCAN_RESULT, { data: Any? -> onScan(data as ScannedDevice) })
 	}
 
-	private fun onScan(data: Any) {
-		val device = data as ScannedDevice
+	private fun onScan(device: ScannedDevice) {
 		if (!device.isStone()) {
 			return
 		}

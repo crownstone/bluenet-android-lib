@@ -33,13 +33,14 @@ class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 	private val rc5subKeysMap = HashMap<SphereId, List<Uint16>?>()
 
 	init {
-		eventBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, ::onSettingsUpdate)
+		eventBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, { data: Any? -> onSettingsUpdate() })
 		setKeys()
 	}
 
 
 	@Synchronized
-	private fun onSettingsUpdate(data: Any) {
+	private fun onSettingsUpdate() {
+		Log.i(TAG, "onSettingsUpdate")
 		setKeys()
 	}
 

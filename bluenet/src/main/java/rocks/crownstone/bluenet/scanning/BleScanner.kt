@@ -54,9 +54,9 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	init {
 		Log.i(TAG, "init")
 
-		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any -> onScanFail() })
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
+		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any? -> onScanFail() })
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY,               { result: Any? -> onCoreScannerReady() })
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY,           { result: Any? -> onCoreScannerNotReady() })
 
 		// Had to init those here, or silly kotlin had some recursion problem
 		startScanRunnable = Runnable {
@@ -163,7 +163,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	}
 
 //	@Synchronized
-	private fun onCoreScannerReady(data: Any) {
+	private fun onCoreScannerReady() {
 		Log.i(TAG, "onCoreScannerReady")
 		synchronized(this) {
 			if (wasRunning) {
@@ -173,7 +173,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	}
 
 //	@Synchronized
-	private fun onCoreScannerNotReady(data: Any) {
+	private fun onCoreScannerNotReady() {
 		Log.i(TAG, "onCoreScannerNotReady")
 		synchronized(this) {
 			if (running) {

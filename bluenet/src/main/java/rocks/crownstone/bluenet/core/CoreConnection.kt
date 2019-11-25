@@ -29,7 +29,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	private val notificationEventBus = EventBus()
 
 	init {
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, ::onBleTurnedOff)
+		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
 	}
 
 	/**
@@ -577,7 +577,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		return deferred.promise
 				.then {
 					// Store the callback in the event bus, return unsub id
-					notificationEventBus.subscribe("${descriptor.characteristic.uuid}", { data: Any -> callback(data as ByteArray) })
+					notificationEventBus.subscribe("${descriptor.characteristic.uuid}", { data: Any? -> callback(data as ByteArray) })
 				}
 	}
 
@@ -839,7 +839,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 
 
 	@Synchronized
-	private fun onBleTurnedOff(data: Any?) {
+	private fun onBleTurnedOff() {
 		// //TODO: When bluetooth is turned off, we should close the gatt?
 		// Reject current action before closing.
 		promises.reject(Errors.BleNotReady())

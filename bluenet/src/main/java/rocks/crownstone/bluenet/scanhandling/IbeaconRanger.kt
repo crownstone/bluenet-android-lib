@@ -52,7 +52,7 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	private val subId: SubscriptionId
 
 	init {
-		subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT, ::onScan)
+		subId = eventBus.subscribe(BluenetEvent.SCAN_RESULT, { data: Any? -> onScan(data as ScannedDevice) })
 //		handler.postDelayed(tickRunnable, TICK_INTERVAL_MS)
 	}
 
@@ -146,12 +146,10 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	}
 
 	@Synchronized
-	private fun onScan(data: Any) {
+	private fun onScan(device: ScannedDevice) {
 		if (!isRunning) {
 			return
 		}
-		val device = data as ScannedDevice
-
 		// Keep up last seen per region (uuid), and check for enter region
 		val ibeaconData = device.ibeaconData ?: return
 		if (ibeaconData.uuid !in trackedUuids) {

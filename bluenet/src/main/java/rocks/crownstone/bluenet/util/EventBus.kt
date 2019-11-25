@@ -15,7 +15,7 @@ import kotlin.collections.HashMap
 
 typealias SubscriptionId = UUID
 typealias EventType = String
-typealias EventCallback = (Any) -> Unit
+typealias EventCallback = (Any?) -> Unit
 
 /**
  * Class that is used to emit and receive events with data.
@@ -44,12 +44,12 @@ class EventBus {
 	}
 
 	@Synchronized
-	fun emit(eventType: BluenetEvent, data: Any = Unit) {
+	fun emit(eventType: BluenetEvent, data: Any? = Unit) {
 		emit(eventType.name, data)
 	}
 
 	@Synchronized
-	fun emit(eventType: EventType, data: Any = Unit) {
+	fun emit(eventType: EventType, data: Any? = Unit) {
 		when (eventType) {
 			BluenetEvent.SCAN_RESULT_RAW.name,
 			BluenetEvent.SCAN_RESULT.name,

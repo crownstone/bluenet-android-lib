@@ -35,11 +35,13 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	private var started = false
 
 	init {
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, ::onBleTurnedOff)
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_ON, ::onBleTurnedOn)
-		evtBus.subscribe(BluenetEvent.IBEACON_ENTER_REGION, ::onRegionEnter)
-		evtBus.subscribe(BluenetEvent.IBEACON_EXIT_REGION, ::onRegionExit)
-		evtBus.subscribe(BluenetEvent.LOCATION_CHANGE, ::onLocationChange)
+		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF,          { data: Any? -> onBleTurnedOff() })
+		evtBus.subscribe(BluenetEvent.BLE_TURNED_ON,           { data: Any? -> onBleTurnedOn() })
+		evtBus.subscribe(BluenetEvent.IBEACON_ENTER_REGION,    { data: Any? -> onRegionEnter() })
+		evtBus.subscribe(BluenetEvent.IBEACON_EXIT_REGION,     { data: Any? -> onRegionExit() })
+		evtBus.subscribe(BluenetEvent.LOCATION_CHANGE,         { data: Any? -> onLocationChange(data as SphereId) })
+		evtBus.subscribe(BluenetEvent.TAP_TO_TOGGLE_CHANGED,   { data: Any? -> onTapToToggleChange(data as SphereId?) })
+		evtBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, { data: Any? -> onLibStateChange() })
 	}
 
 	@Synchronized
@@ -139,29 +141,39 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	}
 
 	@Synchronized
-	private fun onBleTurnedOff(data: Any) {
+	private fun onBleTurnedOff() {
 		// Advertising is automatically stopped
 		broadcasting = BroadcastingState.STOPPED
 	}
 
 	@Synchronized
-	private fun onBleTurnedOn(data: Any) {
+	private fun onBleTurnedOn() {
 		// Start background advertising
 		update()
 	}
 
 	@Synchronized
-	private fun onRegionEnter(data: Any) {
+	private fun onRegionEnter() {
 		// Start background advertising
 	}
 
 	@Synchronized
-	private fun onRegionExit(data: Any) {
+	private fun onRegionExit() {
 		// Stop background advertising?
 	}
 
 	@Synchronized
-	private fun onLocationChange(data: Any) {
-		// Change background advertising
+	private fun onLocationChange(sphereId: SphereId) {
+		update()
+	}
+
+	@Synchronized
+	private fun onTapToToggleChange(sphereId: SphereId?) {
+		update()
+	}
+
+	@Synchronized
+	private fun onLibStateChange() {
+		update()
 	}
 }

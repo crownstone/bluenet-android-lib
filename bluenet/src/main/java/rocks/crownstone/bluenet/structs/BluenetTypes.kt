@@ -47,7 +47,8 @@ enum class BluenetEvent {
 	IBEACON_ENTER_REGION,              // Region was entered. IbeaconRegionEventData as data.
 	IBEACON_EXIT_REGION,               // Region was exited. IbeaconRegionEventData as data.
 	DFU_PROGRESS,                      // DfuProgress as data.
-	LOCATION_CHANGE,                   // Location changed. Location as data.
+	LOCATION_CHANGE,                   // Location changed. SphereId as data. Location can be found in BluenetState.
+	TAP_TO_TOGGLE_CHANGED,             // Tap to toggle state changed. SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
 }
 
 typealias Int8 = Byte

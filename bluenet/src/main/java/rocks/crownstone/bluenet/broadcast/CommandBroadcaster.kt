@@ -46,7 +46,7 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	private var broadcasting = false
 
 	init {
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, ::onBleTurnedOff)
+		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
 	}
 
 	/**
@@ -193,7 +193,7 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	}
 
 	@Synchronized
-	private fun onBleTurnedOff(data: Any) {
+	private fun onBleTurnedOff() {
 		// Fail the current broadcast and anything in queue
 		handler.removeCallbacks(onBroadcastDoneRunnable)
 		queue.clear(Errors.BleNotReady())

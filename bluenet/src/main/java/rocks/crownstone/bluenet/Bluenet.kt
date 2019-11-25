@@ -129,9 +129,9 @@ class Bluenet(looper: Looper? = null) {
 			context = appContext
 		}
 
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY, ::onCoreScannerReady)
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY, ::onCoreScannerNotReady)
-		eventBus.subscribe(BluenetEvent.LOCATION_PERMISSION_GRANTED, ::onPermissionGranted)
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY,          { data: Any? -> onCoreScannerReady() })
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY,      { data: Any? -> onCoreScannerNotReady() })
+		eventBus.subscribe(BluenetEvent.LOCATION_PERMISSION_GRANTED, { data: Any? -> onPermissionGranted() })
 
 		bleCore = BleCore(context, eventBus, looper)
 		bleCore.initBle()
@@ -338,6 +338,7 @@ class Bluenet(looper: Looper? = null) {
 	fun setSphereShortId(sphereId: SphereId, id: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
 		state.settings.sphereShortId = id
+		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
 
 	/**
@@ -346,7 +347,11 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun setLocation(sphereId: SphereId, location: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
+		val changed = (location != state.locationId)
 		state.locationId = location
+		if (changed) {
+			eventBus.emit(BluenetEvent.LOCATION_CHANGE, sphereId)
+		}
 	}
 
 	/**
@@ -358,6 +363,7 @@ class Bluenet(looper: Looper? = null) {
 			return
 		}
 		libState.currentSphere = sphereId
+		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
 
 	/**
@@ -367,6 +373,7 @@ class Bluenet(looper: Looper? = null) {
 	fun setProfile(sphereId: SphereId, profile: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
 		state.profileId = profile
+		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
 
 	/**
@@ -376,6 +383,7 @@ class Bluenet(looper: Looper? = null) {
 	fun setDeviceToken(sphereId: SphereId, token: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
 		state.settings.deviceToken = token
+		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
 
 	/**
@@ -383,16 +391,24 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun setTapToToggle(sphereId: SphereId?, enabled: Boolean, rssiOffset: Int) {
+		var changed = false
 		if (sphereId == null) {
 			for (state in libState.sphereState) {
+				changed = changed || (state.value.tapToToggleEnabled != enabled)
+				changed = changed || (state.value.rssiOffset != rssiOffset)
 				state.value.tapToToggleEnabled = enabled
 				state.value.rssiOffset = rssiOffset
 			}
 		}
 		else {
 			val state = libState.sphereState[sphereId] ?: return
+			changed = changed || (state.tapToToggleEnabled != enabled)
+			changed = changed || (state.rssiOffset != rssiOffset)
 			state.tapToToggleEnabled = enabled
 			state.rssiOffset = rssiOffset
+		}
+		if (changed) {
+			eventBus.emit(BluenetEvent.TAP_TO_TOGGLE_CHANGED, sphereId)
 		}
 	}
 
@@ -636,7 +652,7 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	@Synchronized
-	private fun onCoreScannerReady(data: Any) {
+	private fun onCoreScannerReady() {
 		initScanner()
 		eventBus.emit(BluenetEvent.SCANNER_READY)
 //		for (deferred in scannerReadyPromises) {
@@ -648,12 +664,12 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	@Synchronized
-	private fun onCoreScannerNotReady(data: Any) {
+	private fun onCoreScannerNotReady() {
 		eventBus.emit(BluenetEvent.SCANNER_NOT_READY)
 	}
 
 	@Synchronized
-	private fun onPermissionGranted(data: Any) {
+	private fun onPermissionGranted() {
 		initScanner()
 	}
 

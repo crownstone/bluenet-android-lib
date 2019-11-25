@@ -38,7 +38,7 @@ class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
 	private val lastServiceDataMap = HashMap<DeviceAddress, CrownstoneServiceData>() // TODO: grows over time
 
 	init {
-		eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { result: Any -> onRawScan(result as ScanResult) })
+		eventBus.subscribe(BluenetEvent.SCAN_RESULT_RAW, { data: Any? -> onRawScan(data as ScanResult) })
 	}
 
 	@Synchronized
