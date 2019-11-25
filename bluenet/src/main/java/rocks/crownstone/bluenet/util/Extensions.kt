@@ -47,3 +47,5 @@ fun ByteBuffer.getUint16(offset: Int): Uint16 {
 fun ByteBuffer.getUint32(offset: Int): Uint32 {
 	return Conversion.toUint32(this.getInt(offset))
 }
+
+fun Boolean.toInt() = if (this) 1 else 0
