@@ -8,7 +8,6 @@
 package rocks.crownstone.bluenet.packets.behaviour
 
 import rocks.crownstone.bluenet.packets.PacketInterface
-import rocks.crownstone.bluenet.packets.schedule.ScheduleEntryPacket
 import rocks.crownstone.bluenet.structs.Int32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.getUint8
@@ -28,7 +27,9 @@ enum class BaseTimeType(val num: Uint8) {
 	}
 }
 
-class TimeOfDayPacket(baseTimeType: BaseTimeType, timeOffset: Int32): PacketInterface {
+typealias TimeDifference = Int32
+
+class TimeOfDayPacket(baseTimeType: BaseTimeType, timeOffset: TimeDifference): PacketInterface {
 	var baseTimeType = baseTimeType
 	var timeOffset = timeOffset
 
@@ -39,7 +40,7 @@ class TimeOfDayPacket(baseTimeType: BaseTimeType, timeOffset: Int32): PacketInte
 	}
 
 	override fun getPacketSize(): Int {
-		return ScheduleEntryPacket.SIZE
+		return SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {

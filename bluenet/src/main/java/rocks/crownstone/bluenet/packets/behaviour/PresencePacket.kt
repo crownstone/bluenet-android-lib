@@ -30,7 +30,7 @@ enum class PresenceType(val num: Uint8) {
 	}
 }
 
-class Presence(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds: Uint32): PacketInterface {
+class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds: Uint32): PacketInterface {
 	var type = type
 	val rooms = rooms
 	var timeoutSeconds = timeoutSeconds

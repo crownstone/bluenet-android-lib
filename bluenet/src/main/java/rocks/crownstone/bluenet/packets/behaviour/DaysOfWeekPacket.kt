@@ -23,7 +23,7 @@ enum class DayOfWeekBitPos(val num: Int) {
 	SAT(6),
 }
 
-class DayOfWeekPacket(
+class DaysOfWeekPacket(
 		var sun: Boolean,
 		var mon: Boolean,
 		var tue: Boolean,
