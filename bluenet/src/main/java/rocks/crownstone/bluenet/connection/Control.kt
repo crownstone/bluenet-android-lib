@@ -8,12 +8,11 @@
 package rocks.crownstone.bluenet.connection
 
 import nl.komponents.kovenant.*
+import rocks.crownstone.bluenet.BluenetConfig
 import rocks.crownstone.bluenet.encryption.AccessLevel
-import rocks.crownstone.bluenet.packets.ByteArrayPacket
-import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.*
 import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacketV3
-import rocks.crownstone.bluenet.packets.SetupPacket
-import rocks.crownstone.bluenet.packets.SetupPacketV2
+import rocks.crownstone.bluenet.packets.behaviour.*
 import rocks.crownstone.bluenet.packets.keepAlive.KeepAlivePacket
 import rocks.crownstone.bluenet.packets.keepAlive.MultiKeepAlivePacket
 import rocks.crownstone.bluenet.packets.meshCommand.MeshCommandPacket
@@ -39,6 +38,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
 	private val connection = connection
+	private val resultClass = Result(eventBus, connection)
 
 	/**
 	 * Set the switch value.
@@ -267,6 +267,72 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun removeSchedule(id: Uint8): Promise<Unit, Exception> {
 		Log.i(TAG, "removeSchedule $id")
 		return writeCommand(ControlType.SCHEDULE_ENTRY_REMOVE, ControlTypeV4.UNKNOWN, id)
+	}
+
+	/**
+	 * Add a behaviour.
+	 *
+	 * @param behaviour      The behaviour to store.
+	 * @return Promise with index where the behaviour is stored, and the hash of all behaviours.
+	 */
+	@Synchronized
+	fun addBehaviour(behaviour: BehaviourPacket): Promise<BehaviourIndexedAndHashPacket, Exception> {
+		Log.i(TAG, "addBehaviour behaviour=$behaviour")
+		val resultPacket = BehaviourIndexedAndHashPacket()
+		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_ADD, behaviour, resultPacket)
+	}
+
+	/**
+	 * Replace a behaviour.
+	 *
+	 * @param index          Index at which to store the behaviour.
+	 * @param behaviour      The behaviour to store.
+	 * @return Promise with index where the behaviour is stored, and the hash of all behaviours.
+	 */
+	@Synchronized
+	fun replaceBehaviour(index: BehaviourIndex, behaviour: BehaviourPacket): Promise<BehaviourIndexedAndHashPacket, Exception> {
+		Log.i(TAG, "replaceBehaviour index=$index behaviour=$behaviour")
+		val writePacket = IndexedBehaviourPacket(index, behaviour)
+		val resultPacket = BehaviourIndexedAndHashPacket()
+		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_REPLACE, writePacket, resultPacket)
+	}
+
+	/**
+	 * Remove a behaviour.
+	 *
+	 * @param index          Index at which to remove a behaviour.
+	 * @return Promise with index where the behaviour was removed, and the hash of all behaviours.
+	 */
+	@Synchronized
+	fun removeBehaviour(index: BehaviourIndex): Promise<BehaviourIndexedAndHashPacket, Exception> {
+		Log.i(TAG, "removeBehaviour index=$index")
+		val resultPacket = BehaviourIndexedAndHashPacket()
+		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_REMOVE, index, resultPacket)
+	}
+
+	/**
+	 * Get a behaviour.
+	 *
+	 * @param index          Index of the behaviour to get.
+	 * @return Promise with requested index, and the behaviour at that index.
+	 */
+	@Synchronized
+	fun getBehaviour(index: BehaviourIndex): Promise<IndexedBehaviourPacket, Exception> {
+		Log.i(TAG, "getBehaviour index=$index")
+		val resultPacket = IndexedBehaviourPacket()
+		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_GET, index, resultPacket)
+	}
+
+	/**
+	 * Get a list of indices that hold a behaviour.
+	 *
+	 * @return List of all indices at which a behaviour is stored.
+	 */
+	@Synchronized
+	fun getBehaviourIndices(): Promise<BehaviourIndicesPacket, Exception> {
+		Log.i(TAG, "getBehaviourIndices")
+		val resultPacket = BehaviourIndicesPacket()
+		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_GET_INDICES, EmptyPacket(), resultPacket)
 	}
 
 	/**
@@ -558,6 +624,49 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 			return connection.write(BluenetProtocol.SETUP_SERVICE_UUID, characteristic, array, AccessLevel.SETUP)
 		}
 		return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, characteristic, array, AccessLevel.HIGHEST_AVAILABLE)
+	}
+
+
+	// Results with simple value
+	private inline fun <reified R>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT): Promise<R, Exception> {
+		val resultPacket = ByteArrayPacket()
+		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs)
+				.then {
+					val arr = it.getPayload()
+//					if (arr == null) {
+//						return@then Promise.ofFail<R, Exception>(Errors.Parse("payload missing"))
+//					}
+					try {
+						val value = Conversion.byteArrayTo<R>(arr)
+						return@then Promise.ofSuccess<R, Exception>(value)
+					} catch (ex: Exception) {
+						return@then Promise.ofFail<R, Exception>(ex)
+					}
+				}.unwrap()
+	}
+
+	// Commands with simple value, and no result payload.
+	private inline fun <reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT): Promise<Unit, Exception> {
+		val writePacket = ByteArrayPacket(Conversion.toByteArray(writeValue))
+		val resultPacket = EmptyPacket()
+		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs)
+				.then {
+					return@then Promise.ofSuccess<Unit, Exception>(Unit)
+				}.unwrap()
+	}
+
+	// Commands with simple value
+	private inline fun <T: PacketInterface, reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT): Promise<T, Exception> {
+		val writePacket = ByteArrayPacket(Conversion.toByteArray(writeValue))
+		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs)
+	}
+
+	private fun <T: PacketInterface>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT): Promise<T, Exception> {
+		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, type, writePacket) }
+		return resultClass.getSingleResult(writeCommand, type, resultPacket, timeoutMs)
+				.then {
+					return@then resultPacket
+				}
 	}
 
 	private fun getControlCharacteristic(): UUID {

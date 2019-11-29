@@ -34,6 +34,11 @@ object ResultPayloadPacketV4 {
 			ControlTypeV4.ALLOW_DIMMING -> EmptyPacket()
 			ControlTypeV4.LOCK_SWITCH -> EmptyPacket()
 			ControlTypeV4.UART_MSG -> EmptyPacket()
+			ControlTypeV4.BEHAVIOUR_ADD -> EmptyPacket()
+			ControlTypeV4.BEHAVIOUR_REPLACE -> EmptyPacket()
+			ControlTypeV4.BEHAVIOUR_REMOVE -> EmptyPacket()
+			ControlTypeV4.BEHAVIOUR_GET -> EmptyPacket()
+			ControlTypeV4.BEHAVIOUR_GET_INDICES -> EmptyPacket()
 			ControlTypeV4.UNKNOWN -> EmptyPacket()
 		}
 	}
