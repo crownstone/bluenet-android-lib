@@ -31,7 +31,9 @@ typealias TimeDifference = Int32
 
 class TimeOfDayPacket(baseTimeType: BaseTimeType, timeOffset: TimeDifference): PacketInterface {
 	var baseTimeType = baseTimeType
+		private set
 	var timeOffset = timeOffset
+		private set
 
 	constructor(): this(BaseTimeType.UNKNOWN, 0)
 

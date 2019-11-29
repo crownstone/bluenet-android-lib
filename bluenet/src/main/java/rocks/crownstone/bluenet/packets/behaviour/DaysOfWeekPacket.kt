@@ -24,16 +24,30 @@ enum class DayOfWeekBitPos(val num: Int) {
 }
 
 class DaysOfWeekPacket(
-		var sun: Boolean,
-		var mon: Boolean,
-		var tue: Boolean,
-		var wed: Boolean,
-		var thu: Boolean,
-		var fri: Boolean,
-		var sat: Boolean
+		sun: Boolean,
+		mon: Boolean,
+		tue: Boolean,
+		wed: Boolean,
+		thu: Boolean,
+		fri: Boolean,
+		sat: Boolean
 ): PacketInterface {
-	constructor(): this(false, false, false, false, false, false, false)
+	var sun = sun
+		private set
+	var mon = mon
+		private set
+	var tue = tue
+		private set
+	var wed = wed
+		private set
+	var thu = thu
+		private set
+	var fri = fri
+		private set
+	var sat = sat
+		private set
 
+	constructor(): this(false, false, false, false, false, false, false)
 
 	companion object {
 		const val SIZE = 1

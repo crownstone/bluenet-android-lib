@@ -14,16 +14,16 @@ import rocks.crownstone.bluenet.util.putUint8
 import java.nio.ByteBuffer
 
 class TwilightBehaviourPacket(
-		var switchVal: Uint8,
-		var profileId: Uint8,
-		var daysOfWeek: DaysOfWeekPacket,
-		var from: TimeOfDayPacket,
-		var until: TimeOfDayPacket
-) : PacketInterface {
-	constructor() : this(0, 0, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket())
+		switchVal: Uint8,
+		profileId: Uint8,
+		daysOfWeek: DaysOfWeekPacket,
+		from: TimeOfDayPacket,
+		until: TimeOfDayPacket
+): BehaviourPacket(BehaviourType.TWILIGHT, switchVal, profileId, daysOfWeek, from, until) {
 
+	constructor() : this(0, 0, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket())
 	companion object {
-		const val SIZE = 1 + 1 + DaysOfWeekPacket.SIZE + TimeOfDayPacket.SIZE + TimeOfDayPacket.SIZE
+		const val SIZE = BehaviourPacket.SIZE
 	}
 
 	override fun getPacketSize(): Int {
@@ -34,12 +34,9 @@ class TwilightBehaviourPacket(
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.putUint8(switchVal)
-		bb.putUint8(profileId)
 		var success = true
-		success = success && daysOfWeek.toBuffer(bb)
-		success = success && from.toBuffer(bb)
-		success = success && until.toBuffer(bb)
+		success = success && super.toBuffer(bb)
+		success = success && (type == BehaviourType.TWILIGHT)
 		return success
 	}
 
@@ -47,12 +44,9 @@ class TwilightBehaviourPacket(
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		switchVal = bb.getUint8()
-		profileId = bb.getUint8()
 		var success = true
-		success = success && daysOfWeek.fromBuffer(bb)
-		success = success && from.fromBuffer(bb)
-		success = success && until.fromBuffer(bb)
+		success = success && super.fromBuffer(bb)
+		success = success && (type == BehaviourType.TWILIGHT)
 		return success
 	}
 }

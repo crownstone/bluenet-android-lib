@@ -26,7 +26,7 @@ open class ControlPacketV4(type: ControlTypeV4, payload: PacketInterface?): Payl
 
 	override val TAG = this.javaClass.simpleName
 	companion object {
-		const val SIZE = 2+2
+		const val HEADER_SIZE = 2+2
 	}
 	var type: ControlTypeV4 = type
 		protected set
@@ -36,7 +36,7 @@ open class ControlPacketV4(type: ControlTypeV4, payload: PacketInterface?): Payl
 	}
 
 	override fun getHeaderSize(): Int {
-		return SIZE
+		return HEADER_SIZE
 	}
 
 	override fun getPayloadSize(): Int? {

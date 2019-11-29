@@ -32,8 +32,11 @@ enum class PresenceType(val num: Uint8) {
 
 class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds: Uint32): PacketInterface {
 	var type = type
+		private set
 	val rooms = rooms
 	var timeoutSeconds = timeoutSeconds
+		private set
+
 	constructor(): this(PresenceType.UNKNOWN, ArrayList<Uint8>(), 0)
 
 	companion object {

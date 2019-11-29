@@ -27,55 +27,66 @@ enum class BehaviourType(val num: Uint8) {
 	}
 }
 
-typealias BehaviourPayloadInterface = PacketInterface
+typealias BehaviourIndex = Uint8
 
-class BehaviourPacket(payload: BehaviourPayloadInterface) : PacketInterface {
-	var type: BehaviourType
-	var payload = payload
-	init {
-		type = when (payload::class) {
-			SwitchBehaviourPacket::class -> BehaviourType.SWITCH
-			TwilightBehaviourPacket::class -> BehaviourType.TWILIGHT
-			SmartTimerBehaviourPacket::class -> BehaviourType.SMART_TIMER
-			else -> BehaviourType.UNKNOWN
-		}
-	}
-	constructor(): this(EmptyPacket())
+open class BehaviourPacket(type: BehaviourType,
+					  switchVal: Uint8,
+					  profileId: Uint8,
+					  daysOfWeek: DaysOfWeekPacket,
+					  from: TimeOfDayPacket,
+					  until: TimeOfDayPacket
+): PacketInterface {
+	var type = type
+		private set
+	var switchVal = switchVal
+		private set
+	var profileId = profileId
+		private set
+	var daysOfWeek = daysOfWeek
+		private set
+	var from = from
+		private set
+	var until = until
+		private set
+
+	constructor(): this(BehaviourType.UNKNOWN, 0, 0, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket())
 
 	companion object {
-		const val HEADER_SIZE = 1
+		const val SIZE = 1 + 1 + 1 + DaysOfWeekPacket.SIZE + TimeOfDayPacket.SIZE + TimeOfDayPacket.SIZE
 	}
 
 	override fun getPacketSize(): Int {
-//		val payloadSize = payload?.getPacketSize() ?: 0
-		return HEADER_SIZE + payload.getPacketSize()
+		return SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-//		if (payload == null) {
-//			return false
-//		}
 		if (type == BehaviourType.UNKNOWN) {
 			return false
 		}
 		bb.putUint8(type.num)
-		return payload.toBuffer(bb)
+		bb.putUint8(switchVal)
+		bb.putUint8(profileId)
+		var success = true
+		success = success && daysOfWeek.toBuffer(bb)
+		success = success && from.toBuffer(bb)
+		success = success && until.toBuffer(bb)
+		return success
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < HEADER_SIZE) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		type = BehaviourType.fromNum(bb.getUint8())
-		when (type) {
-			BehaviourType.SWITCH -> payload = SwitchBehaviourPacket()
-			BehaviourType.TWILIGHT -> payload = TwilightBehaviourPacket()
-			BehaviourType.SMART_TIMER -> payload = SmartTimerBehaviourPacket()
-			else -> return false
-		}
-		return payload.fromBuffer(bb)
+		switchVal = bb.getUint8()
+		profileId = bb.getUint8()
+		var success = true
+		success = success && daysOfWeek.fromBuffer(bb)
+		success = success && from.fromBuffer(bb)
+		success = success && until.fromBuffer(bb)
+		return success
 	}
 }
