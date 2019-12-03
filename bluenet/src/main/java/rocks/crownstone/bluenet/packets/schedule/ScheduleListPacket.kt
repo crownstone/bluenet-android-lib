@@ -44,7 +44,7 @@ class ScheduleListPacket: PacketInterface {
 		}
 		list.clear()
 		val size = bb.getUint8()
-		for (i in 0 until size) {
+		for (i in 0 until size.toInt()) {
 			val entry = ScheduleEntryPacket()
 			if (!entry.fromBuffer(bb)) {
 				list.clear()

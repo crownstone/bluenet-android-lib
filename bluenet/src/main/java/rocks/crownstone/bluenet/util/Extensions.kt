@@ -61,3 +61,35 @@ fun ByteBuffer.getUint32(offset: Int): Uint32 {
 }
 
 fun Boolean.toInt() = if (this) 1 else 0
+
+fun Byte.toUint8() = this.toUByte()
+fun Short.toUint8() = this.toUByte()
+fun UShort.toUint8() = this.toUByte()
+fun Int.toUint8() = this.toUByte()
+fun UInt.toUint8() = this.toUByte()
+
+fun UByte.toInt8() = this.toByte()
+fun UShort.toInt8() = this.toByte()
+fun UInt.toInt8() = this.toByte()
+
+
+fun Byte.toUint16() = this.toUShort()
+fun UByte.toUint16() = this.toUShort()
+fun Short.toUint16() = this.toUShort()
+fun Int.toUint16() = this.toUShort()
+fun UInt.toUint16() = this.toUShort()
+
+fun UByte.toInt16() = this.toShort()
+fun UShort.toInt16() = this.toShort()
+fun UInt.toInt16() = this.toShort()
+
+
+fun Byte.toUint32() = this.toUInt()
+fun Short.toUint32() = this.toUInt()
+fun Int.toUint32() = this.toUInt()
+
+fun Long.toUint32() = this.toUInt()
+fun UByte.toDouble() = this.toShort().toDouble()
+fun UShort.toDouble() = this.toInt().toDouble()
+
+fun UInt.toDouble() = this.toLong().toDouble()

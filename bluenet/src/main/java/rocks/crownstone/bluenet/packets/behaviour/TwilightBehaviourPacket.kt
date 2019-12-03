@@ -21,7 +21,7 @@ class TwilightBehaviourPacket(
 		until: TimeOfDayPacket
 ): BehaviourPacket(BehaviourType.TWILIGHT, switchVal, profileId, daysOfWeek, from, until) {
 
-	constructor() : this(0, 0, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket())
+	constructor() : this(0U, 0U, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket())
 	companion object {
 		const val SIZE = BehaviourPacket.SIZE
 	}

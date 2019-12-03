@@ -18,7 +18,7 @@ import kotlin.collections.ArrayList
 
 
 object Conversion {
-	private val TAG = this.javaClass.simpleName
+	val TAG = this.javaClass.simpleName
 
 	const val BASE_UUID_START = "0000"
 	const val BASE_UUID_END = "-0000-1000-8000-00805f9b34fb"
@@ -109,7 +109,7 @@ object Conversion {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		val uint32 = bb.getUint32(offset)
-		val str = "%08x".format(uint32)
+		val str = "%08x".format(uint32.toLong())
 		return stringToUuid(str)
 	}
 
@@ -117,7 +117,7 @@ object Conversion {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		val uint16 = bb.getUint16(offset)
-		val str = "%04x".format(uint16)
+		val str = "%04x".format(uint16.toInt())
 		return stringToUuid(str)
 	}
 
@@ -231,31 +231,43 @@ object Conversion {
 
 
 	fun toUint8(num: Byte): Uint8 {
-		return (num.toInt() and 0xFF).toShort()
+		return num.toUByte()
 	}
 
 	fun toUint8(num: Int): Uint8 {
-		return (num and 0xFF).toShort()
+		return num.toUByte()
+	}
+
+	fun toUint8(num: UInt): Uint8 {
+		return num.toUByte()
 	}
 
 	fun toUint16(num: Byte): Uint16 {
-		return num.toInt() and 0xFFFF
+		return num.toUShort()
 	}
 
 	fun toUint16(num: Short): Uint16 {
-		return num.toInt() and 0xFFFF
+		return num.toUShort()
 	}
 
 	fun toUint16(num: Int): Uint16 {
-		return num and 0xFFFF
+		return num.toUShort()
+	}
+
+	fun toUint16(num: UInt): Uint16 {
+		return num.toUShort()
 	}
 
 	fun toUint16(num: Long): Uint16 {
-		return (num and 0xFFFF).toInt()
+		return num.toUShort()
 	}
 
 	fun toUint32(num: Int): Uint32 {
-		return num.toLong() and 0xFFFFFFFFL
+		return num.toUInt()
+	}
+
+	fun toUint32(num: UShort): Uint32 {
+		return num.toUInt()
 	}
 
 	fun uint16ListToUint32Reversed(list: List<Uint16>): Uint32 {
@@ -380,42 +392,41 @@ object Conversion {
 
 	@Throws
 	inline fun <reified T> byteArrayTo(array: ByteArray, offset: Int = 0): T {
-		when (T::class) {
-			Byte::class, Int8::class, Uint8::class -> {
+		// Using T::class doesn't work, maybe because unsigned ints are still experimental.
+		when (T::class.simpleName) {
+			"Byte", "UByte" -> {
 				if (array.size != 1) {
-					throw Errors.Parse("Expected size of 1")
+					throw Errors.Parse("Expected size of 1, size=${array.size}")
 				}
 			}
-			Short::class, Int16::class, Uint16::class -> {
+			"Short", "UShort" -> {
 				if (array.size != 2) {
-					throw Errors.Parse("Expected size of 2")
+					throw Errors.Parse("Expected size of 2, size=${array.size}")
 				}
 			}
-			Int::class, Int32::class, Uint32::class, Float::class -> {
+			"Int", "UInt", "Float" -> {
 				if (array.size != 4) {
-					throw Errors.Parse("Expected size of 4")
+					throw Errors.Parse("Expected size of 4, size=${array.size}")
 				}
 			}
 			else -> {
 				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 			}
 		}
-
-
-		when (T::class) {
-			Byte::class, Int8::class ->
+		when (T::class.simpleName) {
+			"Byte" ->
 				return array[offset] as T
-			Uint8::class ->
+			"UByte" ->
 				return toUint8(array[0]) as T
-			Short::class, Int16::class ->
+			"Short" ->
 				return byteArrayToShort(array, offset) as T
-			Uint16::class ->
+			"UShort" ->
 				return toUint16(byteArrayToShort(array, offset)) as T
-			Int::class, Int32::class ->
+			"Int" ->
 				return byteArrayToInt(array, offset) as T
-			Uint32::class ->
+			"UInt" ->
 				return toUint32(byteArrayToInt(array, offset)) as T
-			Float::class ->
+			"Float" ->
 				return byteArrayToFloat(array, offset) as T
 			else ->
 				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
@@ -423,28 +434,28 @@ object Conversion {
 	}
 
 	inline fun <reified T> toByteArray(value: T): ByteArray {
-		when (T::class) {
-			Boolean::class -> {
-				val uint8: Uint8 = if (value as Boolean) 1 else 0
+		// Using T::class doesn't work, maybe because unsigned ints are still experimental.
+		when (T::class.simpleName) {
+			"Boolean" -> {
+				val uint8: Uint8 = if (value as Boolean) 1U else 0U
 				return uint8ToByteArray(uint8)
 			}
-			Byte::class, Int8::class ->
+			"Byte" ->
 				return int8ToByteArray(value as Int8)
-			Uint8::class ->
+			"UByte" ->
 				return uint8ToByteArray(value as Uint8)
-			Short::class, Int16::class ->
+			"Short" ->
 				return int16ToByteArray(value as Int16)
-			Uint16::class ->
+			"UShort" ->
 				return uint16ToByteArray(value as Uint16)
-			Int::class, Int32::class ->
+			"Int" ->
 				return int32ToByteArray(value as Int32)
-			Uint32::class ->
+			"UInt" ->
 				return uint32ToByteArray(value as Uint32)
-			Float::class ->
+			"Float" ->
 				return floatToByteArray(value as Float)
 			else ->
 				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 		}
 	}
-
 }

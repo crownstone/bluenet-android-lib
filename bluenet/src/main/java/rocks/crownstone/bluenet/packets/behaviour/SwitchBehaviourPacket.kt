@@ -24,7 +24,7 @@ open class SwitchBehaviourPacket(
 	var presence = presence
 		private set
 
-	constructor(): this(0, 0, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket(), PresencePacket())
+	constructor(): this(0U, 0U, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket(), PresencePacket())
 //	constructor(other: SwitchBehaviourPacket): this(other.switchVal, other.profileId, other.daysOfWeek, other.from, other.until, other.presence)
 
 	companion object {

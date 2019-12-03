@@ -30,9 +30,9 @@ open class ControlPacketV4(type: ControlTypeV4, payload: PacketInterface?): Payl
 	}
 	var type: ControlTypeV4 = type
 		protected set
-	protected var dataSize: Uint16 = 0
+	protected var dataSize: Uint16 = 0U
 	init {
-		dataSize = payload?.getPacketSize() ?: 0
+		dataSize = payload?.getPacketSize()?.toUint16() ?: 0U
 	}
 
 	override fun getHeaderSize(): Int {
@@ -40,7 +40,7 @@ open class ControlPacketV4(type: ControlTypeV4, payload: PacketInterface?): Payl
 	}
 
 	override fun getPayloadSize(): Int? {
-		return dataSize
+		return dataSize.toInt()
 	}
 
 	override fun headerToBuffer(bb: ByteBuffer): Boolean {

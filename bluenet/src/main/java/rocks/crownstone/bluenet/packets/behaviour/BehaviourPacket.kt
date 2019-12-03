@@ -15,10 +15,10 @@ import rocks.crownstone.bluenet.util.putUint8
 import java.nio.ByteBuffer
 
 enum class BehaviourType(val num: Uint8) {
-	SWITCH(0),
-	TWILIGHT(1),
-	SMART_TIMER(2),
-	UNKNOWN(255);
+	SWITCH(0U),
+	TWILIGHT(1U),
+	SMART_TIMER(2U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = values().associateBy(BehaviourType::num)
 		fun fromNum(action: Uint8): BehaviourType {
@@ -28,6 +28,7 @@ enum class BehaviourType(val num: Uint8) {
 }
 
 typealias BehaviourIndex = Uint8
+val INDEX_UNKNOWN: BehaviourIndex = 255U
 
 open class BehaviourPacket(type: BehaviourType,
 					  switchVal: Uint8,
@@ -49,7 +50,7 @@ open class BehaviourPacket(type: BehaviourType,
 	var until = until
 		private set
 
-	constructor(): this(BehaviourType.UNKNOWN, 0, 0, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket())
+	constructor(): this(BehaviourType.UNKNOWN, 0U, 0U, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket())
 
 	companion object {
 		const val SIZE = 1 + 1 + 1 + DaysOfWeekPacket.SIZE + TimeOfDayPacket.SIZE + TimeOfDayPacket.SIZE

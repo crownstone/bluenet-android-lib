@@ -18,7 +18,7 @@ class IndexedBehaviourPacket(index: BehaviourIndex, behaviour: BehaviourPacket):
 	var behaviour = behaviour
 		private set
 
-	constructor(): this(255, BehaviourPacket())
+	constructor(): this(INDEX_UNKNOWN, BehaviourPacket())
 
 	companion object {
 		const val HEADER_SIZE = 1
@@ -32,7 +32,7 @@ class IndexedBehaviourPacket(index: BehaviourIndex, behaviour: BehaviourPacket):
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		if (index == 255.toShort()) {
+		if (index == INDEX_UNKNOWN) {
 			return false
 		}
 		bb.putUint8(index)

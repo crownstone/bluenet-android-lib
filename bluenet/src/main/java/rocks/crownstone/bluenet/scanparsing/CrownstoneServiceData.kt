@@ -41,8 +41,8 @@ class CrownstoneServiceData {
 	internal var operationMode = OperationMode.UNKNOWN
 
 	// State
-	var crownstoneId: Uint8 = 0; internal set
-	var switchState = SwitchState(0); internal set
+	var crownstoneId: Uint8 = 0U; internal set
+	var switchState = SwitchState(0U); internal set
 	var temperature : Byte = 0; internal set             // Chip temperature in °C.
 	var powerUsageReal = 0.0; internal set               // Real power usage in W.
 	var powerUsageApparent = 0.0; internal set           // Apparent power usage in VA.
@@ -50,7 +50,7 @@ class CrownstoneServiceData {
 	var energyUsed = 0L; internal set                    // Energy used in Joule.
 	var externalRssi: Int8 = 0; internal set             // RSSI to external crownstone, only valid when flagExternalData is true.
 	var timestamp = 0L; internal set                     // POSIX local time. Only valid when flagTimeSet is true.
-	var count: Uint16 = 0; internal set                  // Sequence number of the service data. Only valid when flagTimeSet is false. Will overflow.
+	var count: Uint16 = 0U; internal set                  // Sequence number of the service data. Only valid when flagTimeSet is false. Will overflow.
 	var changingData = 0; internal set                   // Data that always changes for each new service data. Is a partial timestamp when time is set, counter when time is not set, or random value for old firmware.
 	internal var validation = false
 
@@ -73,7 +73,7 @@ class CrownstoneServiceData {
 	var errorDimmerTemperature = false; internal set     // The dimmer temperature was too high.
 	var errorDimmerFailureOn = false;   internal set     // The dimmer is always (partially) on.
 	var errorDimmerFailureOff = false;  internal set     // The dimmer is always (partially) off.
-	var errorTimestamp = 0L;            internal set     // Timestamp of the first error.
+	var errorTimestamp: Uint32 = 0U;    internal set     // Timestamp of the first error.
 
 	var unique = false; internal set // Whether this service data was different from the previous.
 

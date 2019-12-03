@@ -15,10 +15,10 @@ import rocks.crownstone.bluenet.util.put
 import java.nio.ByteBuffer
 
 enum class BaseTimeType(val num: Uint8) {
-	MIDNIGHT(0),
-	SUNDOWN(1),
-	SUNRISE(2),
-	UNKNOWN(255);
+	MIDNIGHT(0U),
+	SUNRISE(1U),
+	SUNSET(2U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = values().associateBy(BaseTimeType::num)
 		fun fromNum(action: Uint8): BaseTimeType {

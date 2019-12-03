@@ -10,7 +10,7 @@ package rocks.crownstone.bluenet.packets.behaviour
 import rocks.crownstone.bluenet.packets.PacketInterface
 import java.nio.ByteBuffer
 
-class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexedAndHashPacket>): PacketInterface {
+class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexAndHashPacket>): PacketInterface {
 	val indices = indices
 
 	constructor(): this(ArrayList())
@@ -18,8 +18,8 @@ class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexedAndHashPacket>):
 	/**
 	 * Get a copy of the list of indices.
 	 */
-	fun getIndices(): List<BehaviourIndexedAndHashPacket> {
-		val list = ArrayList<BehaviourIndexedAndHashPacket>()
+	fun getIndices(): List<BehaviourIndexAndHashPacket> {
+		val list = ArrayList<BehaviourIndexAndHashPacket>()
 		list.addAll(indices)
 		return list
 //		return ArrayList<BehaviourIndex>(indices)
@@ -52,7 +52,7 @@ class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexedAndHashPacket>):
 		}
 		indices.clear()
 		while (bb.remaining() > 0) {
-			val indexedHash = BehaviourIndexedAndHashPacket()
+			val indexedHash = BehaviourIndexAndHashPacket()
 			if (!indexedHash.fromBuffer(bb)) {
 				return false
 			}

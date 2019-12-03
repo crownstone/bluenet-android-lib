@@ -9,8 +9,11 @@ package rocks.crownstone.bluenet.scanhandling
 
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
+import rocks.crownstone.bluenet.structs.Int16
 import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.structs.Uint8
+import rocks.crownstone.bluenet.util.toInt16
+import rocks.crownstone.bluenet.util.toInt8
 
 /**
  * Class to validate a ble device.
@@ -21,7 +24,7 @@ class Validator {
 	val TAG = this.javaClass.simpleName
 	companion object {
 		const val THRESHOLD = 1 // Validated once 2 scans with different data have similar constant fields
-		const val CROWNSTONE_ID_INIT: Uint8 = -1 // Init with an invalid value
+		const val CROWNSTONE_ID_INIT: Int16 = -1 // Init with an invalid value
 		const val CHANGING_DATA_INIT = -1 // Init with an invalid value
 	}
 
@@ -92,7 +95,7 @@ class Validator {
 			}
 
 			// Compare crownstone id with previous crownstone id
-			if (serviceData.crownstoneId != lastCrownstoneId) {
+			if (serviceData.crownstoneId.toInt16() != lastCrownstoneId) {
 				reset()
 				return
 			}
@@ -103,7 +106,7 @@ class Validator {
 				isValidated = true
 			}
 		}
-		lastCrownstoneId = serviceData.crownstoneId
+		lastCrownstoneId = serviceData.crownstoneId.toInt16()
 		lastChangingData = serviceData.changingData
 	}
 

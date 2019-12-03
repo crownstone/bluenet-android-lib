@@ -52,20 +52,11 @@ enum class BluenetEvent {
 }
 
 typealias Int8 = Byte
-typealias Uint8 = Short
+typealias Uint8 = UByte
 typealias Int16 = Short
-typealias Uint16 = Int
+typealias Uint16 = UShort
 typealias Int32 = Int
-typealias Uint32 = Long
-
-
-//class Int8: Byte
-//class Uint8: Short
-//class Int16: Short
-//class Uint16: Int
-//class Int32: Int
-//class Uint32: Long
-
+typealias Uint32 = UInt
 
 typealias DeviceAddress = String
 typealias SphereId = String
@@ -92,7 +83,7 @@ data class SphereSettings(
 		val keySet: KeySet,
 		val meshKeySet: MeshKeySet?,
 		val ibeaconUuid: UUID,
-		var sphereShortId: SphereShortId = 0, // TODO: make this val, for now, this value isn't always known on init.
+		var sphereShortId: SphereShortId = 0U, // TODO: make this val, for now, this value isn't always known on init.
 		var deviceToken: Uint8                // TODO: make this val, for now, this value isn't always known on init.
 )
 
@@ -107,9 +98,9 @@ data class SphereSettings(
  */
 data class SphereState(
 		var settings: SphereSettings,
-		var commandCount: Uint8 = 0,
-		var locationId: Uint8 = 0,
-		var profileId: Uint8 = 0,
+		var commandCount: Uint8 = 0U,
+		var locationId: Uint8 = 0U,
+		var profileId: Uint8 = 0U,
 		var tapToToggleEnabled: Boolean = false,
 		var rssiOffset: Int = 0
 )

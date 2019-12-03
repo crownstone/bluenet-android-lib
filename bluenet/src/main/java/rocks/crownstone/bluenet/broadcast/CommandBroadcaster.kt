@@ -135,7 +135,7 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 			Log.w(TAG, "Missing state for sphere $sphereId")
 			return
 		}
-		sphereState.commandCount = Conversion.toUint8(sphereState.commandCount + 1) // Make sure it overflows
+		sphereState.commandCount = Conversion.toUint8(sphereState.commandCount + 1U) // Make sure it overflows
 	}
 
 	@Synchronized

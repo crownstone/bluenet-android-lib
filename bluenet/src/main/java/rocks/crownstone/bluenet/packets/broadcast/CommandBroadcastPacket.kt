@@ -16,10 +16,10 @@ import rocks.crownstone.bluenet.util.putInt
 import java.nio.ByteBuffer
 
 enum class CommandBroadcastType(val num: Uint8) {
-	NO_OP(0),
-	MULTI_SWITCH(1),
-	SET_TIME(2),
-	UNKNOWN(255);
+	NO_OP(0U),
+	MULTI_SWITCH(1U),
+	SET_TIME(2U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = CommandBroadcastType.values().associateBy(CommandBroadcastType::num)
 		fun fromNum(action: Uint8): CommandBroadcastType {

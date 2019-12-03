@@ -9,6 +9,7 @@ package rocks.crownstone.bluenet.structs
 
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Util
+import rocks.crownstone.bluenet.util.toUint32
 import java.util.UUID
 
 object BluenetProtocol {
@@ -91,8 +92,8 @@ object BluenetProtocol {
 	const val MULTIPART_NOTIFICATION_MAX_SIZE = 512
 	const val MULTIPART_NOTIFICATION_LAST_NR = 255
 
-	const val RECOVERY_CODE: Uint32 = 0xDEADBEEF
-	const val FACTORY_RESET_CODE: Uint32 = 0xDEADBEEF
+	const val RECOVERY_CODE: Uint32 = 0xDEADBEEFU
+	const val FACTORY_RESET_CODE: Uint32 = 0xDEADBEEFU
 
 	// State error bitmask
 	const val STATE_ERROR_POS_OVERCURRENT =        0
@@ -118,11 +119,11 @@ object BluenetProtocol {
 }
 
 enum class OpcodeType(val num: Uint8) {
-	READ(0),
-	WRITE(1),
-	NOTIFY(2),
-	RESULT(3),
-	UNKNOWN(255);
+	READ(0U),
+	WRITE(1U),
+	NOTIFY(2U),
+	RESULT(3U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = OpcodeType.values().associateBy(OpcodeType::num)
 		fun fromNum(type: Uint8): OpcodeType {
@@ -132,23 +133,23 @@ enum class OpcodeType(val num: Uint8) {
 }
 
 enum class ResultType(val num: Uint16) {
-	SUCCESS(0),
-	WAIT_FOR_SUCCESS(1),
-	BUFFER_UNASSIGNED(16),
-	BUFFER_LOCKED(17),
-	WRONG_PAYLOAD_LENGTH(32),
-	WRONG_PARAMETER(33),
-	INVALID_MESSAGE(34),
-	UNKNOWN_OP_CODE(35),
-	UNKNOWN_TYPE(36),
-	NOT_FOUND(37),
-	NO_ACCESS(48),
-	NOT_AVAILABLE(64),
-	NOT_IMPLEMENTED(65),
-	WRITE_DISABLED(80),
-	ERR_WRITE_NOT_ALLOWED(81),
-	ADC_INVALID_CHANNEL(96),
-	UNKNOWN(65535);
+	SUCCESS(0U),
+	WAIT_FOR_SUCCESS(1U),
+	BUFFER_UNASSIGNED(16U),
+	BUFFER_LOCKED(17U),
+	WRONG_PAYLOAD_LENGTH(32U),
+	WRONG_PARAMETER(33U),
+	INVALID_MESSAGE(34U),
+	UNKNOWN_OP_CODE(35U),
+	UNKNOWN_TYPE(36U),
+	NOT_FOUND(37U),
+	NO_ACCESS(48U),
+	NOT_AVAILABLE(64U),
+	NOT_IMPLEMENTED(65U),
+	WRITE_DISABLED(80U),
+	ERR_WRITE_NOT_ALLOWED(81U),
+	ADC_INVALID_CHANNEL(96U),
+	UNKNOWN(65535U);
 	companion object {
 		private val map = ResultType.values().associateBy(ResultType::num)
 		fun fromNum(type: Uint16): ResultType {
@@ -158,41 +159,41 @@ enum class ResultType(val num: Uint16) {
 }
 
 enum class ControlType(val num: Uint8) {
-	SWITCH(0),
-	PWM(1),
-	SET_TIME(2),
-	GOTO_DFU(3),
-	RESET(4),
-	FACTORY_RESET(5),
-	KEEP_ALIVE_STATE(6),
-	KEEP_ALIVE(7),
-	ENABLE_MESH(8),
-	ENABLE_ENCRYPTION(9),
-	ENABLE_IBEACON(10),
-	ENABLE_CONT_POWER_MEASURE(11),
-	ENABLE_SCANNER(12),
-	SCAN_DEVICES(13),
-	USER_FEEDBACK(14),
-	SCHEDULE_ENTRY_SET(15),
-	RELAY(16),
-	VALIDATE_SETUP(17),
-	REQUEST_SERVICE_DATA(18),
-	DISCONNECT(19),
-	NOOP(21),
-	INCREASE_TX(22),
-	RESET_STATE_ERRORS(23),
-	KEEP_ALIVE_REPEAT_LAST(24),
-	MULTI_SWITCH(25),
-	SCHEDULE_ENTRY_REMOVE(26),
-	KEEP_ALIVE_MESH(27),
-	MESH_COMMAND(28),
-	ALLOW_DIMMING(29),
-	LOCK_SWITCH(30),
-	SETUP(31),
-	ENABLE_SWITCHCRAFT(32),
-	UART_MSG(33),
-	UART_ENABLE(34),
-	UNKNOWN(255);
+	SWITCH(0U),
+	PWM(1U),
+	SET_TIME(2U),
+	GOTO_DFU(3U),
+	RESET(4U),
+	FACTORY_RESET(5U),
+	KEEP_ALIVE_STATE(6U),
+	KEEP_ALIVE(7U),
+	ENABLE_MESH(8U),
+	ENABLE_ENCRYPTION(9U),
+	ENABLE_IBEACON(10U),
+	ENABLE_CONT_POWER_MEASURE(11U),
+	ENABLE_SCANNER(12U),
+	SCAN_DEVICES(13U),
+	USER_FEEDBACK(14U),
+	SCHEDULE_ENTRY_SET(15U),
+	RELAY(16U),
+	VALIDATE_SETUP(17U),
+	REQUEST_SERVICE_DATA(18U),
+	DISCONNECT(19U),
+	NOOP(21U),
+	INCREASE_TX(22U),
+	RESET_STATE_ERRORS(23U),
+	KEEP_ALIVE_REPEAT_LAST(24U),
+	MULTI_SWITCH(25U),
+	SCHEDULE_ENTRY_REMOVE(26U),
+	KEEP_ALIVE_MESH(27U),
+	MESH_COMMAND(28U),
+	ALLOW_DIMMING(29U),
+	LOCK_SWITCH(30U),
+	SETUP(31U),
+	ENABLE_SWITCHCRAFT(32U),
+	UART_MSG(33U),
+	UART_ENABLE(34U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = ControlType.values().associateBy(ControlType::num)
 		fun fromNum(type: Uint8): ControlType {
@@ -202,31 +203,31 @@ enum class ControlType(val num: Uint8) {
 }
 
 enum class ControlTypeV4(val num: Uint16) {
-	SETUP(0),
-	FACTORY_RESET(1),
-	GET_STATE(2),
-	SET_STATE(3),
-	RESET(10),
-	GOTO_DFU(11),
-	NOOP(12),
-	DISCONNECT(13),
-	SWITCH(20),
-	MULTI_SWITCH(21),
-	DIMMER(22),
-	RELAY(23),
-	SET_TIME(30),
-	INCREASE_TX(31),
-	RESET_STATE_ERRORS(32),
-	MESH_COMMAND(33),
-	ALLOW_DIMMING(40),
-	LOCK_SWITCH(41),
-	UART_MSG(50),
-	BEHAVIOUR_ADD(60),
-	BEHAVIOUR_REPLACE(61),
-	BEHAVIOUR_REMOVE(62),
-	BEHAVIOUR_GET(63),
-	BEHAVIOUR_GET_INDICES(64),
-	UNKNOWN(0xFFFF);
+	SETUP(0U),
+	FACTORY_RESET(1U),
+	GET_STATE(2U),
+	SET_STATE(3U),
+	RESET(10U),
+	GOTO_DFU(11U),
+	NOOP(12U),
+	DISCONNECT(13U),
+	SWITCH(20U),
+	MULTI_SWITCH(21U),
+	DIMMER(22U),
+	RELAY(23U),
+	SET_TIME(30U),
+	INCREASE_TX(31U),
+	RESET_STATE_ERRORS(32U),
+	MESH_COMMAND(33U),
+	ALLOW_DIMMING(40U),
+	LOCK_SWITCH(41U),
+	UART_MSG(50U),
+	BEHAVIOUR_ADD(60U),
+	BEHAVIOUR_REPLACE(61U),
+	BEHAVIOUR_REMOVE(62U),
+	BEHAVIOUR_GET(63U),
+	BEHAVIOUR_GET_INDICES(64U),
+	UNKNOWN(0xFFFFU);
 	companion object {
 		private val map = ControlTypeV4.values().associateBy(ControlTypeV4::num)
 		fun fromNum(type: Uint16): ControlTypeV4 {
@@ -236,20 +237,20 @@ enum class ControlTypeV4(val num: Uint16) {
 }
 
 enum class StateType(val num: Uint8) {
-	RESET_COUNTER(128),
-	SWITCH_STATE(129),
-	ACCUMULATED_ENERGY(130),
-	POWER_USAGE(131),
-	TRACKED_DEVICES(132),
-	SCHEDULE(133),
-	OPERATION_MODE(134),
-	TEMPERATURE(135),
-	TIME(136),
-	ERRORS(139),
-	SWITCHCRAFT_LAST_BUF1(149),
-	SWITCHCRAFT_LAST_BUF2(150),
-	SWITCHCRAFT_LAST_BUF3(151),
-	UNKNOWN(255);
+	RESET_COUNTER(128U),
+	SWITCH_STATE(129U),
+	ACCUMULATED_ENERGY(130U),
+	POWER_USAGE(131U),
+	TRACKED_DEVICES(132U),
+	SCHEDULE(133U),
+	OPERATION_MODE(134U),
+	TEMPERATURE(135U),
+	TIME(136U),
+	ERRORS(139U),
+	SWITCHCRAFT_LAST_BUF1(149U),
+	SWITCHCRAFT_LAST_BUF2(150U),
+	SWITCHCRAFT_LAST_BUF3(151U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = StateType.values().associateBy(StateType::num)
 		fun fromNum(type: Uint8): StateType {
@@ -259,66 +260,66 @@ enum class StateType(val num: Uint8) {
 }
 
 enum class ConfigType(val num: Uint8) {
-	NAME(0),
-	DEVICE_TYPE(1),
-	ROOM(2),
-	FLOOR(3),
-	NEARBY_TIMEOUT(4),
-	PWM_PERIOD(5),
-	IBEACON_MAJOR(6),
-	IBEACON_MINOR(7),
-	IBEACON_PROXIMITY_UUID(8),
-	IBEACON_TXPOWER(9),
-	WIFI_SETTINGS(10),
-	TX_POWER(11),
-	ADV_INTERVAL(12),
-	PASSKEY(13),
-	MIN_ENV_TEMP(14),
-	MAX_ENV_TEMP(15),
-	SCAN_DURATION(16),
-	SCAN_SEND_DELAY(17),
-	SCAN_BREAK_DURATION(18),
-	BOOT_DELAY(19),
-	MAX_CHIP_TEMP(20),
-	SCAN_FILTER(21),
-	SCAN_FILTER_SEND_FRACTION(22),
-	MESH_ENABLED(24),
-	ENCRYPTION_ENABLED(25),
-	IBEACON_ENABLED(26),
-	SCANNER_ENABLED(27),
-	CONT_POWER_SAMPLER_ENABLED(28),
-	TRACKER_ENABLED(29),
-	ADC_SAMPLE_RATE(30),
-	POWER_SAMPLE_BURST_INTERVAL(31),
-	POWER_SAMPLE_CONT_INTERVAL(32),
-	POWER_SAMPLE_CONT_NUM_SAMPLES(33),
-	CROWNSTONE_ID(34),
-	KEY_ADMIN(35),
-	KEY_MEMBER(36),
-	KEY_GUEST(37),
-	DEFAULT_ON(38),
-	SCAN_INTERVAL(39),
-	SCAN_WINDOW(40),
-	RELAY_HIGH_DURATION(41),
-	LOW_TX_POWER(42),
-	VOLTAGE_MULTIPLIER(43),
-	CURRENT_MULTIPLIER(44),
-	VOLTAGE_ZERO(45),
-	CURRENT_ZERO(46),
-	POWER_ZERO(47),
-	POWER_AVG_WINDOW(48),
-	MESH_ACCESS_ADDRESS(49),
-	CURRENT_THRESHOLD(50),
-	CURRENT_THRESHOLD_DIMMER(51),
-	DIMMER_TEMP_UP(52),
-	DIMMER_TEMP_DOWN(53),
-	DIMMING_ALLOWED(54),
-	SWITCH_LOCKED(55),
-	SWITCHCRAFT_ENABLED(56),
-	SWITCHCRAFT_THRESHOLD(57),
-	MESH_CHANNEL(58),
-	UART_ENABLED(59),
-	UNKNOWN(255);
+	NAME(0U),
+	DEVICE_TYPE(1U),
+	ROOM(2U),
+	FLOOR(3U),
+	NEARBY_TIMEOUT(4U),
+	PWM_PERIOD(5U),
+	IBEACON_MAJOR(6U),
+	IBEACON_MINOR(7U),
+	IBEACON_PROXIMITY_UUID(8U),
+	IBEACON_TXPOWER(9U),
+	WIFI_SETTINGS(10U),
+	TX_POWER(11U),
+	ADV_INTERVAL(12U),
+	PASSKEY(13U),
+	MIN_ENV_TEMP(14U),
+	MAX_ENV_TEMP(15U),
+	SCAN_DURATION(16U),
+	SCAN_SEND_DELAY(17U),
+	SCAN_BREAK_DURATION(18U),
+	BOOT_DELAY(19U),
+	MAX_CHIP_TEMP(20U),
+	SCAN_FILTER(21U),
+	SCAN_FILTER_SEND_FRACTION(22U),
+	MESH_ENABLED(24U),
+	ENCRYPTION_ENABLED(25U),
+	IBEACON_ENABLED(26U),
+	SCANNER_ENABLED(27U),
+	CONT_POWER_SAMPLER_ENABLED(28U),
+	TRACKER_ENABLED(29U),
+	ADC_SAMPLE_RATE(30U),
+	POWER_SAMPLE_BURST_INTERVAL(31U),
+	POWER_SAMPLE_CONT_INTERVAL(32U),
+	POWER_SAMPLE_CONT_NUM_SAMPLES(33U),
+	CROWNSTONE_ID(34U),
+	KEY_ADMIN(35U),
+	KEY_MEMBER(36U),
+	KEY_GUEST(37U),
+	DEFAULT_ON(38U),
+	SCAN_INTERVAL(39U),
+	SCAN_WINDOW(40U),
+	RELAY_HIGH_DURATION(41U),
+	LOW_TX_POWER(42U),
+	VOLTAGE_MULTIPLIER(43U),
+	CURRENT_MULTIPLIER(44U),
+	VOLTAGE_ZERO(45U),
+	CURRENT_ZERO(46U),
+	POWER_ZERO(47U),
+	POWER_AVG_WINDOW(48U),
+	MESH_ACCESS_ADDRESS(49U),
+	CURRENT_THRESHOLD(50U),
+	CURRENT_THRESHOLD_DIMMER(51U),
+	DIMMER_TEMP_UP(52U),
+	DIMMER_TEMP_DOWN(53U),
+	DIMMING_ALLOWED(54U),
+	SWITCH_LOCKED(55U),
+	SWITCHCRAFT_ENABLED(56U),
+	SWITCHCRAFT_THRESHOLD(57U),
+	MESH_CHANNEL(58U),
+	UART_ENABLED(59U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = ConfigType.values().associateBy(ConfigType::num)
 		fun fromNum(type: Uint8): ConfigType {
@@ -328,65 +329,65 @@ enum class ConfigType(val num: Uint8) {
 }
 
 enum class StateTypeV4(val num: Uint16) {
-	PWM_PERIOD(5),
-	IBEACON_MAJOR(6),
-	IBEACON_MINOR(7),
-	IBEACON_PROXIMITY_UUID(8),
-	IBEACON_TXPOWER(9),
-	TX_POWER(11),
-	ADV_INTERVAL(12),
-	SCAN_DURATION(16),
-	SCAN_BREAK_DURATION(18),
-	BOOT_DELAY(19),
-	MAX_CHIP_TEMP(20),
-	MESH_ENABLED(24),
-	ENCRYPTION_ENABLED(25),
-	IBEACON_ENABLED(26),
-	SCANNER_ENABLED(27),
-	POWER_SAMPLE_CONT_NUM_SAMPLES(33),
-	CROWNSTONE_ID(34),
-	KEY_ADMIN(35),
-	KEY_MEMBER(36),
-	KEY_GUEST(37),
-	DEFAULT_ON(38),
-	SCAN_INTERVAL(39),
-	SCAN_WINDOW(40),
-	RELAY_HIGH_DURATION(41),
-	LOW_TX_POWER(42),
-	VOLTAGE_MULTIPLIER(43),
-	CURRENT_MULTIPLIER(44),
-	VOLTAGE_ZERO(45),
-	CURRENT_ZERO(46),
-	POWER_ZERO(47),
-	CURRENT_THRESHOLD(50),
-	CURRENT_THRESHOLD_DIMMER(51),
-	DIMMER_TEMP_UP(52),
-	DIMMER_TEMP_DOWN(53),
-	DIMMING_ALLOWED(54),
-	SWITCH_LOCKED(55),
-	SWITCHCRAFT_ENABLED(56),
-	SWITCHCRAFT_THRESHOLD(57),
-	UART_ENABLED(59),
-	NAME(60),
-	KEY_SERVICE_DATA(61),
-	KEY_MESH_DEVICE(62),
-	KEY_MESH_APP(63),
-	KEY_MESH_NETWORK(64),
-	KEY_LOCALIZATION(65),
-	START_DIMMER_ON_ZERO_CROSSING(66),
-	TAP_TO_TOGGLE_ENABLED(67),
-	TAP_TO_TOGGLE_RSSI_THRESHOLD_OFFSET(68),
+	PWM_PERIOD(5U),
+	IBEACON_MAJOR(6U),
+	IBEACON_MINOR(7U),
+	IBEACON_PROXIMITY_UUID(8U),
+	IBEACON_TXPOWER(9U),
+	TX_POWER(11U),
+	ADV_INTERVAL(12U),
+	SCAN_DURATION(16U),
+	SCAN_BREAK_DURATION(18U),
+	BOOT_DELAY(19U),
+	MAX_CHIP_TEMP(20U),
+	MESH_ENABLED(24U),
+	ENCRYPTION_ENABLED(25U),
+	IBEACON_ENABLED(26U),
+	SCANNER_ENABLED(27U),
+	POWER_SAMPLE_CONT_NUM_SAMPLES(33U),
+	CROWNSTONE_ID(34U),
+	KEY_ADMIN(35U),
+	KEY_MEMBER(36U),
+	KEY_GUEST(37U),
+	DEFAULT_ON(38U),
+	SCAN_INTERVAL(39U),
+	SCAN_WINDOW(40U),
+	RELAY_HIGH_DURATION(41U),
+	LOW_TX_POWER(42U),
+	VOLTAGE_MULTIPLIER(43U),
+	CURRENT_MULTIPLIER(44U),
+	VOLTAGE_ZERO(45U),
+	CURRENT_ZERO(46U),
+	POWER_ZERO(47U),
+	CURRENT_THRESHOLD(50U),
+	CURRENT_THRESHOLD_DIMMER(51U),
+	DIMMER_TEMP_UP(52U),
+	DIMMER_TEMP_DOWN(53U),
+	DIMMING_ALLOWED(54U),
+	SWITCH_LOCKED(55U),
+	SWITCHCRAFT_ENABLED(56U),
+	SWITCHCRAFT_THRESHOLD(57U),
+	UART_ENABLED(59U),
+	NAME(60U),
+	KEY_SERVICE_DATA(61U),
+	KEY_MESH_DEVICE(62U),
+	KEY_MESH_APP(63U),
+	KEY_MESH_NETWORK(64U),
+	KEY_LOCALIZATION(65U),
+	START_DIMMER_ON_ZERO_CROSSING(66U),
+	TAP_TO_TOGGLE_ENABLED(67U),
+	TAP_TO_TOGGLE_RSSI_THRESHOLD_OFFSET(68U),
 
-	RESET_COUNTER(128),
-	SWITCH_STATE(129),
-	ACCUMULATED_ENERGY(130),
-	POWER_USAGE(131),
-	OPERATION_MODE(134),
-	TEMPERATURE(135),
-	TIME(136),
-	ERRORS(139),
+	RESET_COUNTER(128U),
+	SWITCH_STATE(129U),
+	ACCUMULATED_ENERGY(130U),
+	POWER_USAGE(131U),
+	OPERATION_MODE(134U),
+	TEMPERATURE(135U),
+	TIME(136U),
+	ERRORS(139U),
 
-	UNKNOWN(0xFFFF);
+	UNKNOWN(0xFFFFU);
 	companion object {
 		private val map = StateTypeV4.values().associateBy(StateTypeV4::num)
 		fun fromNum(type: Uint16): StateTypeV4 {
@@ -396,12 +397,12 @@ enum class StateTypeV4(val num: Uint16) {
 }
 
 enum class DeviceType(val num: Uint8) {
-	UNKNOWN(0),
-	CROWNSTONE_PLUG(1),
-	GUIDESTONE(2),
-	CROWNSTONE_BUILTIN(3),
-	CROWNSTONE_DONGLE(4),
-	CROWNSTONE_BUILTIN_ONE(5);
+	UNKNOWN(0U),
+	CROWNSTONE_PLUG(1U),
+	GUIDESTONE(2U),
+	CROWNSTONE_BUILTIN(3U),
+	CROWNSTONE_DONGLE(4U),
+	CROWNSTONE_BUILTIN_ONE(5U);
 	companion object {
 		private val map = DeviceType.values().associateBy(DeviceType::num)
 		//		fun fromInt(type: Int) = map.getOrDefault(type, UNKNOWN)
@@ -420,13 +421,13 @@ enum class OperationMode {
 }
 
 enum class ServiceDataVersion(val num: Uint8) {
-	UNKNOWN(0),
-	V1(1),
-	V3(3),
-	V4(4),
-	V5(5),
-	V6(6),
-	V7(7);
+	UNKNOWN(0U),
+	V1(1U),
+	V3(3U),
+	V4(4U),
+	V5(5U),
+	V6(6U),
+	V7(7U);
 	companion object {
 		private val map = ServiceDataVersion.values().associateBy(ServiceDataVersion::num)
 		fun fromNum(action: Uint8): ServiceDataVersion {
@@ -436,11 +437,11 @@ enum class ServiceDataVersion(val num: Uint8) {
 }
 
 enum class ServiceDataType(val num: Uint8) {
-	STATE(0), // Service data with state info
-	ERROR(1), // Service data with error info
-	EXT_STATE(2), // Service data of another crownstone with state info
-	EXT_ERROR(3), // Service data of another crownstone with error info
-	UNKNOWN(255);
+	STATE(0U), // Service data with state info
+	ERROR(1U), // Service data with error info
+	EXT_STATE(2U), // Service data of another crownstone with state info
+	EXT_ERROR(3U), // Service data of another crownstone with error info
+	UNKNOWN(255U);
 	companion object {
 		private val map = ServiceDataType.values().associateBy(ServiceDataType::num)
 		fun fromNum(action: Uint8): ServiceDataType {
@@ -450,10 +451,10 @@ enum class ServiceDataType(val num: Uint8) {
 }
 
 enum class UartMode(val num: Uint8) {
-	NONE(0),
-	RX_ONLY(1),
-	RX_AND_TX(3),
-	UNKNOWN(255);
+	NONE(0U),
+	RX_ONLY(1U),
+	RX_AND_TX(3U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = UartMode.values().associateBy(UartMode::num)
 		fun fromNum(action: Uint8): UartMode {
@@ -463,9 +464,9 @@ enum class UartMode(val num: Uint8) {
 }
 
 enum class KeepAliveAction(val num: Uint8) {
-	NO_CHANGE(0),
-	CHANGE(1),
-	UNKNOWN(255);
+	NO_CHANGE(0U),
+	CHANGE(1U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = KeepAliveAction.values().associateBy(KeepAliveAction::num)
 		fun fromNum(action: Uint8): KeepAliveAction {
@@ -475,8 +476,8 @@ enum class KeepAliveAction(val num: Uint8) {
 }
 
 enum class MultiSwitchType(val num: Uint8) {
-	LIST(0),
-	UNKNOWN(255);
+	LIST(0U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = MultiSwitchType.values().associateBy(MultiSwitchType::num)
 		fun fromNum(action: Uint8): MultiSwitchType {
@@ -486,12 +487,12 @@ enum class MultiSwitchType(val num: Uint8) {
 }
 
 enum class MultiSwitchIntent(val num: Uint8) {
-	SPHERE_ENTER(0),
-	SPHERE_EXIT(1),
-	ENTER(2),
-	EXIT(3),
-	MANUAL(4),
-	UNKNOWN(255);
+	SPHERE_ENTER(0U),
+	SPHERE_EXIT(1U),
+	ENTER(2U),
+	EXIT(3U),
+	MANUAL(4U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = MultiSwitchIntent.values().associateBy(MultiSwitchIntent::num)
 		fun fromNum(action: Uint8): MultiSwitchIntent {
@@ -501,8 +502,8 @@ enum class MultiSwitchIntent(val num: Uint8) {
 }
 
 enum class MultiKeepAliveType(val num: Uint8) {
-	SAME_TIMEOUT(1),
-	UNKNOWN(255);
+	SAME_TIMEOUT(1U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = MultiKeepAliveType.values().associateBy(MultiKeepAliveType::num)
 		fun fromNum(action: Uint8): MultiKeepAliveType {
@@ -512,7 +513,7 @@ enum class MultiKeepAliveType(val num: Uint8) {
 }
 
 class KeepAliveActionSwitch() {
-	var actionSwitchValue: Uint8 = 255; private set
+	var actionSwitchValue: Uint8 = 255U; private set
 	constructor(action: Uint8): this() {
 		this.setAction(action)
 	}
@@ -520,16 +521,16 @@ class KeepAliveActionSwitch() {
 		actionSwitchValue = switchValue
 	}
 	fun clearAction() {
-		actionSwitchValue = 255
+		actionSwitchValue = 255U
 	}
 }
 
 enum class MeshCommandType(val num: Uint8) {
-	CONTROL(0),
-	BEACON_CONFIG(1),
-	CONFIG(2),
-	STATE(3),
-	UNKNOWN(255);
+	CONTROL(0U),
+	BEACON_CONFIG(1U),
+	CONFIG(2U),
+	STATE(3U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = MeshCommandType.values().associateBy(MeshCommandType::num)
 		fun fromNum(action: Uint8): MeshCommandType {
@@ -599,7 +600,7 @@ class SwitchState(val state: Uint8) {
 }
 
 class ErrorState() {
-	var bitmask: Uint32 = 0; private set
+	var bitmask: Uint32 = 0U; private set
 	var overCurrent =       false
 	var overCurrentDimmer = false
 	var chipTemperature =   false
@@ -618,7 +619,7 @@ class ErrorState() {
 	}
 
 	fun calcBitMask(): Uint32 {
-		bitmask = 0
+		bitmask = 0U
 		if (overCurrent) {       bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT) }
 		if (overCurrentDimmer) { bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_OVERCURRENT_DIMMER) }
 		if (chipTemperature) {   bitmask = Util.setBit(bitmask, BluenetProtocol.STATE_ERROR_POS_TEMP_CHIP) }
@@ -630,7 +631,7 @@ class ErrorState() {
 }
 
 class ScheduleOverride() {
-	var bitmask: Uint8 = 0; private set
+	var bitmask: Uint8 = 0U; private set
 	var all =      false
 		set(value) { onSet(value, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL) }
 	var location = false
@@ -643,7 +644,7 @@ class ScheduleOverride() {
 	}
 
 	fun calcBitMask(): Uint8 {
-		bitmask = 0
+		bitmask = 0U
 		if (all) {      bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_ALL) }
 		if (location) { bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_OVERRIDE_BIT_POS_LOCATION) }
 		return bitmask
@@ -658,7 +659,7 @@ class ScheduleOverride() {
 }
 
 class ScheduleDayOfWeek() {
-	var bitmask: Uint8 = 0; private set
+	var bitmask: Uint8 = 0U; private set
 	var sunday =    false
 	var monday =    false
 	var tuesday =   false
@@ -681,7 +682,7 @@ class ScheduleDayOfWeek() {
 	}
 
 	fun calcBitMask(): Uint8 {
-		bitmask = 0
+		bitmask = 0U
 		if (sunday) {    bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_SUNDAY) }
 		if (monday) {    bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_MONDAY) }
 		if (tuesday) {   bitmask = Util.setBit(bitmask, BluenetProtocol.SCHEDULE_WEEKDAY_BIT_POS_TUESDAY) }

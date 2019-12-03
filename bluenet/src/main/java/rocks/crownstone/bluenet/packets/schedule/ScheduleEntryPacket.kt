@@ -17,16 +17,16 @@ class ScheduleEntryPacket(): PacketInterface {
 	var actionType: ScheduleActionType = ScheduleActionType.UNKNOWN
 //	var overrideMask: Uint8 = 0
 	var overrideMask = ScheduleOverride()
-	var timestamp: Uint32 = 0
+	var timestamp: Uint32 = 0U
 
 	// Repeat
-	var minutes: Uint16 = 0
+	var minutes: Uint16 = 0U
 //	var dayOfWeekMask: Int = 0
 	var dayOfWeekMask = ScheduleDayOfWeek()
 
 	// Action
-	var switchVal: Uint8 = 0
-	var fadeDuration: Uint16 = 0
+	var switchVal: Uint8 = 0U
+	var fadeDuration: Uint16 = 0U
 
 	constructor(repeatType: ScheduleRepeatType, actionType: ScheduleActionType, timestamp: Uint32, overrideMask: ScheduleOverride = ScheduleOverride()): this() {
 		this.repeatType = repeatType
@@ -40,7 +40,7 @@ class ScheduleEntryPacket(): PacketInterface {
 	}
 
 	fun isActive(): Boolean {
-		return timestamp != 0L
+		return timestamp != 0U
 	}
 
 	override fun getPacketSize(): Int {
@@ -58,14 +58,14 @@ class ScheduleEntryPacket(): PacketInterface {
 		bb.putInt(timestamp)
 		when (repeatType) {
 			ScheduleRepeatType.MINUTES -> {
-				if (minutes == 0) {
+				if (minutes == 0.toUint16()) {
 					return false
 				}
 				bb.putShort(minutes)
 			}
 			ScheduleRepeatType.DAY -> {
 				val dayOfWeekBitmask = dayOfWeekMask.calcBitMask()
-				if (dayOfWeekBitmask == 0.toShort()) {
+				if (dayOfWeekBitmask == 0.toUint8()) {
 					return false
 				}
 				bb.put(dayOfWeekMask.bitmask)
@@ -82,7 +82,7 @@ class ScheduleEntryPacket(): PacketInterface {
 				bb.putShort(0) // Reserved
 			}
 			ScheduleActionType.FADE -> {
-				if (fadeDuration == 0) {
+				if (fadeDuration == 0.toUint16()) {
 					return false
 				}
 				bb.put(switchVal)

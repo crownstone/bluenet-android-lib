@@ -10,15 +10,17 @@ package rocks.crownstone.bluenet.packets.behaviour
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.util.getUint8
 import rocks.crownstone.bluenet.util.putUint8
+import rocks.crownstone.bluenet.util.toUint16
+import rocks.crownstone.bluenet.util.toUint8
 import java.nio.ByteBuffer
 
-class BehaviourIndexedAndHashPacket(index: BehaviourIndex, hash: BehaviourHashPacket): PacketInterface {
+class BehaviourIndexAndHashPacket(index: BehaviourIndex, hash: BehaviourHashPacket): PacketInterface {
 	var index = index
 		private set
 	var hash = hash
 		private set
 
-	constructor(): this(255, BehaviourHashPacket())
+	constructor(): this(INDEX_UNKNOWN, BehaviourHashPacket())
 
 	companion object {
 		const val HEADER_SIZE = 1
@@ -32,7 +34,7 @@ class BehaviourIndexedAndHashPacket(index: BehaviourIndex, hash: BehaviourHashPa
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		if (index == 255.toShort()) {
+		if (index == INDEX_UNKNOWN) {
 			return false
 		}
 		bb.putUint8(index)

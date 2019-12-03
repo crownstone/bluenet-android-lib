@@ -184,7 +184,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 					}
 //					val length = Conversion.byteArrayTo<Uint16>(arr)
 					val length = Conversion.toUint16(Conversion.byteArrayToShort(arr))
-					if (arr.size - 2 < length*2) {
+					if (arr.size - 2 < length.toInt() * 2) {
 						deferred.reject(Errors.Parse("payload too small for length"))
 						return@then
 //						return@then Promise.ofFail<ByteArray, Exception>(Errors.Parse("payload too small for length"))

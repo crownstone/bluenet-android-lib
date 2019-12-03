@@ -35,7 +35,7 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 		}
 	}
 
-	constructor(): this(-1, null, null)
+	constructor(): this(255U, null, null)
 	constructor(type: Uint8, data: ByteArray, opCode: OpcodeType = OpcodeType.WRITE): this(type, data, null, opCode)
 	constructor(type: Uint8, payload: PacketInterface, opCode: OpcodeType = OpcodeType.WRITE): this(type, null, payload, opCode)
 	constructor(type: Uint8, byte: Byte, opCode: OpcodeType = OpcodeType.WRITE): this(type, byteArrayOf(byte), null, opCode)
@@ -55,7 +55,7 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.put(type)
 		bb.put(opCode.num)
-		bb.putShort(dataSize)
+		bb.putUint16(dataSize.toUint16())
 		// TODO check payload size with dataSize?
 		val payload = this.payload
 		if (payload != null) {
@@ -74,7 +74,7 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 		}
 		type = bb.getUint8()
 		opCode = OpcodeType.fromNum(bb.getUint8())
-		dataSize = bb.getUint16()
+		dataSize = bb.getUint16().toInt()
 		if (bb.remaining() < dataSize) {
 			Log.w(TAG, "buffer too small for payload: ${bb.remaining()} < $dataSize")
 			return false

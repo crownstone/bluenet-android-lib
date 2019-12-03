@@ -20,6 +20,7 @@ import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
+import rocks.crownstone.bluenet.util.toUint16
 import java.util.*
 
 /**
@@ -47,7 +48,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setCrownstoneId(id: Uint8): Promise<Unit, Exception> {
 		Log.i(TAG, "setCrownstoneId $id")
-		val stoneId = Conversion.toUint16(id) // Is still uint16
+		val stoneId = id.toUint16() // Is still uint16
 		return setConfigValue(ConfigType.CROWNSTONE_ID, StateTypeV4.CROWNSTONE_ID, stoneId)
 	}
 

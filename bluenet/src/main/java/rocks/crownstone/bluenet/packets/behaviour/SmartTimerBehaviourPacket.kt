@@ -27,7 +27,7 @@ class SmartTimerBehaviourPacket(
 	var endConditionTimeOffset = endConditionTimeOffset
 		private set
 
-	constructor(): this(0, 0, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket(), PresencePacket(), PresencePacket(), 0)
+	constructor(): this(0U, 0U, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket(), PresencePacket(), PresencePacket(), 0)
 	constructor(switchBehaviourPacket: SwitchBehaviourPacket, endConditionPresence: PresencePacket, endConditionTimeOffset: TimeDifference):
 			this(switchBehaviourPacket.switchVal,
 					switchBehaviourPacket.profileId,

@@ -94,10 +94,10 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		}
 
 		if (
-				(stoneId <= 0 || stoneId > 255) ||
-				(sphereShortId <= 0 || sphereShortId > 255) ||
-				(ibeaconData.major < 0 || ibeaconData.major > 0xFFFF) ||
-				(ibeaconData.minor < 0 || ibeaconData.minor > 0xFFFF)
+				(stoneId <= 0U || stoneId > 255U) ||
+				(sphereShortId <= 0U || sphereShortId > 255U) ||
+				(ibeaconData.major < 0U || ibeaconData.major > 0xFFFFU) ||
+				(ibeaconData.minor < 0U || ibeaconData.minor > 0xFFFFU)
 		) {
 			return Promise.ofFail(Errors.ValueWrong())
 		}
@@ -211,7 +211,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	private fun fastSetup(stoneId: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
-		val packet = SetupPacket(0, stoneId, keySet, meshAccessAddress, ibeaconData)
+		val packet = SetupPacket(0U, stoneId, keySet, meshAccessAddress, ibeaconData)
 		val control = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
 		return performFastSetupV2(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)

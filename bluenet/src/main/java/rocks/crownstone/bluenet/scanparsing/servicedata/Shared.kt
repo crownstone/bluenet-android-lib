@@ -71,7 +71,7 @@ internal object Shared {
 		setPowerUsageApparent(servicedata)
 		parseErrorBitmask(bb.getUint32(), servicedata)
 		val count = bb.getUint8()
-		servicedata.count = count.toInt()
+		servicedata.count = count.toUint16()
 		servicedata.changingData = count.toInt()
 		bb.getInt() // reserved
 		servicedata.validation = true // No need for validation so set to true
@@ -128,6 +128,6 @@ internal object Shared {
 		else {
 			servicedata.count = partialTimestamp
 		}
-		servicedata.changingData = partialTimestamp
+		servicedata.changingData = partialTimestamp.toInt()
 	}
 }

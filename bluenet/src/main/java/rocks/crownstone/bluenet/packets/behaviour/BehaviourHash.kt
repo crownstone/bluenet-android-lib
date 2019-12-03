@@ -17,7 +17,7 @@ class BehaviourHashPacket(hash: Uint32): PacketInterface {
 	var hash = hash
 		private set
 
-	constructor(): this(0)
+	constructor(): this(0U)
 
 	companion object {
 		const val SIZE = 4

@@ -30,6 +30,18 @@ object Util {
 		return isBitSet(value.toInt(), bit)
 	}
 
+	fun isBitSet(value: UInt, bit: Int): Boolean {
+		return isBitSet(value.toLong(), bit)
+	}
+
+	fun isBitSet(value: UShort, bit: Int): Boolean {
+		return isBitSet(value.toInt(), bit)
+	}
+
+	fun isBitSet(value: UByte, bit: Int): Boolean {
+		return isBitSet(value.toInt(), bit)
+	}
+
 	// Clear the Nth bit in a value
 	fun clearBit(value: Long, bit: Int): Long {
 		return value and (1L shl bit).inv()
@@ -47,6 +59,18 @@ object Util {
 		return (value.toInt() and (1 shl bit).inv()).toByte()
 	}
 
+	fun clearBit(value: UInt, bit: Int): UInt {
+		return value and (1U shl bit).inv()
+	}
+
+	fun clearBit(value: UShort, bit: Int): UShort {
+		return clearBit(value.toInt(), bit).toUShort()
+	}
+
+	fun clearBit(value: UByte, bit: Int): UByte {
+		return clearBit(value.toInt(), bit).toUByte()
+	}
+
 	// Set the Nth bit in a value
 	fun setBit(value: Long, bit: Int): Long {
 		return value or (1L shl bit)
@@ -62,6 +86,18 @@ object Util {
 
 	fun setBit(value: Byte, bit: Int): Byte {
 		return (value.toInt() or (1 shl bit)).toByte()
+	}
+
+	fun setBit(value: UInt, bit: Int): UInt {
+		return value or (1U shl bit)
+	}
+
+	fun setBit(value: UShort, bit: Int): UShort {
+		return setBit(value.toInt(), bit).toUShort()
+	}
+
+	fun setBit(value: UByte, bit: Int): UByte {
+		return setBit(value.toInt(), bit).toUByte()
 	}
 
 	fun waitPromise(timeMs: Long, handler: Handler): Promise<Unit, Exception> {

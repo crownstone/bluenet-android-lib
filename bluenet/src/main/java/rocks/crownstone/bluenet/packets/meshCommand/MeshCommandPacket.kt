@@ -20,7 +20,7 @@ import java.nio.ByteBuffer
 open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
 	val ids = ArrayList<Uint8>()
 	var type: MeshCommandType
-	var bitmask: Uint8 = 0
+	var bitmask: Uint8 = 0U
 	init {
 		type = when (payload::class) {
 			ControlPacketV3::class -> MeshCommandType.CONTROL

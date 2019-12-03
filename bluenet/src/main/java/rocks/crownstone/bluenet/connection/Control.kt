@@ -23,10 +23,7 @@ import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
 import rocks.crownstone.bluenet.structs.*
-import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.EventBus
-import rocks.crownstone.bluenet.util.Log
-import rocks.crownstone.bluenet.util.Util
+import rocks.crownstone.bluenet.util.*
 import java.util.*
 
 /**
@@ -92,7 +89,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 				.then {
 					val switchVal = when (it.value) {
 						0 -> valueOn
-						else -> 0.toShort()
+						else -> 0.toUint8()
 					}
 					 setSwitch(switchVal)
 				}.unwrap()
@@ -109,12 +106,12 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "toggleSwitchReturnValueSet $valueOn")
 		val deferred = deferred<Uint8, Exception>()
 		val state = State(eventBus, connection)
-		var switchVal: Uint8 = 0
+		var switchVal: Uint8 = 0U
 		state.getSwitchState()
 				.then {
 					switchVal = when (it.value) {
 						0 -> valueOn
-						else -> 0.toShort()
+						else -> 0.toUint8()
 					}
 					setSwitch(switchVal)
 				}.unwrap()
@@ -276,9 +273,9 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise with index where the behaviour is stored, and the hash of all behaviours.
 	 */
 	@Synchronized
-	fun addBehaviour(behaviour: BehaviourPacket): Promise<BehaviourIndexedAndHashPacket, Exception> {
+	fun addBehaviour(behaviour: BehaviourPacket): Promise<BehaviourIndexAndHashPacket, Exception> {
 		Log.i(TAG, "addBehaviour behaviour=$behaviour")
-		val resultPacket = BehaviourIndexedAndHashPacket()
+		val resultPacket = BehaviourIndexAndHashPacket()
 		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_ADD, behaviour, resultPacket)
 	}
 
@@ -290,10 +287,10 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise with index where the behaviour is stored, and the hash of all behaviours.
 	 */
 	@Synchronized
-	fun replaceBehaviour(index: BehaviourIndex, behaviour: BehaviourPacket): Promise<BehaviourIndexedAndHashPacket, Exception> {
+	fun replaceBehaviour(index: BehaviourIndex, behaviour: BehaviourPacket): Promise<BehaviourIndexAndHashPacket, Exception> {
 		Log.i(TAG, "replaceBehaviour index=$index behaviour=$behaviour")
 		val writePacket = IndexedBehaviourPacket(index, behaviour)
-		val resultPacket = BehaviourIndexedAndHashPacket()
+		val resultPacket = BehaviourIndexAndHashPacket()
 		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_REPLACE, writePacket, resultPacket)
 	}
 
@@ -304,9 +301,9 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise with index where the behaviour was removed, and the hash of all behaviours.
 	 */
 	@Synchronized
-	fun removeBehaviour(index: BehaviourIndex): Promise<BehaviourIndexedAndHashPacket, Exception> {
+	fun removeBehaviour(index: BehaviourIndex): Promise<BehaviourIndexAndHashPacket, Exception> {
 		Log.i(TAG, "removeBehaviour index=$index")
-		val resultPacket = BehaviourIndexedAndHashPacket()
+		val resultPacket = BehaviourIndexAndHashPacket()
 		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_REMOVE, index, resultPacket)
 	}
 
@@ -398,7 +395,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 */
 	@Synchronized
 	fun resetErrors(): Promise<Unit, Exception> {
-		return resetErrors(0xFFFFFFFF)
+		return resetErrors(0xFFFFFFFFU)
 	}
 
 	/**
@@ -522,8 +519,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 				.success {
 					val returnCode: Uint32 = Conversion.byteArrayTo(it)
 					when (returnCode) {
-						1L -> deferred.resolve()
-						2L -> deferred.reject(Errors.RecoveryDisabled())
+						1U -> deferred.resolve()
+						2U -> deferred.reject(Errors.RecoveryDisabled())
 						else -> deferred.reject(Errors.RecoveryRebootRequired())
 					}
 				}

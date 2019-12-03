@@ -36,7 +36,7 @@ open class RC5BroadcastPayloadPacket(
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		val data: Int = Conversion.toUint16(
+		val data = Conversion.toUint16(
 				((locationId.toInt() and 0x3F) shl (3+4+3)) +
 						((profileId.toInt() and 0x07) shl (4+3)) +
 						((rssiOffset.toInt() and 0x0F) shl (3)) +

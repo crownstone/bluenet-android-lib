@@ -32,9 +32,9 @@ open class ResultPacketV4(type: ControlTypeV4, resultCode: ResultType, payload: 
 		protected set
 	var resultCode = resultCode
 		protected set
-	protected var dataSize: Uint16 = 0
+	protected var dataSize: Uint16 = 0U
 	init {
-		dataSize = payload?.getPacketSize() ?: 0
+		dataSize = payload?.getPacketSize()?.toUint16() ?: 0U
 	}
 
 	override fun getHeaderSize(): Int {
@@ -42,7 +42,7 @@ open class ResultPacketV4(type: ControlTypeV4, resultCode: ResultType, payload: 
 	}
 
 	override fun getPayloadSize(): Int? {
-		return dataSize
+		return dataSize.toInt()
 	}
 
 	override fun headerToBuffer(bb: ByteBuffer): Boolean {
@@ -57,6 +57,7 @@ open class ResultPacketV4(type: ControlTypeV4, resultCode: ResultType, payload: 
 		type = ControlTypeV4.fromNum(bb.getUint16())
 		resultCode = ResultType.fromNum(bb.getUint16())
 		dataSize = bb.getUint16()
+		Log.i(TAG, "type=$type resultCode=$resultCode dataSize=$dataSize")
 		return true
 	}
 

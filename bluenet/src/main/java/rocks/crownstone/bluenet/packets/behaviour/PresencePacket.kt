@@ -16,12 +16,12 @@ import java.nio.ByteBuffer
 import kotlin.math.min
 
 enum class PresenceType(val num: Uint8) {
-	ALWAYS_TRUE(0),
-	ANYONE_IN_ROOM(1),
-	NO_ONE_IN_ROOM(2),
-	ANYONE_IN_SPHERE(3),
-	NO_ONE_IN_SPHERE(4),
-	UNKNOWN(255);
+	ALWAYS_TRUE(0U),
+	ANYONE_IN_ROOM(1U),
+	NO_ONE_IN_ROOM(2U),
+	ANYONE_IN_SPHERE(3U),
+	NO_ONE_IN_SPHERE(4U),
+	UNKNOWN(255U);
 	companion object {
 		private val map = values().associateBy(PresenceType::num)
 		fun fromNum(action: Uint8): PresenceType {
@@ -37,7 +37,7 @@ class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds
 	var timeoutSeconds = timeoutSeconds
 		private set
 
-	constructor(): this(PresenceType.UNKNOWN, ArrayList<Uint8>(), 0)
+	constructor(): this(PresenceType.UNKNOWN, ArrayList<Uint8>(), 0U)
 
 	companion object {
 		const val SIZE = 1+8+4
@@ -52,12 +52,12 @@ class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds
 			return false
 		}
 		bb.put(type.num)
-		var bitmask1: Uint32 = 0
-		var bitmask2: Uint32 = 0
+		var bitmask1: Uint32 = 0U
+		var bitmask2: Uint32 = 0U
 		for (room in rooms) {
 			when {
-				room < 32 -> bitmask1 += (1 shl room.toInt())
-				room < 64 -> bitmask2 += (1 shl room.toInt())
+				room < 32U -> bitmask1 += (1L shl room.toInt()).toUint32()
+				room < 64U -> bitmask2 += (1L shl room.toInt()).toUint32()
 				else -> return false
 			}
 		}
@@ -77,12 +77,12 @@ class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds
 		val bitmask1 = bb.getUint32()
 		rooms.clear()
 		for (i in 0 until 32) {
-			if ((bitmask1 and (1L shl i)) == 1L) {
+			if ((bitmask1.toLong() and (1L shl i)) == 1L) {
 				rooms.add(Conversion.toUint8(i))
 			}
 		}
 		for (i in 0 until 32) {
-			if ((bitmask2 and (1L shl i)) == 1L) {
+			if ((bitmask2.toLong() and (1L shl i)) == 1L) {
 				rooms.add(Conversion.toUint8(i + 32))
 			}
 		}
