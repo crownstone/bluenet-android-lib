@@ -80,10 +80,17 @@ abstract class PayloadWrapperPacket(payload: PacketInterface?): PacketInterface 
 		}
 		headerFromBuffer(bb)
 		val payload = this.payload
+
+		val dataSize = getPayloadSize() ?: bb.remaining()
+		if (getPayloadSize() != null) {
+			// Change limit to remove padding.
+			val newLimit = bb.limit() - bb.position() + dataSize
+			bb.limit(newLimit)
+		}
+
 		if (payload != null) {
 			return payload.fromBuffer(bb)
 		}
-		val dataSize = getPayloadSize() ?: bb.remaining()
 		val data = ByteArray(dataSize)
 		bb.get(data)
 		this.payload = ByteArrayPacket(data)
