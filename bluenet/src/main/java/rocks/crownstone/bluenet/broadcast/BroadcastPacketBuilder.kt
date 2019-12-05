@@ -98,9 +98,10 @@ class BroadcastPacketBuilder(state: BluenetState, encryptionManager: EncryptionM
 		val profileId = sphereState.profileId
 		val rssiOffset = getEncodedRssiOffset(sphereState.rssiOffset)
 		val tapToToggleEnabled = sphereState.tapToToggleEnabled
+		val ignoreForBehaviourEnabled = sphereState.ignoreMeForBehaviour
 		val counter = sphereState.commandCount
 
-		val rc5Payload = CommandBroadcastRC5Packet(counter, locationId, profileId, rssiOffset, tapToToggleEnabled)
+		val rc5Payload = CommandBroadcastRC5Packet(counter, locationId, profileId, rssiOffset, tapToToggleEnabled, ignoreForBehaviourEnabled)
 		val rc5PayloadArr = rc5Payload.getArray() ?: return null
 		Log.v(TAG, "backgroundBroadcast: $rc5Payload = ${Conversion.bytesToString(rc5PayloadArr)}")
 		return encryptionManager.encryptRC5(sphereId, rc5PayloadArr)

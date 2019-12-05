@@ -8,18 +8,27 @@ import rocks.crownstone.bluenet.util.Util
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
+enum class FlagsBitPos(val num: Int) {
+	FLAG_IGNORE_FOR_BEHAVIOUR(1),
+	FLAG_TAP_TO_TOGGLE(2)
+}
+
 open class RC5BroadcastPayloadPacket(
 	val payload: Uint16,
 	val locationId: Uint8,
 	val profileId: Uint8,
 	val rssiOffset: Uint8,
-	val flagTapToToggle: Boolean
+	val flagTapToToggle: Boolean,
+	val flagIgnoreForBehaviour: Boolean
 ): PacketInterface {
 	val flags: Int
 	init {
 		var tempFlags: Int = 0
 		if (flagTapToToggle) {
-			tempFlags = Util.setBit(tempFlags, 2)
+			tempFlags = Util.setBit(tempFlags, FlagsBitPos.FLAG_TAP_TO_TOGGLE.num)
+		}
+		if (flagIgnoreForBehaviour) {
+			tempFlags = Util.setBit(tempFlags, FlagsBitPos.FLAG_IGNORE_FOR_BEHAVIOUR.num)
 		}
 		flags = tempFlags
 	}

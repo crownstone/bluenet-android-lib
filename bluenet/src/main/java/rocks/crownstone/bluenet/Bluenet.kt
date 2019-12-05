@@ -412,6 +412,28 @@ class Bluenet(looper: Looper? = null) {
 		}
 	}
 
+	/**
+	 * Set ignore for behaviour for a sphere, or all spheres.
+	 */
+	@Synchronized
+	fun setIgnoreMeForBehaviour(sphereId: SphereId?, enabled: Boolean) {
+		var changed = false
+		if (sphereId == null) {
+			for (state in libState.sphereState) {
+				changed = changed || (state.value.ignoreMeForBehaviour != enabled)
+				state.value.ignoreMeForBehaviour = enabled
+			}
+		}
+		else {
+			val state = libState.sphereState[sphereId] ?: return
+			changed = changed || (state.ignoreMeForBehaviour != enabled)
+			state.ignoreMeForBehaviour = enabled
+		}
+		if (changed) {
+			eventBus.emit(BluenetEvent.IGNORE_FOR_BEHAVIOUR_CHANGED, sphereId)
+		}
+	}
+
 
 //	/**
 //	 * Set the keys for encryption and decryption.

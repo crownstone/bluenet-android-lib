@@ -17,13 +17,15 @@ class BackgroundBroadcastPayloadPacket(
 		locationId: Uint8,
 		profileId: Uint8,
 		rssiOffset: Uint8,
-		flagTapToToggle: Boolean
+		flagTapToToggle: Boolean,
+		flagIgnoreForBehaviour: Boolean
 ) : RC5BroadcastPayloadPacket(
 		Conversion.toUint16((timestamp shr 7).toInt()),
 		locationId,
 		profileId,
 		rssiOffset,
-		flagTapToToggle
+		flagTapToToggle,
+		flagIgnoreForBehaviour
 ) {
 	val validationTimestamp: Uint16 = payload
 	init {

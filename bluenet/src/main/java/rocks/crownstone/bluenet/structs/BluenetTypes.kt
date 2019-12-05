@@ -49,6 +49,7 @@ enum class BluenetEvent {
 	DFU_PROGRESS,                      // DfuProgress as data.
 	LOCATION_CHANGE,                   // Location changed. SphereId as data. Location can be found in BluenetState.
 	TAP_TO_TOGGLE_CHANGED,             // Tap to toggle state changed. SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
+	IGNORE_FOR_BEHAVIOUR_CHANGED,      // Ignore for behaviour state changed. SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
 }
 
 typealias Int8 = Byte
@@ -102,7 +103,8 @@ data class SphereState(
 		var locationId: Uint8 = 0U,
 		var profileId: Uint8 = 0U,
 		var tapToToggleEnabled: Boolean = false,
-		var rssiOffset: Int = 0
+		var rssiOffset: Int = 0,
+		var ignoreMeForBehaviour: Boolean = false
 )
 
 data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)

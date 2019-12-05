@@ -42,6 +42,7 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 		evtBus.subscribe(BluenetEvent.LOCATION_CHANGE,         { data: Any? -> onLocationChange(data as SphereId) })
 		evtBus.subscribe(BluenetEvent.TAP_TO_TOGGLE_CHANGED,   { data: Any? -> onTapToToggleChange(data as SphereId?) })
 		evtBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, { data: Any? -> onLibStateChange() })
+		evtBus.subscribe(BluenetEvent.IGNORE_FOR_BEHAVIOUR_CHANGED,  { data: Any? -> onIgnoreForBehaviourChange(data as SphereId?) })
 	}
 
 	@Synchronized
@@ -169,6 +170,11 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 
 	@Synchronized
 	private fun onTapToToggleChange(sphereId: SphereId?) {
+		update()
+	}
+
+	@Synchronized
+	private fun onIgnoreForBehaviourChange(sphereId: SphereId?) {
 		update()
 	}
 

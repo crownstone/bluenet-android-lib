@@ -8,13 +8,15 @@ open class CommandBroadcastRC5Packet(
 		locationId: Uint8,
 		profileId: Uint8,
 		rssiOffset: Uint8,
-		flagTapToToggle: Boolean
+		flagTapToToggle: Boolean,
+		flagIgnoreForBehaviour: Boolean
 ) : RC5BroadcastPayloadPacket(
 		Conversion.toUint16((commandCount.toInt() shl 8)),
 		locationId,
 		profileId,
 		rssiOffset,
-		flagTapToToggle
+		flagTapToToggle,
+		flagIgnoreForBehaviour
 ) {
 	init {
 	}
