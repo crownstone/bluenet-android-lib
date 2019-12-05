@@ -23,11 +23,11 @@ class BehaviourIndexAndHashPacket(index: BehaviourIndex, hash: BehaviourHashPack
 	constructor(): this(INDEX_UNKNOWN, BehaviourHashPacket())
 
 	companion object {
-		const val HEADER_SIZE = 1
+		const val SIZE = 1 + BehaviourHashPacket.SIZE // TODO: replace 1 by BehaviourIndex.SIZE
 	}
 
 	override fun getPacketSize(): Int {
-		return HEADER_SIZE + hash.getPacketSize()
+		return SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
@@ -42,7 +42,7 @@ class BehaviourIndexAndHashPacket(index: BehaviourIndex, hash: BehaviourHashPack
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < HEADER_SIZE) {
+		if (bb.remaining() < SIZE) {
 			return false
 		}
 		index = bb.getUint8()

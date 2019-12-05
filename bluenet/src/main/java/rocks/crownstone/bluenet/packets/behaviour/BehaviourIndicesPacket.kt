@@ -27,7 +27,7 @@ class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexAndHashPacket>): P
 
 	companion object {
 		const val HEADER_SIZE = 0
-		const val ITEM_SIZE = 1 // TODO: replace by BehaviourIndex.SIZE
+		const val ITEM_SIZE = BehaviourIndexAndHashPacket.SIZE
 	}
 
 	override fun getPacketSize(): Int {
