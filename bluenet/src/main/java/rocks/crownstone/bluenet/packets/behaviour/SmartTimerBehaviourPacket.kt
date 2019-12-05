@@ -17,29 +17,25 @@ class SmartTimerBehaviourPacket(
 		from: TimeOfDayPacket,
 		until: TimeOfDayPacket,
 		presence: PresencePacket,
-		endConditionPresence: PresencePacket,
-		endConditionTimeOffset: TimeDifference
+		endConditionPresence: PresencePacket
 ): BehaviourPacket(BehaviourType.SMART_TIMER, switchVal, profileId, daysOfWeek, from, until) {
 	var presence = presence
 		private set
 	var endConditionPresence = endConditionPresence
 		private set
-	var endConditionTimeOffset = endConditionTimeOffset
-		private set
 
-	constructor(): this(0U, 0U, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket(), PresencePacket(), PresencePacket(), 0)
-	constructor(switchBehaviourPacket: SwitchBehaviourPacket, endConditionPresence: PresencePacket, endConditionTimeOffset: TimeDifference):
+	constructor(): this(0U, 0U, DaysOfWeekPacket(), TimeOfDayPacket(), TimeOfDayPacket(), PresencePacket(), PresencePacket())
+	constructor(switchBehaviourPacket: SwitchBehaviourPacket, endConditionPresence: PresencePacket):
 			this(switchBehaviourPacket.switchVal,
 					switchBehaviourPacket.profileId,
 					switchBehaviourPacket.daysOfWeek,
 					switchBehaviourPacket.from,
 					switchBehaviourPacket.until,
 					switchBehaviourPacket.presence,
-					endConditionPresence,
-					endConditionTimeOffset)
+					endConditionPresence)
 
 	companion object {
-		const val SIZE = BehaviourPacket.SIZE + PresencePacket.SIZE + PresencePacket.SIZE + 4
+		const val SIZE = BehaviourPacket.SIZE + PresencePacket.SIZE + PresencePacket.SIZE
 	}
 
 	override fun getPacketSize(): Int {
@@ -55,7 +51,6 @@ class SmartTimerBehaviourPacket(
 		success = success && presence.toBuffer(bb)
 		success = success && endConditionPresence.toBuffer(bb)
 		success = success && type == BehaviourType.SMART_TIMER
-		bb.putInt(endConditionTimeOffset)
 		return success
 	}
 
@@ -68,7 +63,6 @@ class SmartTimerBehaviourPacket(
 		success = success && presence.fromBuffer(bb)
 		success = success && endConditionPresence.fromBuffer(bb)
 		success = success && type == BehaviourType.SMART_TIMER
-		endConditionTimeOffset = bb.getInt()
 		return success
 	}
 }
