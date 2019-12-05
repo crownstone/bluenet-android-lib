@@ -1,3 +1,10 @@
+/**
+ * Author: Crownstone Team
+ * Copyright: Crownstone (https://crownstone.rocks)
+ * Date: Jul 9, 2019
+ * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
+ */
+
 package rocks.crownstone.bluenet.encryption
 
 import rocks.crownstone.bluenet.structs.*

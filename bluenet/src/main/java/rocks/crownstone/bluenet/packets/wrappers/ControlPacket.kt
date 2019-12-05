@@ -1,3 +1,10 @@
+/**
+ * Author: Crownstone Team
+ * Copyright: Crownstone (https://crownstone.rocks)
+ * Date: Nov 14, 2019
+ * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
+ */
+
 package rocks.crownstone.bluenet.packets.wrappers
 
 import rocks.crownstone.bluenet.connection.ExtConnection
