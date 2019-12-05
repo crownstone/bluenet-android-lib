@@ -35,7 +35,7 @@ import java.util.*
  */
 class Bluenet(looper: Looper? = null) {
 	private val TAG = this.javaClass.simpleName
-	private val libState = BluenetState(SphereStateMap(), "none")
+	private val libState = BluenetState(SphereStateMap(), null)
 	private val eventBus = EventBus()
 	private val looper: Looper
 	private val handler: Handler
@@ -334,9 +334,11 @@ class Bluenet(looper: Looper? = null) {
 	 * Set the sphere short id for a sphere.
 	 */
 	@Synchronized
-	@Deprecated("Sphere short id should be known at init and not change.")
 	fun setSphereShortId(sphereId: SphereId, id: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
+		if (state.settings.sphereShortId == id) {
+			return
+		}
 		state.settings.sphereShortId = id
 		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
 	}
@@ -347,23 +349,28 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun setLocation(sphereId: SphereId, location: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
-		val changed = (location != state.locationId)
-		state.locationId = location
-		if (changed) {
-			eventBus.emit(BluenetEvent.LOCATION_CHANGE, sphereId)
+		if (state.locationId == location) {
+			return
 		}
+		state.locationId = location
+		eventBus.emit(BluenetEvent.LOCATION_CHANGE, sphereId)
 	}
 
 	/**
 	 * Set sphere that we're currently in.
+	 *
+	 * Set to null when in no sphere.
 	 */
 	@Synchronized
-	fun setCurrentSphere(sphereId: SphereId) {
-		if (libState.sphereState[sphereId] == null) {
+	fun setCurrentSphere(sphereId: SphereId?) {
+		if (sphereId != null && libState.sphereState[sphereId] == null) {
+			return
+		}
+		if (libState.currentSphere == sphereId) {
 			return
 		}
 		libState.currentSphere = sphereId
-		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
+		eventBus.emit(BluenetEvent.CURRENT_SPHERE_CHANGED, sphereId)
 	}
 
 	/**
@@ -372,8 +379,11 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun setProfile(sphereId: SphereId, profile: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
+		if (state.profileId == profile) {
+			return
+		}
 		state.profileId = profile
-		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
+		eventBus.emit(BluenetEvent.PROFILE_ID_CHANGED, sphereId)
 	}
 
 	/**
@@ -382,12 +392,15 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun setDeviceToken(sphereId: SphereId, token: Uint8) {
 		val state = libState.sphereState[sphereId] ?: return
+		if (state.settings.deviceToken == token) {
+			return
+		}
 		state.settings.deviceToken = token
-		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
+		eventBus.emit(BluenetEvent.DEVICE_TOKEN_CHANGED, sphereId)
 	}
 
 	/**
-	 * Set tap to toggle for a sphere.
+	 * Set tap to toggle for a sphere, or all spheres.
 	 */
 	@Synchronized
 	fun setTapToToggle(sphereId: SphereId?, enabled: Boolean, rssiOffset: Int) {

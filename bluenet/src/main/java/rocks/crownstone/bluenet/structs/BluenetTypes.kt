@@ -50,6 +50,9 @@ enum class BluenetEvent {
 	LOCATION_CHANGE,                   // Location changed. SphereId as data. Location can be found in BluenetState.
 	TAP_TO_TOGGLE_CHANGED,             // Tap to toggle state changed. SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
 	IGNORE_FOR_BEHAVIOUR_CHANGED,      // Ignore for behaviour state changed. SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
+	CURRENT_SPHERE_CHANGED,            // Current sphere changed. Current SphereId as data, or null for none. Current state can be found in BluenetState.
+	PROFILE_ID_CHANGED,                // Profile id changed. SphereId that changed as data. Current state can be found in BluenetState.
+	DEVICE_TOKEN_CHANGED,              // Device token changed. SphereId that changed as data. Current state can be found in BluenetState.
 }
 
 typealias Int8 = Byte
@@ -68,7 +71,7 @@ typealias SphereStateMap = HashMap<SphereId, SphereState>
 
 data class BluenetState(
 		val sphereState: SphereStateMap,
-		var currentSphere: SphereId
+		var currentSphere: SphereId?
 )
 
 /**

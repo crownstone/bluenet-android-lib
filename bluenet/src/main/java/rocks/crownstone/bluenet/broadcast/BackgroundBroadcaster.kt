@@ -35,14 +35,17 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	private var started = false
 
 	init {
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF,          { data: Any? -> onBleTurnedOff() })
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_ON,           { data: Any? -> onBleTurnedOn() })
-		evtBus.subscribe(BluenetEvent.IBEACON_ENTER_REGION,    { data: Any? -> onRegionEnter() })
-		evtBus.subscribe(BluenetEvent.IBEACON_EXIT_REGION,     { data: Any? -> onRegionExit() })
-		evtBus.subscribe(BluenetEvent.LOCATION_CHANGE,         { data: Any? -> onLocationChange(data as SphereId) })
-		evtBus.subscribe(BluenetEvent.TAP_TO_TOGGLE_CHANGED,   { data: Any? -> onTapToToggleChange(data as SphereId?) })
-		evtBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, { data: Any? -> onLibStateChange() })
+		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF,                { data: Any? -> onBleTurnedOff() })
+		evtBus.subscribe(BluenetEvent.BLE_TURNED_ON,                 { data: Any? -> onBleTurnedOn() })
+		evtBus.subscribe(BluenetEvent.IBEACON_ENTER_REGION,          { data: Any? -> onRegionEnter() })
+		evtBus.subscribe(BluenetEvent.IBEACON_EXIT_REGION,           { data: Any? -> onRegionExit() })
+		evtBus.subscribe(BluenetEvent.LOCATION_CHANGE,               { data: Any? -> onLocationChange(data as SphereId) })
+		evtBus.subscribe(BluenetEvent.TAP_TO_TOGGLE_CHANGED,         { data: Any? -> onTapToToggleChange(data as SphereId?) })
 		evtBus.subscribe(BluenetEvent.IGNORE_FOR_BEHAVIOUR_CHANGED,  { data: Any? -> onIgnoreForBehaviourChange(data as SphereId?) })
+		evtBus.subscribe(BluenetEvent.CURRENT_SPHERE_CHANGED,        { data: Any? -> onCurrentSphereChange(data as SphereId?) })
+		evtBus.subscribe(BluenetEvent.PROFILE_ID_CHANGED,            { data: Any? -> onProfileIdChange(data as SphereId) })
+		evtBus.subscribe(BluenetEvent.DEVICE_TOKEN_CHANGED,          { data: Any? -> onDeviceTokenChange(data as SphereId) })
+		evtBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED,       { data: Any? -> onLibStateChange() })
 	}
 
 	@Synchronized
@@ -69,6 +72,12 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	private fun updateBroadcast() {
 		Log.d(TAG, "updateBroadcast")
 		val sphereId = libState.currentSphere
+		if (sphereId == null) {
+			Log.i(TAG, "No current sphere")
+			// TODO: maybe advertise last sphere instead?
+			retryUpdateLater()
+			return
+		}
 		val validationTimestamp = Conversion.toUint32(BluenetProtocol.CAFEBABE) // TODO: use time from crownstones
 		val commandBroadcast = CommandBroadcastPacket(validationTimestamp, sphereId, CommandBroadcastType.NO_OP, BroadcastSingleItemPacket())
 		val advertiseData = broadcastPacketBuilder.getCommandBroadcastAdvertisement(commandBroadcast.sphereId, AccessLevel.HIGHEST_AVAILABLE, commandBroadcast)
@@ -175,6 +184,21 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 
 	@Synchronized
 	private fun onIgnoreForBehaviourChange(sphereId: SphereId?) {
+		update()
+	}
+
+	@Synchronized
+	private fun onCurrentSphereChange(sphereId: SphereId?) {
+		update()
+	}
+
+	@Synchronized
+	private fun onProfileIdChange(sphereId: SphereId) {
+		update()
+	}
+
+	@Synchronized
+	private fun onDeviceTokenChange(sphereId: SphereId) {
 		update()
 	}
 
