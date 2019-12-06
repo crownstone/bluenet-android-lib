@@ -265,7 +265,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		// Subscribe and write command
 		val resultClass = Result(eventBus, connection)
 		performFastSetup(
-				resultClass.getMultipleResults(writeCommand, processCallback, 3000),
+				resultClass.getMultipleResults(writeCommand, processCallback, 3000, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
 				deferred
 		)
 
