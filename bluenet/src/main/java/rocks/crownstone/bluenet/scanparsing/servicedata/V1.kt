@@ -78,7 +78,7 @@ internal object V1 {
 		servicedata.energyUsed = bb.getInt().toLong()
 		val byteArray = ByteArray(3)
 		bb.get(byteArray)
-		servicedata.changingData = Conversion.byteArrayToShort(byteArray) // Only use 2 bytes, should be enough
+		servicedata.changingData = Conversion.byteArrayToShort(byteArray).toInt() // Only use 2 bytes, should be enough
 		servicedata.validation = true // No validation to perform, so assume it's true
 	}
 }

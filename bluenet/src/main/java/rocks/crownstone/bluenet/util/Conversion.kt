@@ -137,10 +137,10 @@ object Conversion {
 	}
 
 //	@JvmOverloads
-	fun byteArrayToShort(bytes: ByteArray, offset: Int = 0): Int {
+	fun byteArrayToShort(bytes: ByteArray, offset: Int = 0): Short {
 		val bb = ByteBuffer.wrap(bytes)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-		return bb.getShort(offset).toInt()
+		return bb.getShort(offset)
 	}
 
 //	@JvmOverloads
@@ -155,8 +155,8 @@ object Conversion {
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.position(offset)
 		val result = ArrayList<Uint16>(bb.remaining()/2)
-		while (bb.remaining() > 2) {
-			result.add(Conversion.toUint16(bb.getShort()))
+		while (bb.remaining() >= 2) {
+			result.add(toUint16(bb.getShort()))
 		}
 		return result
 	}
@@ -166,7 +166,7 @@ object Conversion {
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.position(offset)
 		val result = ArrayList<Int16>(bb.remaining()/2)
-		while (bb.remaining() > 2) {
+		while (bb.remaining() >= 2) {
 			result.add(bb.getShort())
 		}
 		return result
@@ -276,6 +276,10 @@ object Conversion {
 
 	fun uint32ToUint16ListReversed(num: Uint32): List<Uint16> {
 		return arrayListOf(toUint16(num shr 16), toUint16(num))
+	}
+
+	fun uint32ToUint16List(num: Uint32): List<Uint16> {
+		return arrayListOf(toUint16(num), toUint16(num shr 16))
 	}
 
 	fun hexStringToBytes(hex: String): ByteArray {
@@ -392,19 +396,23 @@ object Conversion {
 
 	@Throws
 	inline fun <reified T> byteArrayTo(array: ByteArray, offset: Int = 0): T {
+		Log.i(TAG, "class: ${T::class}")
 		// Using T::class doesn't work, maybe because unsigned ints are still experimental.
 		when (T::class.simpleName) {
 			"Byte", "UByte" -> {
+				Log.i(TAG, "expecting size 1, size=${array.size}")
 				if (array.size != 1) {
 					throw Errors.Parse("Expected size of 1, size=${array.size}")
 				}
 			}
 			"Short", "UShort" -> {
+				Log.i(TAG, "expecting size 2, size=${array.size}")
 				if (array.size != 2) {
 					throw Errors.Parse("Expected size of 2, size=${array.size}")
 				}
 			}
 			"Int", "UInt", "Float" -> {
+				Log.i(TAG, "expecting size 4, size=${array.size}")
 				if (array.size != 4) {
 					throw Errors.Parse("Expected size of 4, size=${array.size}")
 				}
