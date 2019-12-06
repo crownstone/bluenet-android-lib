@@ -7,10 +7,7 @@
 
 package rocks.crownstone.bluenet.behaviour
 
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
-import nl.komponents.kovenant.then
-import nl.komponents.kovenant.unwrap
+import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.Bluenet
 import rocks.crownstone.bluenet.packets.behaviour.BehaviourIndex
 import rocks.crownstone.bluenet.packets.behaviour.BehaviourPacket
@@ -89,6 +86,7 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 					}
 					getBehaviours()
 							.success {
+								Log.d(TAG, "remoteBehaviours: $remoteBehaviours")
 								deferred.resolve(remoteBehaviours)
 							}
 							.fail {
@@ -102,19 +100,63 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 	}
 
 	private fun getBehaviours(): Promise<Unit, Exception>{
-		val index = indicesToGet.peek()
+		if (indicesToGet.isEmpty()) {
+			return Promise.ofSuccess(Unit)
+		}
+		val index = indicesToGet.peek().toUByte()
 		Log.d(TAG, "get behaviour $index")
 		return bluenet.control.getBehaviour(index)
 				.then {
 					Log.d(TAG, "got behaviour: $it")
 					remoteBehaviours.add(it)
 					indicesToGet.remove()
-					if (indicesToGet.isEmpty()) {
-						return@then Promise.ofSuccess<Unit, Exception>(Unit)
-					}
-					else {
-						return@then getBehaviours()
-					}
+					return@then getBehaviours()
 				}.unwrap()
+
+//		val deferred = deferred<Unit, Exception>()
+////		val index = indicesToGet.peekFirst()
+//		val index = indicesToGet.poll().toUByte()
+////		val index = 0.toUByte()
+//		Log.d(TAG, "get behaviour $index")
+//		bluenet.control.getBehaviour(index)
+//				.success {
+//					Log.d(TAG, "got behaviour: $it")
+//					remoteBehaviours.add(it)
+////					indicesToGet.remove()
+//					if (indicesToGet.isEmpty()) {
+//						deferred.resolve()
+//					}
+//					else {
+//						getBehaviours()
+//								.success { deferred.resolve() }
+//								.fail { deferred.reject(it) }
+//					}
+//				}
+//		return deferred.promise
+
+//		getBehavioursPromise = deferred()
+//		val deferred = getBehavioursPromise ?: return Promise.ofFail(Exception("No promise"))
+//		handler.post { getNextBehaviour() }
+//		return deferred.promise
 	}
+
+//	private fun getNextBehaviour() {
+//		val index = indicesToGet.peek()
+//		Log.d(TAG, "get behaviour $index")
+//		bluenet.control.getBehaviour(index)
+//				.success {
+//					Log.d(TAG, "got behaviour: $it")
+//					remoteBehaviours.add(it)
+//					indicesToGet.remove()
+//					if (indicesToGet.isEmpty()) {
+//						getBehavioursPromise?.resolve()
+//					}
+//					handler.post { getNextBehaviour() }
+//				}
+//				.fail {
+//					getBehavioursPromise?.reject(it)
+//				}
+//	}
+
+
 }
