@@ -10,20 +10,10 @@ package rocks.crownstone.bluenet.packets.behaviour
 import rocks.crownstone.bluenet.packets.PacketInterface
 import java.nio.ByteBuffer
 
-class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexAndHashPacket>): PacketInterface {
-	val indices = indices
+class BehaviourIndicesPacket(indicesWithHash: ArrayList<BehaviourIndexAndHashPacket>): PacketInterface {
+	val indicesWithHash = indicesWithHash
 
 	constructor(): this(ArrayList())
-
-	/**
-	 * Get a copy of the list of indices.
-	 */
-	fun getIndices(): List<BehaviourIndexAndHashPacket> {
-		val list = ArrayList<BehaviourIndexAndHashPacket>()
-		list.addAll(indices)
-		return list
-//		return ArrayList<BehaviourIndex>(indices)
-	}
 
 	companion object {
 		const val HEADER_SIZE = 0
@@ -31,14 +21,14 @@ class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexAndHashPacket>): P
 	}
 
 	override fun getPacketSize(): Int {
-		return indices.size * ITEM_SIZE
+		return indicesWithHash.size * ITEM_SIZE
 	}
 
 	override fun toBuffer(bb: ByteBuffer): Boolean {
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		for (index in indices) {
+		for (index in indicesWithHash) {
 			if (!index.toBuffer(bb)) {
 				return false
 			}
@@ -50,13 +40,13 @@ class BehaviourIndicesPacket(indices: ArrayList<BehaviourIndexAndHashPacket>): P
 		if (bb.remaining() < HEADER_SIZE) {
 			return false
 		}
-		indices.clear()
+		indicesWithHash.clear()
 		while (bb.remaining() > 0) {
 			val indexedHash = BehaviourIndexAndHashPacket()
 			if (!indexedHash.fromBuffer(bb)) {
 				return false
 			}
-			indices.add(indexedHash)
+			indicesWithHash.add(indexedHash)
 		}
 		return true
 	}

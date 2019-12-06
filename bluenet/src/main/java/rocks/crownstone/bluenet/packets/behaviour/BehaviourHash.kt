@@ -13,14 +13,16 @@ import rocks.crownstone.bluenet.util.getUint32
 import rocks.crownstone.bluenet.util.putUInt32
 import java.nio.ByteBuffer
 
-class BehaviourHashPacket(hash: Uint32): PacketInterface {
+typealias BehaviourHash = Uint32
+
+class BehaviourHashPacket(hash: BehaviourHash): PacketInterface {
 	var hash = hash
 		private set
 
 	constructor(): this(0U)
 
 	companion object {
-		const val SIZE = 4
+		const val SIZE = BehaviourHash.SIZE_BYTES
 	}
 
 	override fun getPacketSize(): Int {

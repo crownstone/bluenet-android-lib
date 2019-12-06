@@ -7,7 +7,6 @@
 
 package rocks.crownstone.bluenet.packets.behaviour
 
-import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.getUint8
