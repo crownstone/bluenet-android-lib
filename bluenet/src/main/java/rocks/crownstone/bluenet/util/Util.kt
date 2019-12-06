@@ -100,6 +100,10 @@ object Util {
 		return setBit(value.toInt(), bit).toUByte()
 	}
 
+	fun roundUpToMultipleOf(num: Int, multiple: Int): Int {
+		return (((num + multiple - 1) / multiple) * multiple)
+	}
+
 	fun waitPromise(timeMs: Long, handler: Handler): Promise<Unit, Exception> {
 		if (timeMs <=0 ) {
 			return Promise.ofSuccess(Unit)

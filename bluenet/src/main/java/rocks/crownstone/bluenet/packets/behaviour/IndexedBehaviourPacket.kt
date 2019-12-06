@@ -12,7 +12,7 @@ import rocks.crownstone.bluenet.util.getUint8
 import rocks.crownstone.bluenet.util.putUint8
 import java.nio.ByteBuffer
 
-class IndexedBehaviourPacket(index: BehaviourIndex, behaviour: BehaviourPacket): PacketInterface {
+class IndexedBehaviourPacket(index: BehaviourIndex, behaviour: BehaviourPacket): PacketInterface, Comparable<IndexedBehaviourPacket> {
 	var index = index
 		private set
 	var behaviour = behaviour
@@ -45,5 +45,9 @@ class IndexedBehaviourPacket(index: BehaviourIndex, behaviour: BehaviourPacket):
 		}
 		index = bb.getUint8()
 		return behaviour.fromBuffer(bb)
+	}
+
+	override fun compareTo(other: IndexedBehaviourPacket): Int {
+		return (this.index - other.index).toInt()
 	}
 }
