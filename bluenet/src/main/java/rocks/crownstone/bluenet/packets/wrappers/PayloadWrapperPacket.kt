@@ -82,9 +82,14 @@ abstract class PayloadWrapperPacket(payload: PacketInterface?): PacketInterface 
 		val payload = this.payload
 
 		val dataSize = getPayloadSize() ?: bb.remaining()
+		if (bb.remaining() < dataSize) {
+			Log.w(TAG, "buffer too small for data: ${bb.remaining()} < $dataSize")
+			return false
+		}
 		if (getPayloadSize() != null) {
 			// Change limit to remove padding.
-			val newLimit = bb.limit() - bb.position() + dataSize
+			val newLimit = bb.position() + dataSize
+			Log.i(TAG, "limit=${bb.limit()} pos=${bb.position()} dataSize=$dataSize newLimit=$newLimit")
 			bb.limit(newLimit)
 		}
 
@@ -93,6 +98,7 @@ abstract class PayloadWrapperPacket(payload: PacketInterface?): PacketInterface 
 		}
 		val data = ByteArray(dataSize)
 		bb.get(data)
+		Log.i(TAG, "payload size=$dataSize arr=${Conversion.bytesToString(data)}")
 		this.payload = ByteArrayPacket(data)
 		return true
 	}
