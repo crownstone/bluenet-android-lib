@@ -186,6 +186,13 @@ object Conversion {
 		bb.putInt(value.toInt())
 		return bb.array()
 	}
+
+	fun uint24ToByteArray(value: Uint32): ByteArray {
+		// We can simply remove the last byte, as it's little endian.
+		val arr = uint32ToByteArray(value)
+		return arr.copyOf(3)
+	}
+
 //	fun uint32ToByteArray(num: Long): ByteArray {
 //		val bytes = ByteArray(4)
 //		bytes[0] = (num shr 0 and 0xFF).toByte()

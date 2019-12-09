@@ -392,6 +392,7 @@ enum class StateTypeV4(val num: Uint16) {
 	TEMPERATURE(135U),
 	TIME(136U),
 	ERRORS(139U),
+	SUN_TIME(149U),
 
 	UNKNOWN(0xFFFFU);
 	companion object {

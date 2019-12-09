@@ -124,6 +124,7 @@ class CommandBroadcastQueue {
 		val type = when (firstItem.type) {
 			CommandBroadcastItemType.SWITCH -> CommandBroadcastType.MULTI_SWITCH
 			CommandBroadcastItemType.SET_TIME -> CommandBroadcastType.SET_TIME
+			CommandBroadcastItemType.SUN_TIME -> CommandBroadcastType.SUN_TIME
 		}
 		val validationTimestamp = when (firstItem.validationTimestamp) {
 			null -> Conversion.toUint32(BluenetProtocol.CAFEBABE) // TODO: use time from crownstones

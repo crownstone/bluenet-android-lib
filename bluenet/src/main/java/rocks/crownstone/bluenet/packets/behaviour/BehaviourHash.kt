@@ -10,7 +10,7 @@ package rocks.crownstone.bluenet.packets.behaviour
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.util.getUint32
-import rocks.crownstone.bluenet.util.putUInt32
+import rocks.crownstone.bluenet.util.putUint32
 import java.nio.ByteBuffer
 
 typealias BehaviourHash = Uint32
@@ -33,7 +33,7 @@ class BehaviourHashPacket(hash: BehaviourHash): PacketInterface {
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.putUInt32(hash)
+		bb.putUint32(hash)
 		return true
 	}
 

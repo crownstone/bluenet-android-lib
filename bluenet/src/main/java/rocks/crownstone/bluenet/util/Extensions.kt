@@ -32,7 +32,7 @@ fun ByteBuffer.putUint16(value: Uint16) {
 	this.putShort(value.toShort())
 }
 
-fun ByteBuffer.putUInt32(value: Uint32) {
+fun ByteBuffer.putUint32(value: Uint32) {
 	this.putInt(value.toInt())
 }
 

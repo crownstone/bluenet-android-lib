@@ -12,9 +12,7 @@ import android.os.Looper
 import android.os.SystemClock
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
-import nl.komponents.kovenant.then
 import rocks.crownstone.bluenet.BleCore
-import rocks.crownstone.bluenet.BluenetConfig
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_TIME_MS
 import rocks.crownstone.bluenet.encryption.AccessLevel
@@ -24,7 +22,7 @@ import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
-import java.lang.Exception
+import kotlin.Exception
 
 /**
  * Class to broadcast command advertisements.
@@ -51,10 +49,14 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 
 	/**
 	 * Broadcast a switch command.
+	 *
+	 * @param sphereId       Sphere ID of the stone.
+	 * @param stoneId        The ID of the stone.
+	 * @param switchValue    Value to set the switch to.
+	 * @return Promise
 	 */
 	@Synchronized
 	fun switch(sphereId: SphereId, stoneId: Uint8, switchValue: Uint8): Promise<Unit, Exception> {
-//		return Promise.ofSuccess(Unit)
 		val deferred = deferred<Unit, Exception>()
 		val commandItem = BroadcastSwitchItemPacket(stoneId, switchValue)
 		val item = CommandBroadcastItem(
@@ -71,11 +73,17 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 
 	/**
 	 * Set the time of all Crownstones.
+	 *
+	 * @param sphereId                 Sphere ID of the stones.
+	 * @param currentTime              Current local time.
+	 * @param sunRiseAfterMidnight     Seconds after midnight at which the sun rises.
+	 * @param sunSetAfterMidnight      Seconds after midnight at which the sun sets.
+	 * @return Promise
 	 */
 	@Synchronized
-	fun setTime(sphereId: SphereId, timestamp: Uint32): Promise<Unit, Exception> {
+	fun setTime(sphereId: SphereId, currentTime: Uint32, sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
-		val commandItem = BroadcastSetTimePacket(timestamp)
+		val commandItem = BroadcastSetTimePacket(currentTime, sunRiseAfterMidnight, sunSetAfterMidnight)
 		val item = CommandBroadcastItem(
 				deferred,
 				sphereId,
@@ -89,14 +97,46 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	}
 
 	/**
+	 * Set the sunset and sunrise time of all Crownstones.
+	 *
+	 * @param sphereId                 Sphere ID of the stones.
+	 * @param sunRiseAfterMidnight     Seconds after midnight at which the sun rises.
+	 * @param sunSetAfterMidnight      Seconds after midnight at which the sun sets.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setSunTime(sphereId: SphereId, sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		val commandItem = BroadcastSunTimePacket(sunRiseAfterMidnight, sunSetAfterMidnight)
+		val item = CommandBroadcastItem(
+				deferred,
+				sphereId,
+				CommandBroadcastItemType.SUN_TIME,
+				null,
+				commandItem,
+				COMMAND_BROADCAST_TIME_MS
+		)
+		add(item)
+		return deferred.promise
+	}
+
+	/**
 	 * Set time of a Crownstone that has lost the time, or is far out of sync.
 	 *
 	 * This is targeted, as it will need a different validation timestamp for encryption.
+	 *
+	 * @param sphereId                 Sphere ID of the stones.
+	 * @param currentTime              Current local time.
+	 * @param sunRiseAfterMidnight     Seconds after midnight at which the sun rises.
+	 * @param sunSetAfterMidnight      Seconds after midnight at which the sun sets.
+	 * @param stoneId                  The ID of the stone.
+	 * @param validationTimestamp      Timestamp to use for validation, the time set at the stone.
+	 * @return Promise
 	 */
 	@Synchronized
-	fun setTime(sphereId: SphereId, timestamp: Uint32, stoneId: Uint8, validationTimestamp: Uint32?): Promise<Unit, Exception> {
+	fun setTime(sphereId: SphereId, currentTime: Uint32, sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32, stoneId: Uint8, validationTimestamp: Uint32?): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
-		val commandItem = BroadcastSetTimePacket(timestamp)
+		val commandItem = BroadcastSetTimePacket(currentTime, sunRiseAfterMidnight, sunSetAfterMidnight)
 		// TODO: if validationTimestamp == null, get the time of that crownstone.
 		val item = CommandBroadcastItem(
 				deferred,
