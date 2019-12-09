@@ -48,4 +48,8 @@ class BehaviourIndexAndHashPacket(index: BehaviourIndex, hash: BehaviourHashPack
 		index = bb.getUint8()
 		return hash.fromBuffer(bb)
 	}
+
+	override fun toString(): String {
+		return "BehaviourIndexAndHashPacket(index=$index, hash=$hash)"
+	}
 }

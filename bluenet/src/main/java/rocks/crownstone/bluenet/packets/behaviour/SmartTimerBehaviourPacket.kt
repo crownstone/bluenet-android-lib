@@ -65,4 +65,8 @@ class SmartTimerBehaviourPacket(
 		success = success && type == BehaviourType.SMART_TIMER
 		return success
 	}
+
+	override fun toString(): String {
+		return "SmartTimerBehaviourPacket(${super.toString()} presence=$presence, endConditionPresence=$endConditionPresence)"
+	}
 }

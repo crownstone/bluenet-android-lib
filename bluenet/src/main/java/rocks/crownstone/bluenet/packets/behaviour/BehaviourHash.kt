@@ -44,4 +44,8 @@ class BehaviourHashPacket(hash: BehaviourHash): PacketInterface {
 		hash = bb.getUint32()
 		return true
 	}
+
+	override fun toString(): String {
+		return "BehaviourHashPacket(hash=$hash)"
+	}
 }

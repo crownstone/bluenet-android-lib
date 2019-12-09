@@ -89,4 +89,8 @@ class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds
 		timeoutSeconds = bb.getUint32()
 		return true
 	}
+
+	override fun toString(): String {
+		return "PresencePacket(type=$type, rooms=$rooms, timeoutSeconds=$timeoutSeconds)"
+	}
 }

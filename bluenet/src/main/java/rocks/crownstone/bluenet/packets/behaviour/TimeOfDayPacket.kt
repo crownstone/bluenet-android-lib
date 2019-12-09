@@ -65,4 +65,8 @@ class TimeOfDayPacket(baseTimeType: BaseTimeType, timeOffset: TimeDifference): P
 		timeOffset = bb.getInt()
 		return true
 	}
+
+	override fun toString(): String {
+		return "TimeOfDayPacket(baseTimeType=$baseTimeType, timeOffset=$timeOffset)"
+	}
 }

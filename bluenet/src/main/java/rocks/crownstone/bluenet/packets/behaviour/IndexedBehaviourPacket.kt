@@ -50,4 +50,8 @@ class IndexedBehaviourPacket(index: BehaviourIndex, behaviour: BehaviourPacket):
 	override fun compareTo(other: IndexedBehaviourPacket): Int {
 		return (this.index - other.index).toInt()
 	}
+
+	override fun toString(): String {
+		return "IndexedBehaviourPacket(index=$index, behaviour=$behaviour)"
+	}
 }

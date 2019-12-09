@@ -56,4 +56,8 @@ open class SwitchBehaviourPacket(
 		success = success && (type == BehaviourType.SWITCH)
 		return success
 	}
+
+	override fun toString(): String {
+		return "SwitchBehaviourPacket(${super.toString()} presence=$presence)"
+	}
 }

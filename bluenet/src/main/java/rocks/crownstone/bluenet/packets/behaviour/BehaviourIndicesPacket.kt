@@ -50,4 +50,8 @@ class BehaviourIndicesPacket(indicesWithHash: ArrayList<BehaviourIndexAndHashPac
 		}
 		return true
 	}
+
+	override fun toString(): String {
+		return "BehaviourIndicesPacket(indicesWithHash=$indicesWithHash)"
+	}
 }

@@ -87,4 +87,8 @@ class DaysOfWeekPacket(
 		sat = (bitmask and (1 shl DayOfWeekBitPos.SAT.num)) == 1
 		return true
 	}
+
+	override fun toString(): String {
+		return "DaysOfWeekPacket(sun=$sun, mon=$mon, tue=$tue, wed=$wed, thu=$thu, fri=$fri, sat=$sat)"
+	}
 }

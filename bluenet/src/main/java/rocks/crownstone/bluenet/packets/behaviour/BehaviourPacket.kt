@@ -89,4 +89,8 @@ open class BehaviourPacket(type: BehaviourType,
 		success = success && until.fromBuffer(bb)
 		return success
 	}
+
+	override fun toString(): String {
+		return "BehaviourPacket(type=$type, switchVal=$switchVal, profileId=$profileId, daysOfWeek=$daysOfWeek, from=$from, until=$until)"
+	}
 }
