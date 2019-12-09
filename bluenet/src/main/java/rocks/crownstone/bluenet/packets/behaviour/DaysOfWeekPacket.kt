@@ -9,6 +9,7 @@ package rocks.crownstone.bluenet.packets.behaviour
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.Util
 import rocks.crownstone.bluenet.util.put
 import rocks.crownstone.bluenet.util.toInt
 import java.nio.ByteBuffer
@@ -78,13 +79,13 @@ class DaysOfWeekPacket(
 			return false
 		}
 		val bitmask = bb.get().toInt()
-		sun = (bitmask and (1 shl DayOfWeekBitPos.SUN.num)) == 1
-		mon = (bitmask and (1 shl DayOfWeekBitPos.MON.num)) == 1
-		tue = (bitmask and (1 shl DayOfWeekBitPos.TUE.num)) == 1
-		wed = (bitmask and (1 shl DayOfWeekBitPos.WED.num)) == 1
-		thu = (bitmask and (1 shl DayOfWeekBitPos.THU.num)) == 1
-		fri = (bitmask and (1 shl DayOfWeekBitPos.FRI.num)) == 1
-		sat = (bitmask and (1 shl DayOfWeekBitPos.SAT.num)) == 1
+		sun = Util.isBitSet(bitmask, DayOfWeekBitPos.SUN.num)
+		mon = Util.isBitSet(bitmask, DayOfWeekBitPos.MON.num)
+		tue = Util.isBitSet(bitmask, DayOfWeekBitPos.TUE.num)
+		wed = Util.isBitSet(bitmask, DayOfWeekBitPos.WED.num)
+		thu = Util.isBitSet(bitmask, DayOfWeekBitPos.THU.num)
+		fri = Util.isBitSet(bitmask, DayOfWeekBitPos.FRI.num)
+		sat = Util.isBitSet(bitmask, DayOfWeekBitPos.SAT.num)
 		return true
 	}
 
