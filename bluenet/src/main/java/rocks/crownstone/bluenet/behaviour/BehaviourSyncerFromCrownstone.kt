@@ -99,7 +99,7 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 		return deferred.promise
 	}
 
-	private fun getBehaviours(): Promise<Unit, Exception>{
+	private fun getBehaviours(): Promise<Unit, Exception> {
 		if (indicesToGet.isEmpty()) {
 			return Promise.ofSuccess(Unit)
 		}
@@ -112,51 +112,5 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 					indicesToGet.remove()
 					return@then getBehaviours()
 				}.unwrap()
-
-//		val deferred = deferred<Unit, Exception>()
-////		val index = indicesToGet.peekFirst()
-//		val index = indicesToGet.poll().toUByte()
-////		val index = 0.toUByte()
-//		Log.d(TAG, "get behaviour $index")
-//		bluenet.control.getBehaviour(index)
-//				.success {
-//					Log.d(TAG, "got behaviour: $it")
-//					remoteBehaviours.add(it)
-////					indicesToGet.remove()
-//					if (indicesToGet.isEmpty()) {
-//						deferred.resolve()
-//					}
-//					else {
-//						getBehaviours()
-//								.success { deferred.resolve() }
-//								.fail { deferred.reject(it) }
-//					}
-//				}
-//		return deferred.promise
-
-//		getBehavioursPromise = deferred()
-//		val deferred = getBehavioursPromise ?: return Promise.ofFail(Exception("No promise"))
-//		handler.post { getNextBehaviour() }
-//		return deferred.promise
 	}
-
-//	private fun getNextBehaviour() {
-//		val index = indicesToGet.peek()
-//		Log.d(TAG, "get behaviour $index")
-//		bluenet.control.getBehaviour(index)
-//				.success {
-//					Log.d(TAG, "got behaviour: $it")
-//					remoteBehaviours.add(it)
-//					indicesToGet.remove()
-//					if (indicesToGet.isEmpty()) {
-//						getBehavioursPromise?.resolve()
-//					}
-//					handler.post { getNextBehaviour() }
-//				}
-//				.fail {
-//					getBehavioursPromise?.reject(it)
-//				}
-//	}
-
-
 }
