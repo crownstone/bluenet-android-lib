@@ -19,6 +19,7 @@ enum class CommandBroadcastType(val num: Uint8) {
 	NO_OP(0U),
 	MULTI_SWITCH(1U),
 	SET_TIME(2U),
+	SUN_TIME(3U),
 	UNKNOWN(255U);
 	companion object {
 		private val map = CommandBroadcastType.values().associateBy(CommandBroadcastType::num)
