@@ -94,11 +94,14 @@ data class SphereSettings(
 /**
  * Struct that holds state of a sphere.
  *
- * @param settings            Settings of the sphere.
- * @param profileId          Profile this device uses. Influences the behaviour of a Crownstone.
- * @param locationId         ID of the location this device is currently at. Influences the behaviour of a Crownstone.
- * @param tapToToggleEnabled Whether or not this device has tap to toggle enabled.
- * @param rssiOffset         RSSI offset of this device. Influences the distance at which tap to toggle is triggered.
+ * @param settings                Settings of the sphere.
+ * @param profileId               Profile this device uses. Influences the behaviour of a Crownstone.
+ * @param locationId              ID of the location this device is currently at. Influences the behaviour of a Crownstone.
+ * @param tapToToggleEnabled      Whether or not this device has tap to toggle enabled.
+ * @param rssiOffset              RSSI offset of this device. Influences the distance at which tap to toggle is triggered.
+ * @param ignoreMeForBehaviour    Whether this device should be ignored for behaviour presence.
+ * @param sunRiseAfterMidnight    Seconds after midnight at which sun rises.
+ * @param sunSetAfterMidnight     Seconds after midnight at which sun sets.
  */
 data class SphereState(
 		var settings: SphereSettings,
@@ -107,7 +110,9 @@ data class SphereState(
 		var profileId: Uint8 = 0U,
 		var tapToToggleEnabled: Boolean = false,
 		var rssiOffset: Int = 0,
-		var ignoreMeForBehaviour: Boolean = false
+		var ignoreMeForBehaviour: Boolean = false,
+		var sunRiseAfterMidnight: Int32 = -1,
+		var sunSetAfterMidnight: Int32 = -1
 )
 
 data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)

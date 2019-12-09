@@ -17,10 +17,7 @@ import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.packets.broadcast.*
 import rocks.crownstone.bluenet.structs.*
-import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.EventBus
-import rocks.crownstone.bluenet.util.Log
-import rocks.crownstone.bluenet.util.Util
+import rocks.crownstone.bluenet.util.*
 import java.lang.Exception
 
 class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
@@ -85,8 +82,26 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 			retryUpdateLater()
 			return
 		}
+		val sphereSettings = libState.sphereState[sphereId] ?: return
+
 		val validationTimestamp = Conversion.toUint32(BluenetProtocol.CAFEBABE) // TODO: use time from crownstones
-		val commandBroadcast = CommandBroadcastPacket(validationTimestamp, sphereId, CommandBroadcastType.NO_OP, BroadcastSingleItemPacket())
+
+		val payloadType =
+				if (sphereSettings.sunRiseAfterMidnight >= 0 && sphereSettings.sunSetAfterMidnight >= 0) {
+					CommandBroadcastType.SUN_TIME
+				}
+				else {
+					CommandBroadcastType.NO_OP
+				}
+		val commandPayload = BroadcastSingleItemPacket()
+		when (payloadType) {
+			CommandBroadcastType.SUN_TIME -> {
+				commandPayload.add(BroadcastSunTimePacket(sphereSettings.sunRiseAfterMidnight.toUint32(), sphereSettings.sunSetAfterMidnight.toUint32()))
+			}
+			else -> { }
+		}
+
+		val commandBroadcast = CommandBroadcastPacket(validationTimestamp, sphereId, payloadType, commandPayload)
 		val advertiseData = broadcastPacketBuilder.getCommandBroadcastAdvertisement(commandBroadcast.sphereId, AccessLevel.HIGHEST_AVAILABLE, commandBroadcast)
 		if (advertiseData == null) {
 			Log.d(TAG, "Nothing to broadcast")
