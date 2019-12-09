@@ -7,13 +7,11 @@
 
 package rocks.crownstone.bluenet.connection
 
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
-import nl.komponents.kovenant.then
-import nl.komponents.kovenant.unwrap
+import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.packets.ByteArrayPacket
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.other.SunTimePacket
 import rocks.crownstone.bluenet.packets.wrappers.v3.ConfigPacket
 import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
 import rocks.crownstone.bluenet.structs.*
@@ -645,6 +643,54 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.TAP_TO_TOGGLE_RSSI_THRESHOLD_OFFSET)
 	}
 
+	/**
+	 * Set sun time.
+	 *
+	 * @param sunRiseAfterMidnight     Seconds after midnight at which the sun rises.
+	 * @param sunSetAfterMidnight      Seconds after midnight at which the sun sets.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setSunTime(sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32): Promise<Unit, Exception> {
+		Log.i(TAG, "setSunTime $sunRiseAfterMidnight $sunSetAfterMidnight")
+		return setConfig(ConfigType.UNKNOWN, StateTypeV4.SUN_TIME, SunTimePacket(sunRiseAfterMidnight, sunSetAfterMidnight))
+	}
+
+	/**
+	 * Get sun time.
+	 *
+	 * @return Promise with sun time packet as value.
+	 */
+	@Synchronized
+	fun getSunTime(): Promise<SunTimePacket, Exception> {
+		Log.i(TAG, "getSunTime")
+		return getState(StateTypeV4.SUN_TIME, SunTimePacket())
+	}
+
+	/**
+	 * Set time.
+	 *
+	 * @param currentTime     POSIX timestamp.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setTime(currentTime: Uint32): Promise<Unit, Exception> {
+		Log.i(TAG, "setTime $currentTime")
+		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.TIME, currentTime)
+	}
+
+	/**
+	 * Get current time.
+	 *
+	 * @return Promise with POSIX timestamp as value.
+	 */
+	@Synchronized
+	fun getTime(): Promise<Uint32, Exception> {
+		Log.i(TAG, "getTime")
+		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.TIME)
+	}
+
+
 
 	// ------------------------ //
 	// --- helper functions --- //
@@ -672,15 +718,13 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	internal inline fun <reified T>getStateValue(type: StateTypeV4): Promise<T, Exception> {
+		Log.i(TAG, "getStateValue value type=${T::class}")
 		val arrPacket = ByteArrayPacket()
 		return getState(type, arrPacket)
 				.then {
-					val arr = it.getPayload()
-					if (arr == null) {
-						return@then Promise.ofFail<T, Exception>(Errors.Parse("payload missing"))
-					}
 					try {
-						val value = Conversion.byteArrayTo<T>(arr)
+						Log.i(TAG, "class: ${T::class}")
+						val value = Conversion.byteArrayTo<T>(it.getPayload())
 						return@then Promise.ofSuccess<T, Exception>(value)
 					} catch (ex: Exception) {
 						return@then Promise.ofFail<T, Exception>(ex)
@@ -708,13 +752,13 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	internal fun getState(stateType: StateTypeV4, statePayloadPacket: PacketInterface): Promise<StatePacketV4, Exception> {
+	internal fun <T : PacketInterface>getState(stateType: StateTypeV4, statePayloadPacket: T): Promise<T, Exception> {
 		val resultClass = Result(eventBus, connection)
 		val controlClass = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> {
 			return controlClass.writeGetState(stateType)
 		}
-		val deferred = deferred<StatePacketV4, Exception>()
+		val deferred = deferred<T, Exception>()
 		val statePacket = StatePacketV4(stateType, statePayloadPacket)
 		resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
 				.success {
@@ -722,7 +766,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 						deferred.reject(Errors.Parse("Wrong state type: req=$stateType rec=${statePacket.type}"))
 						return@success
 					}
-					deferred.resolve(statePacket)
+					deferred.resolve(statePayloadPacket)
 				}
 				.fail {
 					deferred.reject(it)
