@@ -46,7 +46,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	@Synchronized
 	fun advertise(data: AdvertiseData, timeoutMs: Int): Promise<Unit, Exception> {
 		Log.i(TAG, "advertise")
-		if (!isBleReady(true)) {
+		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
 		if (advertiseCallback != null) {
@@ -88,7 +88,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	fun stopAdvertise() {
 		if (advertiseCallback != null) {
 			Log.d(TAG, "stopAdvertise")
-			if (isBleReady(true)) {
+			if (isAdvertiserReady(true)) {
 				try {
 					advertiser.stopAdvertising(advertiseCallback)
 				}
@@ -114,7 +114,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	@Synchronized
 	fun backgroundAdvertise(data: AdvertiseData): Promise<Unit, Exception> {
 		Log.i(TAG, "advertise")
-		if (!isBleReady(true)) {
+		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
 		val deferred = deferred<Unit, Exception>()
@@ -152,7 +152,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	fun stopBackgroundAdvertise() {
 		if (backgroundAdvertiseCallback != null) {
 			Log.d(TAG, "stopBackgroundAdvertise")
-			if (isBleReady(true)) {
+			if (isAdvertiserReady(true)) {
 				try {
 					advertiser.stopAdvertising(backgroundAdvertiseCallback)
 				}

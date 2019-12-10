@@ -62,6 +62,7 @@ object Errors {
 	class NotConnected: Exception("not connected")
 	class CharacteristicNotFound: Exception("characteristic not found")
 	class SessionDataMissing: Exception("no session data")
+	class NotInitialized: Exception("Not initialized")
 
 	// Wrong crownstone mode
 	open class Mode(msg: String = "wrong mode"): Exception(msg)

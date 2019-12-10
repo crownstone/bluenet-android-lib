@@ -589,6 +589,11 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	}
 
 	@Synchronized
+	fun isAdvertiserReady(useCache: Boolean = false): Boolean {
+		return advertiserSet && isBleReady(useCache)
+	}
+
+	@Synchronized
 	fun isScannerReady(): Boolean {
 		Log.v(TAG, "isScannerReady scannerInitialized=$scannerInitialized scannerSet=$scannerSet")
 //		return (scannerInitialized && isBleReady() && isLocationPermissionGranted() && isLocationServiceEnabled())

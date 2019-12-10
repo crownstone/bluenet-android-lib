@@ -125,7 +125,6 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getTime(): Promise<Uint32, Exception> {
 		Log.i(TAG, "getTime")
-		// TODO: time conversion
 		return getStateValue(StateType.TIME, StateTypeV4.TIME)
 	}
 
