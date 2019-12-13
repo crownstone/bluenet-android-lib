@@ -45,6 +45,7 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 		evtBus.subscribe(BluenetEvent.IBEACON_EXIT_REGION,           { data: Any? -> onRegionExit() })
 		evtBus.subscribe(BluenetEvent.LOCATION_CHANGE,               { data: Any? -> onLocationChange(data as SphereId) })
 		evtBus.subscribe(BluenetEvent.TAP_TO_TOGGLE_CHANGED,         { data: Any? -> onTapToToggleChange(data as SphereId?) })
+		evtBus.subscribe(BluenetEvent.SUN_TIME_CHANGED,              { data: Any? -> onSunTimeChange(data as SphereId?) })
 		evtBus.subscribe(BluenetEvent.IGNORE_FOR_BEHAVIOUR_CHANGED,  { data: Any? -> onIgnoreForBehaviourChange(data as SphereId?) })
 		evtBus.subscribe(BluenetEvent.CURRENT_SPHERE_CHANGED,        { data: Any? -> onCurrentSphereChange(data as SphereId?) })
 		evtBus.subscribe(BluenetEvent.PROFILE_ID_CHANGED,            { data: Any? -> onProfileIdChange(data as SphereId) })
@@ -201,6 +202,11 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 
 	@Synchronized
 	private fun onTapToToggleChange(sphereId: SphereId?) {
+		update()
+	}
+
+	@Synchronized
+	private fun onSunTimeChange(sphereId: SphereId?) {
 		update()
 	}
 

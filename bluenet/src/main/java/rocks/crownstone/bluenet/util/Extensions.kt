@@ -89,7 +89,11 @@ fun UByte.toUint32() = this.toUInt()
 fun Short.toUint32() = this.toUInt()
 fun UShort.toUint32() = this.toUInt()
 fun Int.toUint32() = this.toUInt()
+fun Double.toUint32() = this.toLong().toUInt()
 
+fun UByte.toInt32() = this.toInt()
+fun UShort.toInt32() = this.toInt()
+fun UInt.toInt32() = this.toInt()
 
 fun Long.toUint32() = this.toUInt()
 fun UByte.toDouble() = this.toShort().toDouble()

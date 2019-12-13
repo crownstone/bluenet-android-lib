@@ -447,6 +447,31 @@ class Bluenet(looper: Looper? = null) {
 		}
 	}
 
+	/**
+	 * Set sun rise and set time
+	 */
+	@Synchronized
+	fun setSunTime(sphereId: SphereId?, sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32) {
+		var changed = false
+		if (sphereId == null) {
+			for (state in libState.sphereState) {
+				changed = changed || (state.value.sunRiseAfterMidnight != sunRiseAfterMidnight.toInt32())
+				changed = changed || (state.value.sunSetAfterMidnight != sunSetAfterMidnight.toInt32())
+				state.value.sunRiseAfterMidnight = sunRiseAfterMidnight.toInt32()
+				state.value.sunSetAfterMidnight = sunSetAfterMidnight.toInt32()
+			}
+		}
+		else {
+			val state = libState.sphereState[sphereId] ?: return
+			changed = changed || (state.sunRiseAfterMidnight != sunRiseAfterMidnight.toInt32())
+			changed = changed || (state.sunSetAfterMidnight != sunSetAfterMidnight.toInt32())
+			state.sunRiseAfterMidnight = sunRiseAfterMidnight.toInt32()
+			state.sunSetAfterMidnight = sunSetAfterMidnight.toInt32()
+		}
+		if (changed) {
+			eventBus.emit(BluenetEvent.SUN_TIME_CHANGED, sphereId)
+		}
+	}
 
 //	/**
 //	 * Set the keys for encryption and decryption.
