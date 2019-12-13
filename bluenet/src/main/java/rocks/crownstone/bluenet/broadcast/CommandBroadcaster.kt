@@ -72,6 +72,18 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	}
 
 	/**
+	 * Broadcast a turn switch on command.
+	 *
+	 * @param sphereId       Sphere ID of the stone.
+	 * @param stoneId        The ID of the stone.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun switchOn(sphereId: SphereId, stoneId: Uint8): Promise<Unit, Exception> {
+		return switch(sphereId, stoneId, BluenetProtocol.TURN_SWITCH_ON)
+	}
+
+	/**
 	 * Set the time of all Crownstones.
 	 *
 	 * @param sphereId                 Sphere ID of the stones.

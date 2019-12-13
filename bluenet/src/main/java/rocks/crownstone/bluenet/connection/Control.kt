@@ -144,6 +144,28 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	/**
+	 * Turn switch on of multiple crownstones.
+	 *
+	 * @param packet Packet with switch values.
+	 * @return Promise that resolves when the connected crownstone received the command.
+	 */
+	@Synchronized
+	fun multiSwitchOn(packet: MultiSwitchLegacyPacket): Promise<Unit, Exception> {
+		Log.i(TAG, "multiSwtichOn $packet")
+		if (getPacketProtocol() == 3) {
+			return writeCommand(ControlType.MULTI_SWITCH, ControlTypeV4.UNKNOWN, packet)
+		}
+		else {
+			val newPacket = MultiSwitchPacket()
+			for (item in packet.list) {
+				val newItem = MultiSwitchItemPacket(item.id, BluenetProtocol.TURN_SWITCH_ON)
+				newPacket.add(newItem)
+			}
+			return multiSwitch(newPacket)
+		}
+	}
+
+	/**
 	 * Set the switch value of multiple crownstones.
 	 *
 	 * @param packet Packet with switch values.
