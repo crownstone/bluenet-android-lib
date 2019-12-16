@@ -20,7 +20,7 @@ class BroadcastItemListPacket: CommandBroadcastPayloadInterface {
 
 	companion object {
 		const val HEADER_SIZE = 1
-		const val MAX_PAYLOAD_SIZE = 10
+		const val MAX_PAYLOAD_SIZE = CommandBroadcastPacket.PAYLOAD_SIZE - HEADER_SIZE
 		const val MAX_PACKET_SIZE = HEADER_SIZE + MAX_PAYLOAD_SIZE
 	}
 

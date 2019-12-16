@@ -16,7 +16,6 @@ class BroadcastSunTimePacket(val sunRiseAfterMidnight: Uint32, val sunSetAfterMi
 	companion object {
 		// Sunrise and Sunset are uint 24.
 		const val SIZE = 3 + 3
-		const val RESERVED = BroadcastSingleItemPacket.MAX_PAYLOAD_SIZE - SIZE
 	}
 
 	override fun getPacketSize(): Int {
@@ -31,8 +30,6 @@ class BroadcastSunTimePacket(val sunRiseAfterMidnight: Uint32, val sunSetAfterMi
 		bb.put(sunRiseBytes)
 		val sunSetBytes = Conversion.uint24ToByteArray(sunSetAfterMidnight)
 		bb.put(sunSetBytes)
-		val reserved = ByteArray(RESERVED) { i -> 0 }
-		bb.put(reserved)
 		return true
 	}
 

@@ -54,7 +54,7 @@ class CommandBroadcastPacket(val validationTimestamp: Uint32, val sphereId: Sphe
 		if (!payload.toBuffer(bb)) {
 			return false
 		}
-		for (i in 1..(PAYLOAD_SIZE - payload.getPacketSize())) {
+		for (i in 0 until (PAYLOAD_SIZE - payload.getPacketSize())) {
 			bb.put(0)
 		}
 		return true

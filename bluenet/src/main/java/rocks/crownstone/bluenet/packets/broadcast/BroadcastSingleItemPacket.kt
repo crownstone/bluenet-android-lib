@@ -15,7 +15,7 @@ class BroadcastSingleItemPacket: CommandBroadcastPayloadInterface {
 	private lateinit var itemPayload: PacketInterface
 
 	companion object {
-		const val MAX_PAYLOAD_SIZE = 11
+		const val MAX_PAYLOAD_SIZE = CommandBroadcastPacket.PAYLOAD_SIZE
 	}
 
 	override fun add(item: PacketInterface): Boolean {
