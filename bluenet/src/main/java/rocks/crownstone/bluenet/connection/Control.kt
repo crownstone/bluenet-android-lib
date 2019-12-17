@@ -583,8 +583,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	@Synchronized
-	internal fun writeGetState(type: StateTypeV4): Promise<Unit, Exception> {
-		return writeCommand(ControlType.UNKNOWN, ControlTypeV4.GET_STATE, type.num)
+	internal fun writeGetState(packet: StatePacketV4): Promise<Unit, Exception> {
+		return writeCommand(ControlType.UNKNOWN, ControlTypeV4.GET_STATE, packet)
 	}
 
 //	private fun checkValidType(type: ControlType, type4: ControlTypeV4): Promise<Unit, Exception> {

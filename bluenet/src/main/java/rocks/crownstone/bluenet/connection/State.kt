@@ -197,7 +197,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 
-	private inline fun <reified T>getStateValue(type: StateType, type4: StateTypeV4): Promise<T, Exception> {
+	private inline fun <reified T>getStateValue(type: StateType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
 		if (getPacketProtocol() == 3) {
 			return getState(type)
 					.then {
@@ -215,7 +215,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 		}
 		else {
 			val configClass = Config(eventBus, connection)
-			return configClass.getStateValue(type4)
+			return configClass.getStateValue(type4, id)
 		}
 	}
 

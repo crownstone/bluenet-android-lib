@@ -118,6 +118,8 @@ object BluenetProtocol {
 	const val SCHEDULE_WEEKDAY_MASK_ALL_DAYS = 0x7F // 01111111
 
 	const val TURN_SWITCH_ON: Uint8 = 0xFFU
+
+	const val STATE_DEFAULT_ID: Uint16 = 0U
 }
 
 enum class OpcodeType(val num: Uint8) {

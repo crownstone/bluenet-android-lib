@@ -13,15 +13,18 @@ import rocks.crownstone.bluenet.structs.StateTypeV4
 import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.util.getUint16
 import rocks.crownstone.bluenet.util.putShort
+import rocks.crownstone.bluenet.util.putUint16
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class StatePacketV4(type: StateTypeV4, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+open class StatePacketV4(type: StateTypeV4, id: Uint16, payload: PacketInterface?): PayloadWrapperPacket(payload) {
 	override val TAG = this.javaClass.simpleName
 	companion object {
-		const val SIZE = 2
+		const val SIZE = 4
 	}
 	var type = type
+		protected set
+	var id = id
 		protected set
 
 	override fun getHeaderSize(): Int {
@@ -34,12 +37,14 @@ open class StatePacketV4(type: StateTypeV4, payload: PacketInterface?): PayloadW
 
 	override fun headerToBuffer(bb: ByteBuffer): Boolean {
 		bb.order(ByteOrder.LITTLE_ENDIAN)
-		bb.putShort(type.num)
+		bb.putUint16(type.num)
+		bb.putUint16(id)
 		return true
 	}
 
 	override fun headerFromBuffer(bb: ByteBuffer): Boolean {
 		type = StateTypeV4.fromNum(bb.getUint16())
+		id = bb.getUint16()
 		return true
 	}
 

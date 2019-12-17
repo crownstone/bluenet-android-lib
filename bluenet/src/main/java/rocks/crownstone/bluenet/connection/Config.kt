@@ -696,7 +696,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	// --- helper functions --- //
 	// ------------------------ //
 
-	private inline fun <reified T>getConfigValue(type: ConfigType, type4: StateTypeV4): Promise<T, Exception> {
+	private inline fun <reified T>getConfigValue(type: ConfigType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
 		if (getPacketProtocol() == 3) {
 			return getConfig(type)
 					.then {
@@ -713,14 +713,14 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 					}.unwrap()
 		}
 		else {
-			return getStateValue(type4)
+			return getStateValue(type4, id)
 		}
 	}
 
-	internal inline fun <reified T>getStateValue(type: StateTypeV4): Promise<T, Exception> {
+	internal inline fun <reified T>getStateValue(type: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
 		Log.i(TAG, "getStateValue value type=${T::class}")
 		val arrPacket = ByteArrayPacket()
-		return getState(type, arrPacket)
+		return getState(type, arrPacket, id)
 				.then {
 					try {
 						Log.i(TAG, "class: ${T::class}")
@@ -752,14 +752,15 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	internal fun <T : PacketInterface>getState(stateType: StateTypeV4, statePayloadPacket: T): Promise<T, Exception> {
+	internal fun <T : PacketInterface>getState(stateType: StateTypeV4, statePayloadPacket: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
 		val resultClass = Result(eventBus, connection)
 		val controlClass = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> {
-			return controlClass.writeGetState(stateType)
+			val statePacket = StatePacketV4(stateType, id, null)
+			return controlClass.writeGetState(statePacket)
 		}
 		val deferred = deferred<T, Exception>()
-		val statePacket = StatePacketV4(stateType, statePayloadPacket)
+		val statePacket = StatePacketV4(stateType, id, statePayloadPacket)
 		resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
 				.success {
 					if (statePacket.type != stateType) {
@@ -774,23 +775,23 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	private inline fun <reified T>setConfigValue(type: ConfigType, type4: StateTypeV4, value: T): Promise<Unit, Exception> {
-		return setConfig(type, type4, ByteArrayPacket(Conversion.toByteArray(value)))
+	private inline fun <reified T>setConfigValue(type: ConfigType, type4: StateTypeV4, value: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<Unit, Exception> {
+		return setConfig(type, type4, ByteArrayPacket(Conversion.toByteArray(value)), id)
 	}
 
-	private fun setConfig(type: ConfigType, type4: StateTypeV4, packet: PacketInterface): Promise<Unit, Exception> {
+	private fun setConfig(type: ConfigType, type4: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<Unit, Exception> {
 		if (getPacketProtocol() == 3) {
 			val configPacket = ConfigPacket(type, packet)
 			Log.i(TAG, "setConfig $configPacket")
 			return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), configPacket.getArray())
 		}
 		else {
-			return setState(type4, packet)
+			return setState(type4, packet, id)
 		}
 	}
 
-	internal fun setState(type: StateTypeV4, packet: PacketInterface): Promise<Unit, Exception> {
-		val statePacket = StatePacketV4(type, packet)
+	internal fun setState(type: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<Unit, Exception> {
+		val statePacket = StatePacketV4(type, id, packet)
 		val controlClass = Control(eventBus, connection)
 		Log.i(TAG, "setState $statePacket")
 		return controlClass.writeSetState(statePacket)
