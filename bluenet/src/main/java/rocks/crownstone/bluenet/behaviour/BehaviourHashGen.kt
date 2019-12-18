@@ -39,9 +39,9 @@ object BehaviourHashGen {
 		var hash: BehaviourHash = 0U
 		for (p in sortedList) {
 			val indexArr = byteArrayOf(p.index.toByte())
-			Hash.fletcher32(indexArr, hash)
+			hash = Hash.fletcher32(indexArr, hash)
 			val behaviourArr = p.behaviour.getArray() ?: return 0U
-			Hash.fletcher32(behaviourArr, hash)
+			hash = Hash.fletcher32(behaviourArr, hash)
 		}
 		return hash
 	}
