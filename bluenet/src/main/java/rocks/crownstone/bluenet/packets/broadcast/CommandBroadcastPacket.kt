@@ -63,4 +63,8 @@ class CommandBroadcastPacket(val validationTimestamp: Uint32, val sphereId: Sphe
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
 		return false // Not implemented yet (no need?)
 	}
+
+	override fun toString(): String {
+		return "CommandBroadcastPacket(validationTimestamp=$validationTimestamp, sphereId='$sphereId', type=$type, payload=$payload)"
+	}
 }

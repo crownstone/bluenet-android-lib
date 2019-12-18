@@ -26,6 +26,7 @@ class BroadcastPacketBuilder(state: BluenetState, encryptionManager: EncryptionM
 	private val libState = state
 
 	fun getCommandBroadcastAdvertisement(sphereId: SphereId, accessLevel: AccessLevel, commandBroadcast: CommandBroadcastPacket): AdvertiseData? {
+		Log.d(TAG, "commandBroadcast=$commandBroadcast")
 		val advertiseUuids = getCommandBroadcastServiceUuids(sphereId, accessLevel, commandBroadcast) ?: return null
 		val advertiseBuilder = AdvertiseData.Builder()
 		for (uuid in advertiseUuids) {
@@ -46,7 +47,6 @@ class BroadcastPacketBuilder(state: BluenetState, encryptionManager: EncryptionM
 		if (keyAccessLevel == null) {
 			return null
 		}
-
 		val commandBroadcastHeader = getCommandBroadcastHeader(sphereId, keyAccessLevel.accessLevel) ?: return null
 		Log.v(TAG, "commandBroadcastHeader: ${Conversion.bytesToString(commandBroadcastHeader)}")
 		val encryptedCommandBroadcast = encryptCommandBroadcastPacket(keyAccessLevel.key, commandBroadcast, commandBroadcastHeader) ?: return null
@@ -62,7 +62,6 @@ class BroadcastPacketBuilder(state: BluenetState, encryptionManager: EncryptionM
 	}
 
 	fun encryptCommandBroadcastPacket(key: ByteArray, commandBroadcast: CommandBroadcastPacket, nonce: ByteArray): ByteArray? {
-
 		val commandBroadcastBytes = commandBroadcast.getArray() ?: return null
 		Log.v(TAG, "commandBroadcast: ${Conversion.bytesToString(commandBroadcastBytes)}")
 		val encryptedCommandBroadcast = Encryption.encryptCtr(commandBroadcastBytes, 0, 0, nonce, key) ?: return null
@@ -79,15 +78,12 @@ class BroadcastPacketBuilder(state: BluenetState, encryptionManager: EncryptionM
 			Log.w(TAG, "Missing state for sphere $sphereId")
 			return null
 		}
-
-
-
 		val sphereShortId = sphereState.settings.sphereShortId
 		val deviceToken = sphereState.settings.deviceToken
 		val encryptedBackgroundBroadcastPayload = getBackgroundPacket(sphereId) ?: return null
 		Log.v(TAG, "encryptedCommandBroadcastRC5Packet: ${Conversion.bytesToString(encryptedBackgroundBroadcastPayload)}")
 		val commandBroadcastHeader = CommandBroadcastHeaderPacket(0, sphereShortId, accessLevel.num, deviceToken, encryptedBackgroundBroadcastPayload)
-		Log.v(TAG, "commandBroadcastHeader: $commandBroadcastHeader")
+		Log.d(TAG, "commandBroadcastHeader: $commandBroadcastHeader")
 		return commandBroadcastHeader.getArray()
 	}
 
@@ -100,7 +96,6 @@ class BroadcastPacketBuilder(state: BluenetState, encryptionManager: EncryptionM
 			Log.w(TAG, "Missing state for sphere $sphereId")
 			return null
 		}
-
 		val locationId = sphereState.locationId
 		val profileId = sphereState.profileId
 		val rssiOffset = getEncodedRssiOffset(sphereState.rssiOffset)
@@ -110,7 +105,7 @@ class BroadcastPacketBuilder(state: BluenetState, encryptionManager: EncryptionM
 
 		val rc5Payload = CommandBroadcastRC5Packet(counter, locationId, profileId, rssiOffset, tapToToggleEnabled, ignoreForBehaviourEnabled)
 		val rc5PayloadArr = rc5Payload.getArray() ?: return null
-		Log.v(TAG, "backgroundBroadcast: $rc5Payload = ${Conversion.bytesToString(rc5PayloadArr)}")
+		Log.d(TAG, "backgroundBroadcast: $rc5Payload = ${Conversion.bytesToString(rc5PayloadArr)}")
 		return encryptionManager.encryptRC5(sphereId, rc5PayloadArr)
 	}
 

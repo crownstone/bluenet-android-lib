@@ -403,23 +403,20 @@ object Conversion {
 
 	@Throws
 	inline fun <reified T> byteArrayTo(array: ByteArray, offset: Int = 0): T {
-		Log.i(TAG, "class: ${T::class}")
+		Log.v(TAG, "class: ${T::class}")
 		// Using T::class doesn't work, maybe because unsigned ints are still experimental.
 		when (T::class.simpleName) {
 			"Byte", "UByte" -> {
-				Log.i(TAG, "expecting size 1, size=${array.size}")
 				if (array.size != 1) {
 					throw Errors.Parse("Expected size of 1, size=${array.size}")
 				}
 			}
 			"Short", "UShort" -> {
-				Log.i(TAG, "expecting size 2, size=${array.size}")
 				if (array.size != 2) {
 					throw Errors.Parse("Expected size of 2, size=${array.size}")
 				}
 			}
 			"Int", "UInt", "Float" -> {
-				Log.i(TAG, "expecting size 4, size=${array.size}")
 				if (array.size != 4) {
 					throw Errors.Parse("Expected size of 4, size=${array.size}")
 				}

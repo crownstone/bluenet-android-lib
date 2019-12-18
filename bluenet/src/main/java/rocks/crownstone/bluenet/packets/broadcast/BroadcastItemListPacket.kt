@@ -76,4 +76,8 @@ class BroadcastItemListPacket: CommandBroadcastPayloadInterface {
 		// Not implemented yet (no need?)
 		return false
 	}
+
+	override fun toString(): String {
+		return "BroadcastItemListPacket(list=$list, size=$size, itemClass=$itemClass)"
+	}
 }

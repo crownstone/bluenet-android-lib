@@ -36,4 +36,8 @@ class BroadcastSunTimePacket(val sunRiseAfterMidnight: Uint32, val sunSetAfterMi
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
 		return false // Not implemented yet (no need?)
 	}
+
+	override fun toString(): String {
+		return "BroadcastSunTimePacket(sunRiseAfterMidnight=$sunRiseAfterMidnight, sunSetAfterMidnight=$sunSetAfterMidnight)"
+	}
 }

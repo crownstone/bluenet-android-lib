@@ -66,7 +66,7 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 					for (b in it.indicesWithHash) {
 						val index = b.index
 						val localBehaviour = localBehavioursMap.get(index)
-						Log.d(TAG, "index=$index in local map: ${(localBehaviour == null)}")
+						Log.d(TAG, "index=$index in local map: ${(localBehaviour != null)}")
 						if (localBehaviour != null) {
 							val localBehaviourHash = BehaviourHashGen.getHash(localBehaviour)
 							Log.d(TAG, "hash: local=$localBehaviourHash remote=${b.hash.hash}")

@@ -55,4 +55,11 @@ class BroadcastSingleItemPacket: CommandBroadcastPayloadInterface {
 		// Not implemented yet (no need?)
 		return false
 	}
+
+	override fun toString(): String {
+		if (::itemPayload.isInitialized) {
+			return itemPayload.toString()
+		}
+		return "<empty>"
+	}
 }

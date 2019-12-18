@@ -111,6 +111,7 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 		}
 		when (broadcasting) {
 			BroadcastingState.STOPPED -> {
+				Log.d(TAG, "startBroadcasting  cmd=$commandBroadcast")
 				startBroadcasting(advertiseData)
 			}
 			BroadcastingState.STARTED -> {
