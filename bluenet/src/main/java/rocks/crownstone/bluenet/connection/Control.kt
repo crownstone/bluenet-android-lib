@@ -344,8 +344,16 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getBehaviour(index: BehaviourIndex): Promise<IndexedBehaviourPacket, Exception> {
 		Log.i(TAG, "getBehaviour index=$index")
-		val resultPacket = IndexedBehaviourPacket()
+		val resultPacket = IndexedBehaviourPacket(INDEX_UNKNOWN, BehaviourGetPacket())
 		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_GET, index, resultPacket)
+				.then {
+					val getPacket: BehaviourGetPacket = it.behaviour as BehaviourGetPacket
+					val packet = getPacket.packet
+					if (packet == null) {
+						return@then Promise.ofFail<IndexedBehaviourPacket, Exception>(Errors.Parse("behaviour"))
+					}
+					return@then Promise.ofSuccess<IndexedBehaviourPacket, Exception>(IndexedBehaviourPacket(it.index, packet))
+				}.unwrap()
 	}
 
 	/**
