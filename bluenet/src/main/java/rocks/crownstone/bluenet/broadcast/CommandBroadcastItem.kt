@@ -53,6 +53,7 @@ class CommandBroadcastItem(
 			Log.v(TAG, "resolve ${toString()}")
 			promise?.resolve()
 			promise = null
+			timeLeftMs = 0
 		}
 	}
 
