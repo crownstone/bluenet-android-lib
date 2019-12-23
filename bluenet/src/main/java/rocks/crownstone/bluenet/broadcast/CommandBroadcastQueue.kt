@@ -77,7 +77,7 @@ class CommandBroadcastQueue {
 	 * To be called when advertisement has been advertised.
 	 */
 	@Synchronized
-	fun advertisementDone(advertisedTimeMs: Int, error: java.lang.Exception?) {
+	fun advertisementDone(advertisedTimeMs: Int, error: Exception?) {
 		for (it in advertisedItems) {
 			it.stoppedAdvertising(advertisedTimeMs, error)
 			putItemBackInQueue(it)
@@ -125,6 +125,7 @@ class CommandBroadcastQueue {
 			CommandBroadcastItemType.SWITCH -> CommandBroadcastType.MULTI_SWITCH
 			CommandBroadcastItemType.SET_TIME -> CommandBroadcastType.SET_TIME
 			CommandBroadcastItemType.SUN_TIME -> CommandBroadcastType.SUN_TIME
+			CommandBroadcastItemType.BEHAVIOUR_SETTINGS -> CommandBroadcastType.BEHAVIOUR_SETTINGS
 		}
 		val validationTimestamp = when (firstItem.validationTimestamp) {
 			null -> Conversion.toUint32(BluenetProtocol.CAFEBABE) // TODO: use time from crownstones
@@ -165,7 +166,7 @@ class CommandBroadcastQueue {
 		if (queue.isEmpty()) {
 			return null
 		}
-		var iter = queue.iterator()
+		val iter = queue.iterator()
 		while (iter.hasNext()) {
 			val it = iter.next()
 			if (it.isDone()) {

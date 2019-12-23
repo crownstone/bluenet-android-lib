@@ -14,6 +14,7 @@ import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import rocks.crownstone.bluenet.BleCore
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_INTERVAL_MS
+import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_RELIABLE_TIME_MS
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_TIME_MS
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
@@ -81,6 +82,29 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	@Synchronized
 	fun switchOn(sphereId: SphereId, stoneId: Uint8): Promise<Unit, Exception> {
 		return switch(sphereId, stoneId, BluenetProtocol.TURN_SWITCH_ON)
+	}
+
+	/**
+	 * Set behaviour settings.
+	 *
+	 * @param sphereId       Sphere ID to use.
+	 * @param mode           Behaviour mode to set.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setBehaviourSettings(sphereId: SphereId, mode: BehaviourSettingsMode): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		val commandItem = BroadcastBehaviourSettingsPacket(mode)
+		val item = CommandBroadcastItem(
+				deferred,
+				sphereId,
+				CommandBroadcastItemType.BEHAVIOUR_SETTINGS,
+				null,
+				commandItem,
+				COMMAND_BROADCAST_RELIABLE_TIME_MS
+		)
+		add(item)
+		return deferred.promise
 	}
 
 	/**

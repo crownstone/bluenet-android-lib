@@ -8,26 +8,12 @@
 package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.CommandBroadcastType
 import rocks.crownstone.bluenet.structs.SphereId
 import rocks.crownstone.bluenet.structs.Uint32
-import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.put
 import rocks.crownstone.bluenet.util.putInt
 import java.nio.ByteBuffer
-
-enum class CommandBroadcastType(val num: Uint8) {
-	NO_OP(0U),
-	MULTI_SWITCH(1U),
-	SET_TIME(2U),
-	SUN_TIME(3U),
-	UNKNOWN(255U);
-	companion object {
-		private val map = CommandBroadcastType.values().associateBy(CommandBroadcastType::num)
-		fun fromNum(action: Uint8): CommandBroadcastType {
-			return map[action] ?: return UNKNOWN
-		}
-	}
-}
 
 /**
  * Packet to sent command broadcasts.

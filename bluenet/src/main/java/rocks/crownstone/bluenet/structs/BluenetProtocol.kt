@@ -246,6 +246,22 @@ enum class ControlTypeV4(val num: Uint16) {
 	}
 }
 
+enum class CommandBroadcastType(val num: Uint8) {
+	NO_OP(0U),
+	MULTI_SWITCH(1U),
+	SET_TIME(2U),
+	SUN_TIME(3U),
+	BEHAVIOUR_SETTINGS(4U),
+	UNKNOWN(255U);
+	companion object {
+		private val map = values().associateBy(CommandBroadcastType::num)
+		fun fromNum(action: Uint8): CommandBroadcastType {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+
 enum class StateType(val num: Uint8) {
 	RESET_COUNTER(128U),
 	SWITCH_STATE(129U),
@@ -587,8 +603,20 @@ enum class ScheduleWeekDayBitPos(val num: Int) {
 	ALL_DAYS(7),
 	UNKNOWN(255);
 	companion object {
-		private val map = ScheduleWeekDayBitPos.values().associateBy(ScheduleWeekDayBitPos::num)
+		private val map = values().associateBy(ScheduleWeekDayBitPos::num)
 		fun fromNum(action: Int): ScheduleWeekDayBitPos {
+			return map[action] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class BehaviourSettingsMode(val num: Uint8) {
+	DUMB(0U),
+	SMART(1U),
+	UNKNOWN(255U);
+	companion object {
+		private val map = values().associateBy(BehaviourSettingsMode::num)
+		fun fromNum(action: Uint8): BehaviourSettingsMode {
 			return map[action] ?: return UNKNOWN
 		}
 	}
