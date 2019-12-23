@@ -254,8 +254,16 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	private fun onBroadcastDone() {
 		Log.i(TAG, "onBroadcastDone")
 		bleCore.stopAdvertise()
-		val now = SystemClock.elapsedRealtime() // ms since boot
-		val timeBroadcasted = (now - startTime).toInt()
+		val timeBroadcasted = when (startTime) {
+			0L -> {
+				Log.w(TAG, "No start time set")
+				0
+			}
+			else -> {
+				val now = SystemClock.elapsedRealtime() // ms since boot
+				(now - startTime).toInt()
+			}
+		}
 		broadcasting = false
 		queue.advertisementDone(timeBroadcasted, null)
 		broadcastNext()
