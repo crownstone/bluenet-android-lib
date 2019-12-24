@@ -314,14 +314,35 @@ class Bluenet(looper: Looper? = null) {
 	 * Load settings for each sphere.
 	 *
 	 * Values should match values used in setup.
+	 *
+	 * TODO: split this up into functions that only set 1 thing
 	 */
 	@Synchronized
 	fun setSphereSettings(sphereSettings: SphereSettingsMap) {
-		libState.sphereState.clear()
+		var anyChange = false
 		for ((sphereId, settings) in sphereSettings) {
-			libState.sphereState[sphereId] = SphereState(settings)
+			var changed = false
+			val state = libState.sphereState[sphereId]
+			if (state != null) {
+				// For now, only check keySet and ibeaconUuid, as the other settings are not given at this point by the consumer app...
+				changed = changed || (state.settings.ibeaconUuid != settings.ibeaconUuid)
+				changed = changed || (state.settings.keySet != settings.keySet)
+			}
+			else {
+				changed = true
+			}
+			if (changed) {
+				Log.i(TAG, "Set new sphere state: sphereId=$sphereId")
+				anyChange = true
+				libState.sphereState[sphereId] = SphereState(settings)
+			}
+			else {
+				Log.i(TAG, "No change for sphereId=$sphereId")
+			}
 		}
-		eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
+		if (anyChange) {
+			eventBus.emit(BluenetEvent.SPHERE_SETTINGS_UPDATED)
+		}
 	}
 
 	@Synchronized

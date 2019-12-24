@@ -88,7 +88,7 @@ data class SphereSettings(
 		val keySet: KeySet,
 		val meshKeySet: MeshKeySet?,
 		val ibeaconUuid: UUID,
-		var sphereShortId: SphereShortId = 0U, // TODO: make this val, for now, this value isn't always known on init.
+		var sphereShortId: SphereShortId,     // TODO: make this val, for now, this value isn't always known on init.
 		var deviceToken: Uint8                // TODO: make this val, for now, this value isn't always known on init.
 )
 
@@ -108,10 +108,10 @@ data class SphereState(
 		var settings: SphereSettings,
 		var commandCount: Uint8 = 0U,
 		var locationId: Uint8 = 0U,
-		var profileId: Uint8 = 0U,
-		var tapToToggleEnabled: Boolean = false,
-		var rssiOffset: Int = 0,
-		var ignoreMeForBehaviour: Boolean = false,
+		var profileId: Uint8 = 0U,                 // TODO: this is a setting.
+		var tapToToggleEnabled: Boolean = false,   // TODO: this is a setting.
+		var rssiOffset: Int = 0,                   // TODO: this is a setting.
+		var ignoreMeForBehaviour: Boolean = false, // TODO: this is a setting.
 		var sunRiseAfterMidnight: Int32 = -1,
 		var sunSetAfterMidnight: Int32 = -1
 )
