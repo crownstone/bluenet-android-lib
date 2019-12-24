@@ -69,4 +69,39 @@ class MeshKeySet() {
 				"net: ${Conversion.bytesToHexString(netKeyBytes)}, " +
 				"]"
 	}
+
+	override fun equals(other: Any?): Boolean {
+		if (this === other) return true
+		if (javaClass != other?.javaClass) return false
+
+		other as MeshKeySet
+
+		val deviceKeyBytes = this.deviceKeyBytes
+		val otherDeviceKeyBytes = other.deviceKeyBytes
+		if (deviceKeyBytes != null) {
+			if (otherDeviceKeyBytes == null) return false
+			if (!deviceKeyBytes.contentEquals(otherDeviceKeyBytes)) return false
+		}
+		else if (otherDeviceKeyBytes != null) return false
+
+		val appKeyBytes = this.appKeyBytes
+		val otherAppKeyBytes = other.appKeyBytes
+		if (appKeyBytes != null) {
+			if (otherAppKeyBytes == null) return false
+			if (!appKeyBytes.contentEquals(otherAppKeyBytes)) return false
+		}
+		else if (otherAppKeyBytes != null) return false
+
+		val netKeyBytes = this.netKeyBytes
+		val otherNetKeyBytes = other.netKeyBytes
+		if (netKeyBytes != null) {
+			if (otherNetKeyBytes == null) return false
+			if (!netKeyBytes.contentEquals(otherNetKeyBytes)) return false
+		}
+		else if (otherNetKeyBytes != null) return false
+
+		if (initialized != other.initialized) return false
+
+		return true
+	}
 }

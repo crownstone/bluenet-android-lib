@@ -125,4 +125,64 @@ class KeySet() {
 				"localization: ${Conversion.bytesToHexString(localizationKeyBytes)}, " +
 				"]"
 	}
+
+	override fun equals(other: Any?): Boolean {
+		if (this === other) return true
+		if (javaClass != other?.javaClass) return false
+
+		other as KeySet
+
+		val adminKeyBytes = this.adminKeyBytes
+		val otherAdminKeyBytes = other.adminKeyBytes
+		if (adminKeyBytes != null) {
+			if (otherAdminKeyBytes == null) return false
+			if (!adminKeyBytes.contentEquals(otherAdminKeyBytes)) return false
+		}
+		else if (otherAdminKeyBytes != null) return false
+
+		val memberKeyBytes = this.memberKeyBytes
+		val otherMemberKeyBytes = other.memberKeyBytes
+		if (memberKeyBytes != null) {
+			if (otherMemberKeyBytes == null) return false
+			if (!memberKeyBytes.contentEquals(otherMemberKeyBytes)) return false
+		}
+		else if (otherMemberKeyBytes != null) return false
+
+		val guestKeyBytes = this.guestKeyBytes
+		val otherGuestKeyBytes = other.guestKeyBytes
+		if (guestKeyBytes != null) {
+			if (otherGuestKeyBytes == null) return false
+			if (!guestKeyBytes.contentEquals(otherGuestKeyBytes)) return false
+		}
+		else if (otherGuestKeyBytes != null) return false
+
+		// No need to check setup key, as it's temp.
+//		val setupKeyBytes = this.setupKeyBytes
+//		val otherSetupKeyBytes = other.setupKeyBytes
+//		if (setupKeyBytes != null) {
+//			if (otherSetupKeyBytes == null) return false
+//			if (!setupKeyBytes.contentEquals(otherSetupKeyBytes)) return false
+//		}
+//		else if (otherSetupKeyBytes != null) return false
+
+		val serviceDataKeyBytes = this.serviceDataKeyBytes
+		val otherServiceDataKeyBytes = other.serviceDataKeyBytes
+		if (serviceDataKeyBytes != null) {
+			if (otherServiceDataKeyBytes == null) return false
+			if (!serviceDataKeyBytes.contentEquals(otherServiceDataKeyBytes)) return false
+		}
+		else if (otherServiceDataKeyBytes != null) return false
+
+		val localizationKeyBytes = this.localizationKeyBytes
+		val otherLocalizationKeyBytes = other.localizationKeyBytes
+		if (localizationKeyBytes != null) {
+			if (otherLocalizationKeyBytes == null) return false
+			if (!localizationKeyBytes.contentEquals(otherLocalizationKeyBytes)) return false
+		}
+		else if (otherLocalizationKeyBytes != null) return false
+
+		if (initialized != other.initialized) return false
+
+		return true
+	}
 }
