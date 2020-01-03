@@ -78,6 +78,7 @@ fun UByte.toUint16() = this.toUShort()
 fun Short.toUint16() = this.toUShort()
 fun Int.toUint16() = this.toUShort()
 fun UInt.toUint16() = this.toUShort()
+fun Long.toUint16() = this.toUShort()
 
 fun UByte.toInt16() = this.toShort()
 fun UShort.toInt16() = this.toShort()

@@ -4,7 +4,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import rocks.crownstone.bluenet.encryption.RC5
+import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.toUint16
 
 class RC5Test {
 	private val TAG = this.javaClass.simpleName
@@ -28,12 +30,17 @@ class RC5Test {
 		for (i in 0 until expandedKey.size) {
 			println("expandedKey $i: ${expandedKey[i]}")
 		}
-		assertTrue(expandedKey == arrayListOf(17188, 48365, 24340, 1800, 42461, 5147, 20677, 25885, 6492, 7594, 37111, 45723, 17422, 17628, 2782, 13305, 17628, 42281, 16228, 35216, 16588, 9898, 26128, 2533, 52784, 17181))
+		val expandedKeyIntList = arrayListOf(17188, 48365, 24340, 1800, 42461, 5147, 20677, 25885, 6492, 7594, 37111, 45723, 17422, 17628, 2782, 13305, 17628, 42281, 16228, 35216, 16588, 9898, 26128, 2533, 52784, 17181)
+		val expandedUint16List = ArrayList<Uint16>()
+		for (i in 0 until expandedKeyIntList.size) {
+			expandedUint16List.add(expandedKeyIntList[i].toUint16())
+		}
+		assertTrue(expandedKey == expandedUint16List)
 
 		val data = Conversion.toUint32(123456789)
 		val dataList = Conversion.uint32ToUint16ListReversed(data)
 		println("data: $data = $dataList")
-		assertTrue(dataList == arrayListOf(1883, 52501))
+		assertTrue(dataList == arrayListOf(1883.toUint16(), 52501.toUint16()))
 
 		val encrypted = RC5.encrypt(dataList, expandedKey)
 		assertFalse(encrypted == null)
@@ -41,7 +48,7 @@ class RC5Test {
 			return
 		}
 		println("encrypted: ${Conversion.uint16ListToUint32Reversed(encrypted)} = $encrypted")
-		assertTrue(encrypted == arrayListOf(54517, 58512))
+		assertTrue(encrypted == arrayListOf(54517.toUint16(), 58512.toUint16()))
 
 		val decryptedList = RC5.decrypt(encrypted, expandedKey)
 		assertFalse(decryptedList == null)
@@ -50,7 +57,7 @@ class RC5Test {
 		}
 		val decrypted = Conversion.uint16ListToUint32Reversed(decryptedList)
 		println("decrypted: $decrypted = $decryptedList")
-		assertTrue(decryptedList == arrayListOf(1883, 52501))
+		assertTrue(decryptedList == arrayListOf(1883.toUint16(), 52501.toUint16()))
 
 		assertTrue(decrypted == data)
 	}

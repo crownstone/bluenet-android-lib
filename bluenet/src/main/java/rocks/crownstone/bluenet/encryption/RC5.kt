@@ -15,6 +15,7 @@ import rocks.crownstone.bluenet.structs.BluenetProtocol.RC5_WORD_SIZE
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.toUint16
+import rocks.crownstone.bluenet.util.toUint8
 
 /**
  * Static class to perform RC5 encryption.
@@ -48,8 +49,9 @@ object RC5 {
 			L.add(0U)
 		}
 		for (i in 0 until keyLenWords) {
-			L[i] = ((key[2*i+1].toInt() shl 8) + key[2*i]).toUint16()
-//			Log.i(TAG, "RC5 L[i]=${L[i]}: (${Conversion.toUint8(key[2*i+1]).toInt()} << 8 = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8)}) + ${Conversion.toUint8(key[2*i])} = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8) + Conversion.toUint8(key[2*i])}")
+			L[i] = ((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt()).toUint16()
+//			Log.i(TAG, "${(key[2*i+1].toUint8().toUInt() shl 8)} + ${key[2*i].toUint8().toUInt()}: uint=${((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt())} uint16=${((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt()).toUint16()}")
+//			Log.i(TAG, "RC5 L[i]=${L[i]}: (${Conversion.toUint8(key[2*i+1]).toInt()} << 8 = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8)}) + ${Conversion.toUint8(key[2*i])} = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8) + Conversion.toUint8(key[2*i]).toInt()}")
 		}
 
 		val subKeys = ArrayList<Uint16>(RC5_NUM_SUBKEYS)
@@ -122,12 +124,12 @@ object RC5 {
 	}
 
 	private fun rotateLeft(x: Uint16, shift: Int): Uint16 {
-		val u = x.toInt()
+		val u = x.toUInt()
 		return Conversion.toUint16((u shl shift) or (u shr (16 - shift)))
 	}
 
 	private fun rotateRight(x: Uint16, shift: Int): Uint16 {
-		val u = x.toInt()
+		val u = x.toUInt()
 		return Conversion.toUint16((u shr shift) or (u shl (16 - shift)))
 	}
 }
