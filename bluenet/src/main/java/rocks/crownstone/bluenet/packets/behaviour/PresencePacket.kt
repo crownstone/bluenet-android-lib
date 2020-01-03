@@ -61,8 +61,8 @@ class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds
 				else -> return false
 			}
 		}
-		bb.putInt(bitmask2)
 		bb.putInt(bitmask1)
+		bb.putInt(bitmask2)
 		bb.putInt(timeoutSeconds)
 		return true
 	}
@@ -73,8 +73,8 @@ class PresencePacket(type: PresenceType, rooms: ArrayList<Uint8>, timeoutSeconds
 		}
 
 		type = PresenceType.fromNum(bb.getUint8())
-		val bitmask2 = bb.getUint32()
 		val bitmask1 = bb.getUint32()
+		val bitmask2 = bb.getUint32()
 		rooms.clear()
 		for (i in 0 until 32) {
 			if ((bitmask1.toLong() and (1L shl i)) == 1L) {
