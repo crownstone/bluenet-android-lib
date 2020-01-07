@@ -65,6 +65,7 @@ class CrownstoneServiceData {
 	var flagSwitchCraft = false;         internal set    // True when switchcraft is enabled via config.
 	var flagTapToToggleEnabled = false;  internal set    // True when tap to toggle is enabled.
 	var flagBehaviourOverridden = false; internal set    // True when behaviour is overridden.
+	var flagBehaviourEnabled = false;    internal set    // True when behaviour is enabled.
 
 	// Errors
 	var errorOverCurrent = false;       internal set     // Too much current went through the crownstone.

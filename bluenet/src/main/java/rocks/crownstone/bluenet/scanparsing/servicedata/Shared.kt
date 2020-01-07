@@ -32,7 +32,7 @@ internal object Shared {
 			servicedata.externalRssi = bb.get()
 		}
 		else {
-			bb.get() // reserved
+			parseExtraFlags(bb.getUint8(), servicedata)
 		}
 		servicedata.validation = bb.get() == VALIDATION
 		return true
@@ -87,6 +87,10 @@ internal object Shared {
 		servicedata.flagSwitchCraft         = Util.isBitSet(flags, 5)
 		servicedata.flagTapToToggleEnabled         = Util.isBitSet(flags, 6)
 		servicedata.flagBehaviourOverridden = Util.isBitSet(flags, 7)
+	}
+
+	private fun parseExtraFlags(flags: Uint8, servicedata: CrownstoneServiceData) {
+		servicedata.flagBehaviourEnabled    = Util.isBitSet(flags, 0)
 	}
 
 	private fun parseErrorBitmask(bitmask: Uint32, servicedata: CrownstoneServiceData) {
