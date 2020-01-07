@@ -9,7 +9,6 @@ package rocks.crownstone.bluenet.structs
 
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Util
-import rocks.crownstone.bluenet.util.toUint32
 import java.util.UUID
 
 object BluenetProtocol {
@@ -610,13 +609,13 @@ enum class ScheduleWeekDayBitPos(val num: Int) {
 	}
 }
 
-enum class BehaviourSettingsMode(val num: Uint8) {
+enum class BehaviourSettings(val num: Uint32) {
 	DUMB(0U),
 	SMART(1U),
-	UNKNOWN(255U);
+	UNKNOWN(0xFFFFFFFFU);
 	companion object {
-		private val map = values().associateBy(BehaviourSettingsMode::num)
-		fun fromNum(action: Uint8): BehaviourSettingsMode {
+		private val map = values().associateBy(BehaviourSettings::num)
+		fun fromNum(action: Uint32): BehaviourSettings {
 			return map[action] ?: return UNKNOWN
 		}
 	}

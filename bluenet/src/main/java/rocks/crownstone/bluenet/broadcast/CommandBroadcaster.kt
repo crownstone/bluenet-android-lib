@@ -92,7 +92,7 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setBehaviourSettings(sphereId: SphereId, mode: BehaviourSettingsMode): Promise<Unit, Exception> {
+	fun setBehaviourSettings(sphereId: SphereId, mode: BehaviourSettings): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 		val commandItem = BroadcastBehaviourSettingsPacket(mode)
 		val item = CommandBroadcastItem(

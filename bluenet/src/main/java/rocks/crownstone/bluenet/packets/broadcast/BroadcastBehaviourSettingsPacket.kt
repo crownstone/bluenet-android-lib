@@ -8,13 +8,13 @@
 package rocks.crownstone.bluenet.packets.broadcast
 
 import rocks.crownstone.bluenet.packets.PacketInterface
-import rocks.crownstone.bluenet.structs.BehaviourSettingsMode
-import rocks.crownstone.bluenet.util.putUint8
+import rocks.crownstone.bluenet.structs.BehaviourSettings
+import rocks.crownstone.bluenet.util.putUint32
 import java.nio.ByteBuffer
 
-class BroadcastBehaviourSettingsPacket(val mode: BehaviourSettingsMode): PacketInterface {
+class BroadcastBehaviourSettingsPacket(val mode: BehaviourSettings): PacketInterface {
 	companion object {
-		const val SIZE = 1
+		const val SIZE = 4
 	}
 
 	override fun getPacketSize(): Int {
@@ -25,7 +25,7 @@ class BroadcastBehaviourSettingsPacket(val mode: BehaviourSettingsMode): PacketI
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.putUint8(mode.num)
+		bb.putUint32(mode.num)
 		return true
 	}
 
