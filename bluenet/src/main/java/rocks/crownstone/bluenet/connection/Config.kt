@@ -653,6 +653,10 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setSunTime(sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setSunTime $sunRiseAfterMidnight $sunSetAfterMidnight")
+		if (getPacketProtocol() == 3) {
+			Log.w(TAG, "Old protocol: no suntime will be written.")
+			return Promise.ofSuccess(Unit)
+		}
 		return setConfig(ConfigType.UNKNOWN, StateTypeV4.SUN_TIME, SunTimePacket(sunRiseAfterMidnight, sunSetAfterMidnight))
 	}
 

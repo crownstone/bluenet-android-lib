@@ -172,12 +172,12 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 
 	@Synchronized
 	private fun onTimeout() {
-		Log.v(TAG, "onTimeout")
+		Log.d(TAG, "onTimeout numBeacons=${deviceMap.size}")
 //		val result = ArrayList<ScannedIbeacon>()
 		val result = ScannedIbeaconList()
 		for (entry in deviceMap) {
 			val referenceId = trackedUuids[entry.value.ibeaconData.uuid] ?: ""
-			Log.v(TAG, "    ${entry.key} uuid=${entry.value.ibeaconData.uuid} rssi=${entry.value.averager.getAverage()}")
+			Log.d(TAG, "    ${entry.key} uuid=${entry.value.ibeaconData.uuid} rssi=${entry.value.averager.getAverage()}")
 			result.add(ScannedIbeacon(entry.key, entry.value.ibeaconData, entry.value.averager.getAverage(), referenceId))
 		}
 		deviceMap.clear()
