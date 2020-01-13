@@ -19,7 +19,6 @@ import rocks.crownstone.bluenet.util.Log
 enum class CommandBroadcastItemType {
 	SWITCH,
 	SET_TIME,
-	SUN_TIME,
 	BEHAVIOUR_SETTINGS,
 }
 

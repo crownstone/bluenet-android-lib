@@ -143,11 +143,11 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	@Synchronized
 	fun setSunTime(sphereId: SphereId, sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
-		val commandItem = BroadcastSunTimePacket(sunRiseAfterMidnight, sunSetAfterMidnight)
+		val commandItem = BroadcastSetTimePacket(null, sunRiseAfterMidnight, sunSetAfterMidnight)
 		val item = CommandBroadcastItem(
 				deferred,
 				sphereId,
-				CommandBroadcastItemType.SUN_TIME,
+				CommandBroadcastItemType.SET_TIME,
 				null,
 				commandItem,
 				COMMAND_BROADCAST_TIME_MS

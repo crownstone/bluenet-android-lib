@@ -124,7 +124,6 @@ class CommandBroadcastQueue {
 		val type = when (firstItem.type) {
 			CommandBroadcastItemType.SWITCH -> CommandBroadcastType.MULTI_SWITCH
 			CommandBroadcastItemType.SET_TIME -> CommandBroadcastType.SET_TIME
-			CommandBroadcastItemType.SUN_TIME -> CommandBroadcastType.SUN_TIME
 			CommandBroadcastItemType.BEHAVIOUR_SETTINGS -> CommandBroadcastType.BEHAVIOUR_SETTINGS
 		}
 		val validationTimestamp = when (firstItem.validationTimestamp) {

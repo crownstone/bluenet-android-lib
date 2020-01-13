@@ -249,7 +249,6 @@ enum class CommandBroadcastType(val num: Uint8) {
 	NO_OP(0U),
 	MULTI_SWITCH(1U),
 	SET_TIME(2U),
-	SUN_TIME(3U),
 	BEHAVIOUR_SETTINGS(4U),
 	UNKNOWN(255U);
 	companion object {

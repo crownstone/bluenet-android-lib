@@ -89,15 +89,15 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 
 		val payloadType =
 				if (sphereSettings.sunRiseAfterMidnight >= 0 && sphereSettings.sunSetAfterMidnight >= 0) {
-					CommandBroadcastType.SUN_TIME
+					CommandBroadcastType.SET_TIME
 				}
 				else {
 					CommandBroadcastType.NO_OP
 				}
 		val commandPayload = BroadcastSingleItemPacket()
 		when (payloadType) {
-			CommandBroadcastType.SUN_TIME -> {
-				commandPayload.add(BroadcastSunTimePacket(sphereSettings.sunRiseAfterMidnight.toUint32(), sphereSettings.sunSetAfterMidnight.toUint32()))
+			CommandBroadcastType.SET_TIME -> {
+				commandPayload.add(BroadcastSetTimePacket(null, sphereSettings.sunRiseAfterMidnight.toUint32(), sphereSettings.sunSetAfterMidnight.toUint32()))
 			}
 			else -> { }
 		}
