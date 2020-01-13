@@ -91,10 +91,16 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 
 	/**
 	 * Reset the device, which will make it go out of DFU mode.
+	 *
+	 * Also resolves when already in normal mode.
 	 */
 	@Synchronized
 	fun reset(): Promise<Unit, Exception> {
 		Log.i(TAG, "reset")
+		if (connection.hasService(BluenetProtocol.CROWNSTONE_SERVICE_UUID) || connection.hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
+			Log.i(TAG, "already out of DFU mode")
+			return connection.disconnect(true)
+		}
 		if (connection.hasService(BluenetProtocol.DFU_SERVICE_UUID)) {
 			return connection.subscribe(BluenetProtocol.DFU_SERVICE_UUID, BluenetProtocol.CHAR_DFU_CONTROL_UUID, {})
 					.then {
