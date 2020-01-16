@@ -48,8 +48,9 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private var scanDuration: Long  = 120 * 1000 // Restart every 2 minutes
 	private val lastStartTimes = LinkedList<Long>()
 
-	private var startScanRunnable: Runnable
-	private var stopScanRunnable: Runnable
+	private var startIntervalRunnable: Runnable
+	private var stopIntervalRunnable: Runnable
+	private var restartRunnable: Runnable
 
 	init {
 		Log.i(TAG, "init")
@@ -59,22 +60,20 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY,           { result: Any? -> onCoreScannerNotReady() })
 
 		// Had to init those here, or silly kotlin had some recursion problem
-		startScanRunnable = Runnable {
-			startInterval()
-		}
-		stopScanRunnable = Runnable {
-			stopInterval()
-		}
+		startIntervalRunnable = Runnable { startInterval() }
+		stopIntervalRunnable = Runnable { stopInterval() }
+		restartRunnable = Runnable { restart() }
 	}
 
 //	@Synchronized
 	fun startScan(delay: Long = 0) {
 		Log.i(TAG, "startScan delay=$delay")
 		synchronized(this) {
+			handler.removeCallbacks(restartRunnable)
 			if (!running) {
 				running = true
 				handler.removeCallbacksAndMessages(null)
-				handler.postDelayed(startScanRunnable, delay)
+				handler.postDelayed(startIntervalRunnable, delay)
 			}
 		}
 	}
@@ -83,11 +82,11 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	fun stopScan() {
 		Log.i(TAG, "stopScan")
 		synchronized(this) {
+			handler.removeCallbacksAndMessages(null)
 			wasRunning = false
 			if (running) {
 				running = false
 				core.stopScan()
-				handler.removeCallbacksAndMessages(null)
 			}
 		}
 	}
@@ -109,7 +108,15 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 		synchronized(this) {
 			val wasRunning = running
 			Log.d(TAG, "restart wasRunning=$wasRunning")
+			handler.removeCallbacks(restartRunnable)
 			if (wasRunning) {
+				val delay = delayMsToPreventStartingTooOften()
+				if (delay > 0) {
+					// Don't stop until we can start again.
+					Log.w(TAG, "delay restart for $delay ms")
+					handler.postDelayed(restartRunnable, delay)
+					return
+				}
 				stopScan()
 				startScan(500)
 			}
@@ -129,24 +136,24 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private fun startInterval() {
 		Log.i(TAG, "startInterval")
 		synchronized(this) {
-			val now = SystemClock.elapsedRealtime() // See https://developer.android.com/reference/android/os/SystemClock
-			// Check if we start too often.
-			if ((lastStartTimes.size >= BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) && (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD)) {
+			val delay = delayMsToPreventStartingTooOften()
+			if (delay > 0) {
 				// We're starting too often, delay this start.
+				Log.w(TAG, "delay start for $delay ms")
 				handler.removeCallbacksAndMessages(null)
-				Log.i(TAG, "delay for ${BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now} ms")
-				handler.postDelayed(startScanRunnable, BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now)
-//				startScan(BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now) // Won't work, as it checks for running
+				handler.postDelayed(startIntervalRunnable, delay)
+//				startScan(delay) // Won't work, as it checks for running
 				return
 			}
+
 			// Keep up list of last start times.
-			lastStartTimes.addLast(now)
+			lastStartTimes.addLast(now())
 			while (lastStartTimes.size > BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) {
 				lastStartTimes.removeFirst()
 			}
 			core.startScan()
 			if (scanDuration > 0) {
-				handler.postDelayed(stopScanRunnable, scanDuration)
+				handler.postDelayed(stopIntervalRunnable, scanDuration)
 			}
 		}
 	}
@@ -157,7 +164,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 		synchronized(this) {
 			core.stopScan()
 			if (scanPause > 0) {
-				handler.postDelayed(startScanRunnable, scanPause)
+				handler.postDelayed(startIntervalRunnable, scanPause)
 			}
 		}
 	}
@@ -191,4 +198,15 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 		}
 	}
 
+	private fun delayMsToPreventStartingTooOften(): Long {
+		val now = now()
+		if ((lastStartTimes.size >= BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) && (now - lastStartTimes.first < BluenetConfig.SCAN_CHECK_PERIOD)) {
+			return BluenetConfig.SCAN_CHECK_PERIOD + lastStartTimes.first - now
+		}
+		return 0
+	}
+
+	private fun now(): Long {
+		return SystemClock.elapsedRealtime() // See https://developer.android.com/reference/android/os/SystemClock
+	}
 }
