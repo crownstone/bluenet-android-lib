@@ -177,7 +177,7 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 		val result = ScannedIbeaconList()
 		for (entry in deviceMap) {
 			val referenceId = trackedUuids[entry.value.ibeaconData.uuid] ?: ""
-			Log.d(TAG, "    ${entry.key} uuid=${entry.value.ibeaconData.uuid} rssi=${entry.value.averager.getAverage()}")
+			Log.v(TAG, "    ${entry.key} uuid=${entry.value.ibeaconData.uuid} major=${entry.value.ibeaconData.major} minor=${entry.value.ibeaconData.minor} rssi=${entry.value.averager.getAverage()}")
 			result.add(ScannedIbeacon(entry.key, entry.value.ibeaconData, entry.value.averager.getAverage(), referenceId))
 		}
 		deviceMap.clear()
