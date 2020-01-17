@@ -236,6 +236,7 @@ enum class ControlTypeV4(val num: Uint16) {
 	BEHAVIOUR_REMOVE(62U),
 	BEHAVIOUR_GET(63U),
 	BEHAVIOUR_GET_INDICES(64U),
+	BEHAVIOUR_GET_DEBUG(69U),
 	UNKNOWN(0xFFFFU);
 	companion object {
 		private val map = ControlTypeV4.values().associateBy(ControlTypeV4::num)

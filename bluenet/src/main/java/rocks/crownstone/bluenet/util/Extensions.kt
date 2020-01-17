@@ -9,6 +9,7 @@ package rocks.crownstone.bluenet.util
 
 import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.structs.Uint32
+import rocks.crownstone.bluenet.structs.Uint64
 import rocks.crownstone.bluenet.structs.Uint8
 import java.nio.ByteBuffer
 
@@ -46,6 +47,10 @@ fun ByteBuffer.getUint16(): Uint16 {
 
 fun ByteBuffer.getUint32(): Uint32 {
 	return Conversion.toUint32(this.getInt())
+}
+
+fun ByteBuffer.getUint64(): Uint64 {
+	return Conversion.toUint64(this.getLong())
 }
 
 fun ByteBuffer.getUint8(offset: Int): Uint8 {

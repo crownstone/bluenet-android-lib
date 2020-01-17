@@ -277,6 +277,10 @@ object Conversion {
 		return num.toUInt()
 	}
 
+	fun toUint64(num: Long): Uint64 {
+		return num.toULong()
+	}
+
 	fun uint16ListToUint32Reversed(list: List<Uint16>): Uint32 {
 		return (toUint32(list[0]) shl 16) + toUint32(list[1])
 	}

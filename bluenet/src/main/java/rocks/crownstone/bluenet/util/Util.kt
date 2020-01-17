@@ -11,6 +11,8 @@ import android.os.Handler
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.resolve
+import rocks.crownstone.bluenet.structs.Uint32
+import rocks.crownstone.bluenet.structs.Uint64
 
 object Util {
 	// Check if Nth bit in a value is set
@@ -22,6 +24,16 @@ object Util {
 		return value and (1 shl bit) != 0
 	}
 
+	fun isBitSet(value: ULong, bit: Int): Boolean {
+		val one: ULong = 1U
+		val zero: ULong = 0U
+		return value and (one shl bit) != zero
+	}
+
+	fun isBitSet(value: UInt, bit: Int): Boolean {
+		return value and (1U shl bit) != 0U
+	}
+
 	fun isBitSet(value: Short, bit: Int): Boolean {
 		return isBitSet(value.toInt(), bit)
 	}
@@ -30,16 +42,12 @@ object Util {
 		return isBitSet(value.toInt(), bit)
 	}
 
-	fun isBitSet(value: UInt, bit: Int): Boolean {
-		return isBitSet(value.toLong(), bit)
-	}
-
 	fun isBitSet(value: UShort, bit: Int): Boolean {
-		return isBitSet(value.toInt(), bit)
+		return isBitSet(value.toUInt(), bit)
 	}
 
 	fun isBitSet(value: UByte, bit: Int): Boolean {
-		return isBitSet(value.toInt(), bit)
+		return isBitSet(value.toUInt(), bit)
 	}
 
 	// Clear the Nth bit in a value

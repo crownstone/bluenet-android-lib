@@ -62,6 +62,8 @@ typealias Int16 = Short
 typealias Uint16 = UShort
 typealias Int32 = Int
 typealias Uint32 = UInt
+typealias Int64 = Long
+typealias Uint64 = ULong
 
 typealias DeviceAddress = String
 typealias SphereId = String

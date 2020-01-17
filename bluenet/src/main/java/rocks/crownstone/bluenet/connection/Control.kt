@@ -369,6 +369,18 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	/**
+	 * Get some info to help debugging behaviours.
+	 *
+	 * @return Promise with debug info.
+	 */
+	@Synchronized
+	fun getBehaviourDebug(): Promise<BehaviourDebugPacket, Exception> {
+		Log.i(TAG, "getBehaviourDebug")
+		val resultPacket = BehaviourDebugPacket()
+		return writeCommandAndGetResult(ControlTypeV4.BEHAVIOUR_GET_DEBUG, EmptyPacket(), resultPacket)
+	}
+
+	/**
 	 * Make the crownstone break the connection.
 	 *
 	 * Resolves also when already disconnected.
