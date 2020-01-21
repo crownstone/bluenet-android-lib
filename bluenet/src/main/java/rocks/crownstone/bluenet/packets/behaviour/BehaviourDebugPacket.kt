@@ -30,12 +30,21 @@ class BehaviourDebugPacket: PacketInterface {
 		private set
 	var activeEndConditions: Uint64 = 0U
 		private set
-	var presenceBitmasks: ArrayList<Uint64> = ArrayList(NUM_PROFILES)
+	var activeTimeoutPeriod: Uint64 = 0U
 		private set
+	var presenceBitmasks: ArrayList<Uint64> = ArrayList(NUM_PROFILES)
+//	var presenceBitmasks: ArrayList<Uint64> = ULongArray(NUM_PROFILES, { 0U }).toList()
+		private set
+
+	init {
+		for (i in 0 until NUM_PROFILES) {
+			presenceBitmasks.add(0U)
+		}
+	}
 
 	companion object {
 		const val NUM_PROFILES = 8
-		const val SIZE = 3*4 + 5*1 + 2*8 + NUM_PROFILES*8
+		const val SIZE = 3*4 + 5*1 + 3*8 + NUM_PROFILES*8
 	}
 
 	override fun getPacketSize(): Int {
@@ -56,6 +65,7 @@ class BehaviourDebugPacket: PacketInterface {
 		behaviourEnabled = (bb.getUint8() > 0U)
 		activeBehaviours = bb.getUint64()
 		activeEndConditions = bb.getUint64()
+		activeTimeoutPeriod = bb.getUint64()
 		for (i in 0 until NUM_PROFILES) {
 			presenceBitmasks[i] = bb.getUint64()
 		}
@@ -71,6 +81,6 @@ class BehaviourDebugPacket: PacketInterface {
 		for (i in 0 until NUM_PROFILES) {
 			presenceString += presenceBitmasks[i].toString()
 		}
-		return "BehaviourDebugPacket(time=$time, sunRise=$sunrise, sunSet=$sunset, overrideState=$overrideState, behaviourState=$behaviourState, aggregatedState=$aggregatedState, dimmerPowered=$dimmerPowered, behaviourEnabled=$behaviourEnabled, activeBehaviours=$activeBehaviours, activeEndConditions=$activeEndConditions, presenceBitmasks=$presenceString)"
+		return "BehaviourDebugPacket(time=$time, sunRise=$sunrise, sunSet=$sunset, overrideState=$overrideState, behaviourState=$behaviourState, aggregatedState=$aggregatedState, dimmerPowered=$dimmerPowered, behaviourEnabled=$behaviourEnabled, activeBehaviours=$activeBehaviours, activeEndConditions=$activeEndConditions, activeGracePeriod=$activeTimeoutPeriod, presenceBitmasks=$presenceString)"
 	}
 }
