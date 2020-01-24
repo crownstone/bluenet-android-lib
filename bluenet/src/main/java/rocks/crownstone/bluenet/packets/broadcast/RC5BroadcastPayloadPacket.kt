@@ -68,6 +68,6 @@ open class RC5BroadcastPayloadPacket(
 	}
 
 	override fun toString(): String {
-		return "payload=$payload, locationId=$locationId, profileId=$profileId, rssiOffset=$rssiOffset, flagTapToToggle=$flagTapToToggle, flags=$flags"
+		return "payload=$payload, locationId=$locationId, profileId=$profileId, rssiOffset=$rssiOffset, flagTapToToggle=$flagTapToToggle, flagIgnoreForBehaviour=$flagIgnoreForBehaviour, flags=$flags"
 	}
 }
