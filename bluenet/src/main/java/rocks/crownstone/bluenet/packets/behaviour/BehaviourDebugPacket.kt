@@ -44,7 +44,7 @@ class BehaviourDebugPacket: PacketInterface {
 
 	companion object {
 		const val NUM_PROFILES = 8
-		const val SIZE = 3*4 + 5*1 + 3*8 + NUM_PROFILES*8
+		const val SIZE = 3 * Uint32.SIZE_BYTES + 5 * Uint8.SIZE_BYTES + 3 * Uint64.SIZE_BYTES + NUM_PROFILES * Uint64.SIZE_BYTES
 	}
 
 	override fun getPacketSize(): Int {
