@@ -57,7 +57,7 @@ class CrownstoneServiceData {
 	// Flags
 	var flagExternalData = false;        internal set    // True when this service data is from another crownstone.
 	internal var flagSetup = false
-	var flagDimmingAvailable = false;    internal set    // True when dimming is available (hardware).
+	var flagDimmerReady = false;         internal set    // True when dimmer hardware is ready for use.
 	var flagDimmable = false;            internal set    // True when dimming is allowed via config.
 	var flagError = false;               internal set    // True when there is an error.
 	var flagSwitchLocked = false;        internal set    // True when the switch is locked via config.

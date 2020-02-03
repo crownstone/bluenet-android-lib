@@ -80,7 +80,7 @@ internal object Shared {
 	}
 
 	private fun parseFlags(flags: Uint8, servicedata: CrownstoneServiceData) {
-		servicedata.flagDimmingAvailable    = Util.isBitSet(flags, 0)
+		servicedata.flagDimmerReady         = Util.isBitSet(flags, 0)
 		servicedata.flagDimmable            = Util.isBitSet(flags, 1)
 		servicedata.flagError               = Util.isBitSet(flags, 2)
 		servicedata.flagSwitchLocked        = Util.isBitSet(flags, 3)
