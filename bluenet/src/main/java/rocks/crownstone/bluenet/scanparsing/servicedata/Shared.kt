@@ -44,6 +44,7 @@ internal object Shared {
 		parseErrorBitmask(bb.getUint32(), servicedata)
 		servicedata.errorTimestamp = bb.getUint32()
 		parseFlags(bb.getUint8(), servicedata)
+		servicedata.flagError = true // Force flag error to be set.
 		servicedata.temperature = bb.get()
 		parsePartialTimestamp(bb, servicedata)
 		if (external) {
@@ -85,7 +86,7 @@ internal object Shared {
 		servicedata.flagSwitchLocked        = Util.isBitSet(flags, 3)
 		servicedata.flagTimeSet             = Util.isBitSet(flags, 4)
 		servicedata.flagSwitchCraft         = Util.isBitSet(flags, 5)
-		servicedata.flagTapToToggleEnabled         = Util.isBitSet(flags, 6)
+		servicedata.flagTapToToggleEnabled  = Util.isBitSet(flags, 6)
 		servicedata.flagBehaviourOverridden = Util.isBitSet(flags, 7)
 	}
 
@@ -100,7 +101,6 @@ internal object Shared {
 		servicedata.errorDimmerTemperature = Util.isBitSet(bitmask,3)
 		servicedata.errorDimmerFailureOn   = Util.isBitSet(bitmask,4)
 		servicedata.errorDimmerFailureOff  = Util.isBitSet(bitmask,5)
-		servicedata.flagError = true
 	}
 
 	private fun parsePowerFactor(bb: ByteBuffer, servicedata: CrownstoneServiceData) {
