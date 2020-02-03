@@ -17,6 +17,7 @@ import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.structs.ScanMode
+import rocks.crownstone.bluenet.structs.ScanStartFailure
 import java.util.*
 
 /**
@@ -55,9 +56,9 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	init {
 		Log.i(TAG, "init")
 
-		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { result: Any? -> onScanFail() })
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY,               { result: Any? -> onCoreScannerReady() })
-		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY,           { result: Any? -> onCoreScannerNotReady() })
+		val subIdScanFail = eventBus.subscribe(BluenetEvent.SCAN_FAILURE, { data: Any? -> onScanFail(data as ScanStartFailure) })
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY,               { data: Any? -> onCoreScannerReady() })
+		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY,           { data: Any? -> onCoreScannerNotReady() })
 
 		// Had to init those here, or silly kotlin had some recursion problem
 		startIntervalRunnable = Runnable { startInterval() }
@@ -191,7 +192,7 @@ class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
 	}
 
 //	@Synchronized
-	private fun onScanFail() {
+	private fun onScanFail(error: ScanStartFailure) {
 		Log.e(TAG, "onScanFail: TODO")
 		synchronized(this) {
 			// 2019-11-19 don't do anything, let the app tell the user to reset bluetooth instead.

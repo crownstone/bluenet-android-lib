@@ -12,9 +12,7 @@ import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.encryption.MeshKeySet
 import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
 import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.Util
 import java.util.*
-import kotlin.collections.HashMap
 
 
 enum class BluenetEvent {
@@ -31,7 +29,7 @@ enum class BluenetEvent {
 	SCANNER_READY,                     // Scanner is ready to be used.
 	SCANNER_NOT_READY,                 // Scanner is no longer ready to be used.
 	SCAN_RESULT_RAW,                   // Device was scanned. ScanResult as data.
-	SCAN_FAILURE,                      // Scanning failed.
+	SCAN_FAILURE,                      // Scanning failed. ScanStartFailure as data.
 	SCAN_RESULT,                       // Device was scanned. ScannedDevice as data.
 	SCAN_RESULT_VALIDATED,             // Validated device was scanned. ScannedDevice as data.
 	SCAN_RESULT_UNIQUE,                // Device was scanned, with unique service data.  ScannedDevice as data.
@@ -163,3 +161,20 @@ typealias IbeaconRegionList = HashMap<UUID, String> // Map with list of entered 
 data class IbeaconRegionEventData(val changedRegion: UUID, val list: IbeaconRegionList) // Changed region is the UUID that was entered or exited.
 
 data class DfuProgress(val percentage: Int, val currentSpeed: Float, val avgSpeed: Float, val currentPart: Int, val totalParts: Int)
+
+enum class ScanStartFailure(val num: Int) {
+	NO_ERROR(0),
+	ALREADY_STARTED(1),
+	APPLICATION_REGISTRATION_FAILED(2),
+	INTERNAL_ERROR(3),
+	FEATURE_UNSUPPORTED(4),
+	OUT_OF_HARDWARE_RESOURCES(5),
+	SCANNING_TOO_FREQUENTLY(6),
+	UNKNOWN(-1);
+	companion object {
+		private val map = ScanStartFailure.values().associateBy(ScanStartFailure::num)
+		fun fromNum(type: Int): ScanStartFailure {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}

@@ -18,6 +18,7 @@ import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.structs.ScanMode
+import rocks.crownstone.bluenet.structs.ScanStartFailure
 
 /**
  * Class that adds scanning to the bluetooth LE core class.
@@ -156,7 +157,7 @@ open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : 
 				return
 			}
 //			scanning = false
-			eventBus.emit(BluenetEvent.SCAN_FAILURE)
+			eventBus.emit(BluenetEvent.SCAN_FAILURE, ScanStartFailure.fromNum(errorCode))
 		}
 	}
 
