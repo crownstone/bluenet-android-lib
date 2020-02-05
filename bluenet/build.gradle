@@ -37,7 +37,7 @@ dependencies {
     implementation 'nl.komponents.kovenant:kovenant-combine:3.3.0'
     implementation 'nl.komponents.kovenant:kovenant-jvm:3.3.0'
     implementation 'nl.komponents.kovenant:kovenant-functional:3.3.0'
-    implementation 'no.nordicsemi.android:dfu:1.8.0'
+    implementation 'no.nordicsemi.android:dfu:1.9.1'
 }
 repositories {
     mavenCentral()

@@ -32,54 +32,54 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 	private var dfuDeferred: Deferred<Unit, Exception>? = null
 
 	private val progressListener = object: DfuProgressListener {
-		override fun onDeviceConnecting(deviceAddress: String?) {
+		override fun onDeviceConnecting(deviceAddress: String) {
 			Log.d(TAG, "onDeviceConnecting")
 		}
 
-		override fun onDeviceConnected(deviceAddress: String?) {
+		override fun onDeviceConnected(deviceAddress: String) {
 			Log.d(TAG, "onDeviceConnected")
 		}
 
-		override fun onEnablingDfuMode(deviceAddress: String?) {
+		override fun onEnablingDfuMode(deviceAddress: String) {
 			Log.d(TAG, "onEnablingDfuMode")
 		}
 
-		override fun onDfuProcessStarting(deviceAddress: String?) {
+		override fun onDfuProcessStarting(deviceAddress: String) {
 			Log.d(TAG, "onDfuProcessStarting")
 		}
 
-		override fun onDfuProcessStarted(deviceAddress: String?) {
+		override fun onDfuProcessStarted(deviceAddress: String) {
 			Log.d(TAG, "onDfuProcessStarted")
 		}
 
-		override fun onProgressChanged(deviceAddress: String?, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
+		override fun onProgressChanged(deviceAddress: String, percent: Int, speed: Float, avgSpeed: Float, currentPart: Int, partsTotal: Int) {
 			Log.d(TAG, "onProgressChanged percent=$percent ($currentPart / $partsTotal) speed=$speed ($avgSpeed avg)")
 			onProgress(percent, speed, avgSpeed, currentPart, partsTotal)
 		}
 
-		override fun onFirmwareValidating(deviceAddress: String?) {
+		override fun onFirmwareValidating(deviceAddress: String) {
 			Log.d(TAG, "onFirmwareValidating")
 		}
 
-		override fun onDeviceDisconnecting(deviceAddress: String?) {
+		override fun onDeviceDisconnecting(deviceAddress: String) {
 			Log.d(TAG, "onDeviceDisconnecting")
 		}
 
-		override fun onDeviceDisconnected(deviceAddress: String?) {
+		override fun onDeviceDisconnected(deviceAddress: String) {
 			Log.d(TAG, "onDeviceDisconnected")
 		}
 
-		override fun onDfuCompleted(deviceAddress: String?) {
+		override fun onDfuCompleted(deviceAddress: String) {
 			Log.d(TAG, "onDfuCompleted")
 			onDfuCompleted()
 		}
 
-		override fun onDfuAborted(deviceAddress: String?) {
+		override fun onDfuAborted(deviceAddress: String) {
 			Log.d(TAG, "onDfuAborted")
 			onDfuAborted()
 		}
 
-		override fun onError(deviceAddress: String?, error: Int, errorType: Int, message: String?) {
+		override fun onError(deviceAddress: String, error: Int, errorType: Int, message: String?) {
 			Log.d(TAG, "onError error=$error errorType=$errorType msg=$message")
 			onDfuError(error, errorType, message)
 		}
@@ -161,6 +161,7 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 //				.setForceDfu(false)
 				.setUnsafeExperimentalButtonlessServiceInSecureDfuEnabled(false)
 				.setZip(null, fileName)
+				.setNumberOfRetries(2)
 		// Controller can be used to pause / resume / abort.
 		val dfuServiceController = dfuServiceInitiator.start(context, service)
 		dfuDeferred = deferred

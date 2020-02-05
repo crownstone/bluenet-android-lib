@@ -74,7 +74,7 @@ class Bluenet(looper: Looper? = null) {
 		}
 		else {
 			// Current thread:
-			this.looper = Looper.myLooper()
+			this.looper = Looper.myLooper()!!
 
 //			// Own thread:
 //			val handlerThread = HandlerThread("Bluenet")
