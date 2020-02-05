@@ -161,7 +161,7 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 //				.setForceDfu(false)
 				.setUnsafeExperimentalButtonlessServiceInSecureDfuEnabled(false)
 				.setZip(null, fileName)
-				.setNumberOfRetries(2)
+//				.setNumberOfRetries(2)
 		// Controller can be used to pause / resume / abort.
 		val dfuServiceController = dfuServiceInitiator.start(context, service)
 		dfuDeferred = deferred
