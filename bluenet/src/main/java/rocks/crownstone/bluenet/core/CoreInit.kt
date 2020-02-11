@@ -808,8 +808,56 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		}
 	}
 
+	/**
+	 * Turn off bluetooth adapter.
+	 *
+	 * Sometimes the only solution to bluetooth issues is to turn off and on the bluetooth adapter.
+	 * But android doesn't allow apps to turn on bluetooth anymore, so all that's left is to turn it off.
+	 * This will trigger a bluetooth turned off event, so that the app can show that to the user
+	 * and ask for it to be turned on again.
+	 *
+	 * Use with care! You don't just want to turn off bluetooth, as it also disconnects other devices.
+	 */
+	@Synchronized
+	fun disableBle(): Boolean {
+		Log.i(TAG, "disableBle")
+		if (!bleInitialized) {
+			Log.w(TAG, "BLE not initialized")
+			return false
+		}
+		checkBleEnabled()
+		if (!bleEnabled) {
+			Log.i(TAG, "Already disabled")
+			return false
+		}
+		val success = bleAdapter.disable()
+		if (!success) {
+			Log.w(TAG, "Unable to disable BLE")
+		}
+		return success
+	}
 
-
-
-
+	/**
+	 * Turn on bluetooth adapter.
+	 *
+	 *
+	 */
+	@Synchronized
+	fun enableBle(): Boolean {
+		Log.i(TAG, "enableBle")
+		if (!bleInitialized) {
+			Log.w(TAG, "BLE not initialized")
+			return false
+		}
+		checkBleEnabled()
+		if (bleEnabled) {
+			Log.i(TAG, "Already enabled")
+			return false
+		}
+		val success = bleAdapter.enable()
+		if (!success) {
+			Log.w(TAG, "Unable to enable BLE")
+		}
+		return success
+	}
 }
