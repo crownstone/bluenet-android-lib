@@ -26,6 +26,8 @@ class BehaviourDebugPacket: PacketInterface {
 		private set
 	var behaviourEnabled: Boolean = false
 		private set
+	var storedBehaviours: Uint64 = 0U
+		private set
 	var activeBehaviours: Uint64 = 0U
 		private set
 	var activeEndConditions: Uint64 = 0U
@@ -63,6 +65,7 @@ class BehaviourDebugPacket: PacketInterface {
 		aggregatedState = bb.getUint8()
 		dimmerPowered = (bb.getUint8() > 0U)
 		behaviourEnabled = (bb.getUint8() > 0U)
+		storedBehaviours = bb.getUint64()
 		activeBehaviours = bb.getUint64()
 		activeEndConditions = bb.getUint64()
 		activeTimeoutPeriod = bb.getUint64()
@@ -81,6 +84,6 @@ class BehaviourDebugPacket: PacketInterface {
 		for (i in 0 until NUM_PROFILES) {
 			presenceString += presenceBitmasks[i].toString()
 		}
-		return "BehaviourDebugPacket(time=$time, sunRise=$sunrise, sunSet=$sunset, overrideState=$overrideState, behaviourState=$behaviourState, aggregatedState=$aggregatedState, dimmerPowered=$dimmerPowered, behaviourEnabled=$behaviourEnabled, activeBehaviours=$activeBehaviours, activeEndConditions=$activeEndConditions, activeGracePeriod=$activeTimeoutPeriod, presenceBitmasks=$presenceString)"
+		return "BehaviourDebugPacket(time=$time, sunRise=$sunrise, sunSet=$sunset, overrideState=$overrideState, behaviourState=$behaviourState, aggregatedState=$aggregatedState, dimmerPowered=$dimmerPowered, behaviourEnabled=$behaviourEnabled, storedBehaviours=$storedBehaviours, activeBehaviours=$activeBehaviours, activeEndConditions=$activeEndConditions, activeGracePeriod=$activeTimeoutPeriod, presenceBitmasks=$presenceString)"
 	}
 }
