@@ -28,8 +28,11 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	private var backgroundAdvertiseCallback: AdvertiseCallback? = null
 	private var backgroundAdvertiseData: AdvertiseData? = null
 	private var backgroundAdvertiseStarted = false
+
+	// Some phones can only have one advertiser at a time.
 	private var checkedMultipleAdvertisementSupport = false
 	private var isMultipleAdvertisementSupported = false
+
 	init {
 		// Set maximum advertising frequency, and TX power, so that we can have a low timeout.
 		advertiserSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
@@ -60,12 +63,14 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 
 		advertiseCallback = object : AdvertiseCallback() {
 			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+				Log.d(TAG, "advertise started")
 				super.onStartSuccess(settingsInEffect)
 				deferred.resolve()
 			}
 
 			override fun onStartFailure(errorCode: Int) {
 				super.onStartFailure(errorCode)
+				Log.w(TAG, "advertise failed: $errorCode")
 				val err = when (errorCode) {
 					ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
 					ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
@@ -78,13 +83,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 		}
 		advertiserSettingsBuilder.setTimeout(timeoutMs)
-		if (!checkedMultipleAdvertisementSupport) {
-			// Since BluetoothAdapter.isMultipleAdvertisementSupported() always returns false when bluetooth is off,
-			// we should check it when bluetooth is on.
-			// For now, we just check it once on start.
-			isMultipleAdvertisementSupported = bleAdapter.isMultipleAdvertisementSupported
-			Log.i(TAG, "isMultipleAdvertisementSupported=$isMultipleAdvertisementSupported")
-		}
+		checkMultipleAdvertisementSupport()
 		if (!isMultipleAdvertisementSupported) {
 			pauseBackgroundAdvertise()
 		}
@@ -100,9 +99,6 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 
 	@Synchronized
 	fun stopAdvertise() {
-		if (!isMultipleAdvertisementSupported) {
-			resumeBackgroundAdvertise()
-		}
 		if (advertiseCallback != null) {
 			Log.d(TAG, "stopAdvertise")
 			if (isAdvertiserReady(true)) {
@@ -115,6 +111,9 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 				}
 			}
 			advertiseCallback = null
+		}
+		if (!isMultipleAdvertisementSupported) {
+			resumeBackgroundAdvertise()
 		}
 	}
 
@@ -150,14 +149,22 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 		val deferred = deferred<Unit, Exception>()
 
+		checkMultipleAdvertisementSupport()
+		if (!isMultipleAdvertisementSupported && advertiseCallback != null) {
+			// Will be started when advertising stops
+			return Promise.ofSuccess(Unit)
+		}
+
 		backgroundAdvertiseCallback = object : AdvertiseCallback() {
 			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+				Log.d(TAG, "backgroundAdvertise started")
 				super.onStartSuccess(settingsInEffect)
 				deferred.resolve()
 			}
 
 			override fun onStartFailure(errorCode: Int) {
 				super.onStartFailure(errorCode)
+				Log.w(TAG, "backgroundAdvertise failed: $errorCode")
 				val err = when (errorCode) {
 					ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
 					ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
@@ -207,6 +214,17 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 		Log.d(TAG, "resumeBackgroundAdvertise")
 		if (backgroundAdvertiseStarted) {
 			backgroundAdvertise()
+		}
+	}
+
+	@Synchronized
+	private fun checkMultipleAdvertisementSupport() {
+		if (!checkedMultipleAdvertisementSupport) {
+			// Since BluetoothAdapter.isMultipleAdvertisementSupported() always returns false when bluetooth is off,
+			// we should check it when bluetooth is on.
+			// For now, we just check it once on start.
+			isMultipleAdvertisementSupported = bleAdapter.isMultipleAdvertisementSupported
+			Log.i(TAG, "isMultipleAdvertisementSupported=$isMultipleAdvertisementSupported")
 		}
 	}
 }
