@@ -26,6 +26,8 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	private var advertiseCallback: AdvertiseCallback? = null
 	private var backgroundAdvertiserSettingsBuilder = AdvertiseSettings.Builder()
 	private var backgroundAdvertiseCallback: AdvertiseCallback? = null
+	private var backgroundAdvertiseData: AdvertiseData? = null
+	private var backgroundAdvertiseStarted = false
 	init {
 		// Set maximum advertising frequency, and TX power, so that we can have a low timeout.
 		advertiserSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
@@ -74,6 +76,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 		}
 		advertiserSettingsBuilder.setTimeout(timeoutMs)
+		pauseBackgroundAdvertise()
 		try {
 			advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
 		}
@@ -86,6 +89,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 
 	@Synchronized
 	fun stopAdvertise() {
+		resumeBackgroundAdvertise()
 		if (advertiseCallback != null) {
 			Log.d(TAG, "stopAdvertise")
 			if (isAdvertiserReady(true)) {
@@ -113,7 +117,21 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 
 	@Synchronized
 	fun backgroundAdvertise(data: AdvertiseData): Promise<Unit, Exception> {
-		Log.i(TAG, "advertise")
+		backgroundAdvertiseData = data
+		backgroundAdvertiseStarted = true
+		return backgroundAdvertise()
+	}
+
+	@Synchronized
+	fun stopBackgroundAdvertise() {
+		Log.d(TAG, "stopBackgroundAdvertise")
+		backgroundAdvertiseStarted = false
+		stopBackgroundAdvertiseInternal()
+	}
+
+	@Synchronized
+	private fun backgroundAdvertise(): Promise<Unit, Exception> {
+		Log.i(TAG, "backgroundAdvertise")
 		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
@@ -139,7 +157,7 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 		}
 		try {
-			advertiser.startAdvertising(backgroundAdvertiserSettingsBuilder.build(), data, backgroundAdvertiseCallback)
+			advertiser.startAdvertising(backgroundAdvertiserSettingsBuilder.build(), backgroundAdvertiseData, backgroundAdvertiseCallback)
 		}
 		catch (e: IllegalStateException) {
 			Log.w(TAG, "Advertise couldn't start: $e")
@@ -149,9 +167,9 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	}
 
 	@Synchronized
-	fun stopBackgroundAdvertise() {
+	private fun stopBackgroundAdvertiseInternal() {
 		if (backgroundAdvertiseCallback != null) {
-			Log.d(TAG, "stopBackgroundAdvertise")
+			Log.d(TAG, "stopBackgroundAdvertiseInternal")
 			if (isAdvertiserReady(true)) {
 				try {
 					advertiser.stopAdvertising(backgroundAdvertiseCallback)
@@ -162,6 +180,20 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 				}
 			}
 			backgroundAdvertiseCallback = null
+		}
+	}
+
+	@Synchronized
+	private fun pauseBackgroundAdvertise() {
+		Log.d(TAG, "pauseBackgroundAdvertise")
+		stopBackgroundAdvertise()
+	}
+
+	@Synchronized
+	private fun resumeBackgroundAdvertise() {
+		Log.d(TAG, "resumeBackgroundAdvertise")
+		if (backgroundAdvertiseStarted) {
+			backgroundAdvertise()
 		}
 	}
 }
