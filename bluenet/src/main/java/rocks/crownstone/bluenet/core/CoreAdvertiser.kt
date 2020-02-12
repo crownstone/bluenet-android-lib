@@ -28,6 +28,8 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 	private var backgroundAdvertiseCallback: AdvertiseCallback? = null
 	private var backgroundAdvertiseData: AdvertiseData? = null
 	private var backgroundAdvertiseStarted = false
+	private var checkedMultipleAdvertisementSupport = false
+	private var isMultipleAdvertisementSupported = false
 	init {
 		// Set maximum advertising frequency, and TX power, so that we can have a low timeout.
 		advertiserSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
@@ -76,7 +78,16 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 		}
 		advertiserSettingsBuilder.setTimeout(timeoutMs)
-		pauseBackgroundAdvertise()
+		if (!checkedMultipleAdvertisementSupport) {
+			// Since BluetoothAdapter.isMultipleAdvertisementSupported() always returns false when bluetooth is off,
+			// we should check it when bluetooth is on.
+			// For now, we just check it once on start.
+			isMultipleAdvertisementSupported = bleAdapter.isMultipleAdvertisementSupported
+			Log.i(TAG, "isMultipleAdvertisementSupported=$isMultipleAdvertisementSupported")
+		}
+		if (!isMultipleAdvertisementSupported) {
+			pauseBackgroundAdvertise()
+		}
 		try {
 			advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
 		}
@@ -89,7 +100,9 @@ open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper)
 
 	@Synchronized
 	fun stopAdvertise() {
-		resumeBackgroundAdvertise()
+		if (!isMultipleAdvertisementSupported) {
+			resumeBackgroundAdvertise()
+		}
 		if (advertiseCallback != null) {
 			Log.d(TAG, "stopAdvertise")
 			if (isAdvertiserReady(true)) {
