@@ -230,6 +230,22 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlType.GOTO_DFU, ControlTypeV4.GOTO_DFU)
 	}
 
+	@Synchronized
+	fun getBootloaderVersion(): Promise<String, Exception> {
+		Log.i(TAG, "getBootloaderVersion")
+		val resultPacket = ByteArrayPacket()
+		return writeCommandAndGetResult(ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
+				.then {
+					if (resultPacket.getPayload().size == 0) {
+						Log.w(TAG, "Empty bootloader version")
+						return@then Promise.ofFail<String, Exception>(Errors.SizeWrong())
+					}
+					val version = String(resultPacket.getPayload())
+					Log.i(TAG, "Bootloader version: $version")
+					return@then Promise.ofSuccess<String, Exception>(version)
+				}.unwrap()
+	}
+
 	/**
 	 * Reboot the crownstone.
 	 *
@@ -691,24 +707,24 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	// Commands with simple value, and no result payload.
-	private inline fun <reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT): Promise<Unit, Exception> {
+	private inline fun <reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<Unit, Exception> {
 		val writePacket = ByteArrayPacket(Conversion.toByteArray(writeValue))
 		val resultPacket = EmptyPacket()
-		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs)
+		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs, accessLevel)
 				.then {
 					return@then Promise.ofSuccess<Unit, Exception>(Unit)
 				}.unwrap()
 	}
 
 	// Commands with simple value
-	private inline fun <T: PacketInterface, reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT): Promise<T, Exception> {
+	private inline fun <T: PacketInterface, reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<T, Exception> {
 		val writePacket = ByteArrayPacket(Conversion.toByteArray(writeValue))
-		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs)
+		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs, accessLevel)
 	}
 
-	private fun <T: PacketInterface>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT): Promise<T, Exception> {
-		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, type, writePacket) }
-		return resultClass.getSingleResult(writeCommand, type, resultPacket, timeoutMs)
+	private fun <T: PacketInterface>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<T, Exception> {
+		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, type, writePacket, accessLevel) }
+		return resultClass.getSingleResult(writeCommand, type, resultPacket, timeoutMs, accessLevel = accessLevel)
 				.then {
 					return@then resultPacket
 				}

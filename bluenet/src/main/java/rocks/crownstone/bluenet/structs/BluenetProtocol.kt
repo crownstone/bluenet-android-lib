@@ -216,6 +216,7 @@ enum class ControlTypeV4(val num: Uint16) {
 	FACTORY_RESET(1U),
 	GET_STATE(2U),
 	SET_STATE(3U),
+	GET_BOOTLOADER_VERSION(4U),
 	RESET(10U),
 	GOTO_DFU(11U),
 	NOOP(12U),

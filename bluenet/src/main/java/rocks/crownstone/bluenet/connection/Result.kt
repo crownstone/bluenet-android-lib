@@ -10,6 +10,7 @@ package rocks.crownstone.bluenet.connection
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.resolve
+import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
 import rocks.crownstone.bluenet.structs.*
@@ -26,10 +27,11 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 	fun getSingleResult(
 			writeCommand: () -> Promise<Unit, Exception>,
 			timeoutMs: Long,
-			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS)
+			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS),
+			accessLevel: AccessLevel? = null
 	): Promise<ResultPacketV4, Exception> {
 		val deferred = deferred<ResultPacketV4, Exception>()
-		connection.getSingleMergedNotification(getServiceUuid(), getResultCharacteristic(), writeCommand, timeoutMs)
+		connection.getSingleMergedNotification(getServiceUuid(), getResultCharacteristic(), writeCommand, timeoutMs, accessLevel)
 				.success {
 					val packet = ResultPacketV4()
 					if (!packet.fromArray(it)) {
@@ -54,10 +56,11 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 			type: ControlTypeV4,
 			payload: PacketInterface,
 			timeoutMs: Long,
-			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS)
+			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS),
+			accessLevel: AccessLevel? = null
 	): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
-		connection.getSingleMergedNotification(getServiceUuid(), getResultCharacteristic(), writeCommand, timeoutMs)
+		connection.getSingleMergedNotification(getServiceUuid(), getResultCharacteristic(), writeCommand, timeoutMs, accessLevel)
 				.success {
 					val packet = ResultPacketV4(type, ResultType.UNKNOWN, payload)
 					if (!packet.fromArray(it) || packet.type != type) {
@@ -81,7 +84,8 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 			writeCommand: () -> Promise<Unit, Exception>,
 			callback: ResultProcessCallback,
 			timeoutMs: Long,
-			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS)
+			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS),
+			accessLevel: AccessLevel? = null
 	): Promise<Unit, Exception> {
 		val processCallback = fun (data: ByteArray): ProcessResult {
 			val packet = ResultPacketV4()
@@ -96,7 +100,7 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 			}
 		}
 
-		return connection.getMultipleMergedNotifications(getServiceUuid(), getResultCharacteristic(), writeCommand, processCallback, timeoutMs)
+		return connection.getMultipleMergedNotifications(getServiceUuid(), getResultCharacteristic(), writeCommand, processCallback, timeoutMs, accessLevel)
 	}
 
 	private fun getServiceUuid(): UUID {

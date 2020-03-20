@@ -152,7 +152,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	}
 
 	@Synchronized
-	fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long): Promise<ByteArray, Exception> {
+	fun getSingleMergedNotification(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, timeoutMs: Long, accessLevel: AccessLevel? = null): Promise<ByteArray, Exception> {
 		Log.i(TAG, "getSingleMergedNotification serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
@@ -160,7 +160,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		}
 		return bleCore.getSingleMergedNotification(serviceUuid, characteristicUuid, writeCommand, timeoutMs)
 				.then {
-					encryptionManager.decryptPromise(address, it)
+					encryptionManager.decryptPromise(address, it, accessLevel)
 				}.unwrap()
 				.success {
 					Log.i(TAG, "received merged notification on $characteristicUuid ${Conversion.bytesToString(it)}")
@@ -168,14 +168,14 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	}
 
 	@Synchronized
-	fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
+	fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long, accessLevel: AccessLevel? = null): Promise<Unit, Exception> {
 		Log.i(TAG, "getMultipleMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val address = bleCore.getConnectedAddress()
 		if (address == null) {
 			return Promise.ofFail(Errors.NotConnected())
 		}
 		val processCallBack = fun (mergedNotification: ByteArray): ProcessResult {
-			val decryptedData = encryptionManager.decrypt(address, mergedNotification)
+			val decryptedData = encryptionManager.decrypt(address, mergedNotification, accessLevel)
 			if (decryptedData == null) {
 				return ProcessResult.ERROR
 			}
@@ -227,7 +227,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 			}
 			CrownstoneMode.NORMAL -> {
 				if (encryptionManager.getKeySetFromAddress(address) == null) {
-					Log.i(TAG, "No keys, don't read session data")
+					Log.w(TAG, "No keys, don't read session data")
 					return Promise.ofSuccess(Unit)
 				}
 				Log.i(TAG, "get session data")

@@ -227,13 +227,18 @@ class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 
 	// TODO: use throw instead of promise?
 	@Synchronized
-	fun decryptPromise(address: DeviceAddress, data: ByteArray): Promise<ByteArray, Exception> {
+	fun decryptPromise(address: DeviceAddress, data: ByteArray, accessLevel: AccessLevel? = null): Promise<ByteArray, Exception> {
 		val sessionData = this.sessionData
 		if (sessionData == null) {
 			return Promise.ofFail(Errors.SessionDataMissing())
 		}
-		val setupKey = sessionData.tempKey
 
+		// TODO: handle more cases of provided accessLevel
+		if (accessLevel == AccessLevel.ENCRYPTION_DISABLED) {
+			Log.d(TAG, "Don't decrypt")
+			return Promise.ofSuccess(data)
+		}
+		val setupKey = sessionData.tempKey
 		val keys = if (setupKey != null) {
 			Log.i(TAG, "Use setup key")
 //			KeyAccessLevelPair(setupKey, AccessLevel.SETUP)
@@ -254,14 +259,18 @@ class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 
 	// TODO: use throw instead
 	@Synchronized
-	fun decrypt(address: DeviceAddress, data: ByteArray): ByteArray? {
+	fun decrypt(address: DeviceAddress, data: ByteArray, accessLevel: AccessLevel? = null): ByteArray? {
 		val sessionData = this.sessionData
 		if (sessionData == null) {
 			Log.e(TAG, Errors.SessionDataMissing().message)
 			return null
 		}
+		// TODO: handle more cases of provided accessLevel
+		if (accessLevel == AccessLevel.ENCRYPTION_DISABLED) {
+			Log.d(TAG, "Don't decrypt")
+			return data
+		}
 		val setupKey = sessionData.tempKey
-
 		val keys = if (setupKey != null) {
 			Log.i(TAG, "Use setup key")
 //			KeyAccessLevelPair(setupKey, AccessLevel.SETUP)
