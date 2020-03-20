@@ -39,6 +39,9 @@ object BluenetProtocol {
 	// protocol v4
 	val CHAR_CONTROL4_UUID =       UUID.fromString("24f0000a-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_RESULT_UUID =         UUID.fromString("24f0000b-7d10-4805-bfc1-7663a01c3bff")
+	// protocol v5
+	val CHAR_CONTROL5_UUID =       UUID.fromString("24f0000c-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_RESULT5_UUID =        UUID.fromString("24f0000d-7d10-4805-bfc1-7663a01c3bff")
 
 	// Setup service
 	val SETUP_SERVICE_UUID =             UUID.fromString("24f10000-7d10-4805-bfc1-7663a01c3bff")
@@ -54,6 +57,9 @@ object BluenetProtocol {
 	// protocol v4
 	val CHAR_SETUP_CONTROL4_UUID =       UUID.fromString("24f1000a-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SETUP_RESULT_UUID =         UUID.fromString("24f1000b-7d10-4805-bfc1-7663a01c3bff")
+	// protocol v5
+	val CHAR_SETUP_CONTROL5_UUID =       UUID.fromString("24f1000c-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_SETUP_RESULT5_UUID =        UUID.fromString("24f1000d-7d10-4805-bfc1-7663a01c3bff")
 
 	// Device Information Service
 	val DEVICE_INFO_SERVICE_UUID =    UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
@@ -119,6 +125,12 @@ object BluenetProtocol {
 	const val TURN_SWITCH_ON: Uint8 = 0xFFU
 
 	const val STATE_DEFAULT_ID: Uint16 = 0U
+}
+
+enum class PacketProtocol(val major: Int, val minor: Int) {
+	V3(3, 0),
+	V4(4, 0),
+	V5(5, 0)
 }
 
 enum class OpcodeType(val num: Uint8) {
@@ -418,6 +430,20 @@ enum class StateTypeV4(val num: Uint16) {
 	companion object {
 		private val map = StateTypeV4.values().associateBy(StateTypeV4::num)
 		fun fromNum(type: Uint16): StateTypeV4 {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class PersistenceMode(val num: Uint8) {
+	STRATEGY1(0U),
+	FIRMWARE_DEFAULT(1U),
+	RAM(2U),
+	FLASH(3U),
+	UNKNOWN(255U);
+	companion object {
+		private val map = values().associateBy(PersistenceMode::num)
+		fun fromNum(type: Uint8): PersistenceMode {
 			return map[type] ?: return UNKNOWN
 		}
 	}

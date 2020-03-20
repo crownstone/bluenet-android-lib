@@ -102,7 +102,10 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 			return Promise.ofFail(Errors.ValueWrong())
 		}
 
-		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL4_UUID)) {
+		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL5_UUID)) {
+			return fastSetupV4(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
+		}
+		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL4_UUID)) {
 			return fastSetupV4(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {

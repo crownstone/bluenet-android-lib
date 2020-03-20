@@ -198,7 +198,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 
 
 	private inline fun <reified T>getStateValue(type: StateType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
-		if (getPacketProtocol() == 3) {
+		if (getPacketProtocol() == PacketProtocol.V3) {
 			return getState(type)
 					.then {
 						val arr = it.getPayload()
@@ -240,28 +240,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 
-	private fun getPacketProtocol(): Int {
-		if (connection.mode == CrownstoneMode.SETUP) {
-			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
-				return 3
-			}
-			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-				return 3
-			}
-			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
-				return 3
-			}
-			else {
-				return 4
-			}
-		}
-		else {
-			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
-				return 3
-			}
-			else {
-				return 4
-			}
-		}
+	private fun getPacketProtocol(): PacketProtocol {
+		return connection.getPacketProtocol()
 	}
 }

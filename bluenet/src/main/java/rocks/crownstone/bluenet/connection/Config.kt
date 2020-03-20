@@ -11,9 +11,11 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.packets.ByteArrayPacket
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.UuidPacket
 import rocks.crownstone.bluenet.packets.other.SunTimePacket
 import rocks.crownstone.bluenet.packets.wrappers.v3.ConfigPacket
 import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v5.StatePacketV5
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
@@ -95,11 +97,39 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @param uuid The iBeacon UUID.
 	 * @return Promise
 	 */
-	@Deprecated("Should be set during setup")
 	@Synchronized
-	fun setIbeaconUuid(uuid: UUID): Promise<Unit, Exception> {
+	fun setIbeaconUuid(uuid: UUID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconUuid $uuid")
-		return setConfig(ConfigType.IBEACON_PROXIMITY_UUID, StateTypeV4.IBEACON_PROXIMITY_UUID, ByteArrayPacket(Conversion.uuidToBytes(uuid)))
+		return setConfig(ConfigType.IBEACON_PROXIMITY_UUID, StateTypeV4.IBEACON_PROXIMITY_UUID, UuidPacket(uuid), persistenceMode = persistenceMode)
+	}
+
+	/**
+	 * Get the iBeacon UUID.
+	 *
+	 * @param uuid The iBeacon UUID.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun getIbeaconUuid(persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<UUID, Exception> {
+		Log.i(TAG, "getIbeaconUuid")
+		if (getPacketProtocol() == PacketProtocol.V3) {
+//			return getConfig(ConfigType.IBEACON_PROXIMITY_UUID)
+//					.then {
+//						val arr = it.getPayload()
+//						if (arr == null || arr.size < 16) {
+//							return@then Promise.ofFail<UUID, Exception>(Errors.Parse("payload of 16 expected"))
+//						}
+//						return@then Promise.ofSuccess<UUID, Exception>(Conversion.bytesToUuid16(arr))
+//					}.unwrap()
+			return Promise.ofFail(Errors.NotImplemented())
+		}
+		else {
+			val resultPacket = UuidPacket()
+			return getState(StateTypeV4.IBEACON_PROXIMITY_UUID, resultPacket, persistenceMode = persistenceMode)
+					.then {
+						return@then resultPacket.uuid
+					}
+		}
 	}
 
 	/**
@@ -108,7 +138,6 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @param major The iBeacon major.
 	 * @return Promise
 	 */
-	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setIbeaconMajor(major: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconMajor $major")
@@ -121,7 +150,6 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @param minor The iBeacon minor.
 	 * @return Promise
 	 */
-	@Deprecated("Should be set during setup")
 	@Synchronized
 	fun setIbeaconMinor(minor: Uint16): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconMinor $minor")
@@ -221,7 +249,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		if (mode == UartMode.UNKNOWN) {
 			return Promise.ofFail(Errors.ValueWrong())
 		}
-		if (getPacketProtocol() == 3) {
+		if (getPacketProtocol() == PacketProtocol.V3) {
 			val controlClass = Control(eventBus, connection)
 			return controlClass.writeCommand(ControlType.UART_ENABLE, ControlTypeV4.UNKNOWN, mode.num)
 		}
@@ -554,7 +582,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setSwitchCraftEnabled(enable: Boolean): Promise<Unit, Exception> {
 		Log.i(TAG, "setSwitchCraftEnabled $enable")
-		if (getPacketProtocol() == 3) {
+		if (getPacketProtocol() == PacketProtocol.V3) {
 			val controlClass = Control(eventBus, connection)
 			return controlClass.writeCommand(ControlType.ENABLE_SWITCHCRAFT, ControlTypeV4.UNKNOWN, enable)
 		}
@@ -653,7 +681,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setSunTime(sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setSunTime $sunRiseAfterMidnight $sunSetAfterMidnight")
-		if (getPacketProtocol() == 3) {
+		if (getPacketProtocol() == PacketProtocol.V3) {
 			Log.w(TAG, "Old protocol: no suntime will be written.")
 			return Promise.ofSuccess(Unit)
 		}
@@ -700,8 +728,8 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	// --- helper functions --- //
 	// ------------------------ //
 
-	private inline fun <reified T>getConfigValue(type: ConfigType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
-		if (getPacketProtocol() == 3) {
+	private inline fun <reified T>getConfigValue(type: ConfigType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<T, Exception> {
+		if (getPacketProtocol() == PacketProtocol.V3) {
 			return getConfig(type)
 					.then {
 						val arr = it.getPayload()
@@ -717,14 +745,14 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 					}.unwrap()
 		}
 		else {
-			return getStateValue(type4, id)
+			return getStateValue(type4, id, persistenceMode)
 		}
 	}
 
-	internal inline fun <reified T>getStateValue(type: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
+	internal inline fun <reified T>getStateValue(type: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<T, Exception> {
 		Log.i(TAG, "getStateValue value type=${T::class}")
 		val arrPacket = ByteArrayPacket()
-		return getState(type, arrPacket, id)
+		return getState(type, arrPacket, id, persistenceMode)
 				.then {
 					try {
 						Log.i(TAG, "class: ${T::class}")
@@ -756,49 +784,77 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	internal fun <T : PacketInterface>getState(stateType: StateTypeV4, statePayloadPacket: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
+	internal fun <T : PacketInterface>getState(stateType: StateTypeV4, statePayloadPacket: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<T, Exception> {
 		val resultClass = Result(eventBus, connection)
 		val controlClass = Control(eventBus, connection)
-		val writeCommand = fun (): Promise<Unit, Exception> {
-			val statePacket = StatePacketV4(stateType, id, null)
-			return controlClass.writeGetState(statePacket)
-		}
 		val deferred = deferred<T, Exception>()
-		val statePacket = StatePacketV4(stateType, id, statePayloadPacket)
-		resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
-				.success {
-					if (statePacket.type != stateType) {
-						deferred.reject(Errors.Parse("Wrong state type: req=$stateType rec=${statePacket.type}"))
-						return@success
+
+		if (getPacketProtocol() == PacketProtocol.V4) {
+			val writeCommand = fun(): Promise<Unit, Exception> {
+				val statePacket = StatePacketV4(stateType, id, null)
+				return controlClass.writeGetState(statePacket)
+			}
+			val statePacket = StatePacketV4(stateType, id, statePayloadPacket)
+			resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
+					.success {
+						if (statePacket.type != stateType) {
+							deferred.reject(Errors.Parse("Wrong state type: req=$stateType rec=${statePacket.type}"))
+							return@success
+						}
+						deferred.resolve(statePayloadPacket)
 					}
-					deferred.resolve(statePayloadPacket)
-				}
-				.fail {
-					deferred.reject(it)
-				}
+					.fail {
+						deferred.reject(it)
+					}
+		}
+		else {
+			val writeCommand = fun(): Promise<Unit, Exception> {
+				val statePacket = StatePacketV5(stateType, id, persistenceMode, null)
+				return controlClass.writeGetState(statePacket)
+			}
+			val statePacket = StatePacketV5(stateType, id, persistenceMode, statePayloadPacket)
+			resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
+					.success {
+						if (statePacket.type != stateType) {
+							deferred.reject(Errors.Parse("Wrong state type: req=$stateType rec=${statePacket.type}"))
+							return@success
+						}
+						deferred.resolve(statePayloadPacket)
+					}
+					.fail {
+						deferred.reject(it)
+					}
+		}
 		return deferred.promise
 	}
 
-	private inline fun <reified T>setConfigValue(type: ConfigType, type4: StateTypeV4, value: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<Unit, Exception> {
-		return setConfig(type, type4, ByteArrayPacket(Conversion.toByteArray(value)), id)
+	private inline fun <reified T>setConfigValue(type: ConfigType, type4: StateTypeV4, value: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
+		return setConfig(type, type4, ByteArrayPacket(Conversion.toByteArray(value)), id, persistenceMode)
 	}
 
-	private fun setConfig(type: ConfigType, type4: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<Unit, Exception> {
-		if (getPacketProtocol() == 3) {
+	private fun setConfig(type: ConfigType, type4: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
+		if (getPacketProtocol() == PacketProtocol.V3) {
 			val configPacket = ConfigPacket(type, packet)
 			Log.i(TAG, "setConfig $configPacket")
 			return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), configPacket.getArray())
 		}
 		else {
-			return setState(type4, packet, id)
+			return setState(type4, packet, id, persistenceMode)
 		}
 	}
 
-	internal fun setState(type: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<Unit, Exception> {
-		val statePacket = StatePacketV4(type, id, packet)
+	internal fun setState(type: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
 		val controlClass = Control(eventBus, connection)
-		Log.i(TAG, "setState $statePacket")
-		return controlClass.writeSetState(statePacket)
+		if (getPacketProtocol() == PacketProtocol.V4) {
+			val statePacket = StatePacketV4(type, id, packet)
+			Log.i(TAG, "setState $statePacket")
+			return controlClass.writeSetState(statePacket)
+		}
+		else {
+			val statePacket = StatePacketV5(type, id, persistenceMode, packet)
+			Log.i(TAG, "setState $statePacket")
+			return controlClass.writeSetState(statePacket)
+		}
 	}
 
 	private fun getServiceUuid(): UUID {
@@ -812,14 +868,16 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		val packetProtocol = getPacketProtocol()
 		if (connection.mode == CrownstoneMode.SETUP) {
 			return when (packetProtocol) {
-				3 -> BluenetProtocol.CHAR_SETUP_CONFIG_CONTROL_UUID
-				else -> BluenetProtocol.CHAR_SETUP_CONTROL4_UUID
+				PacketProtocol.V3 -> BluenetProtocol.CHAR_SETUP_CONFIG_CONTROL_UUID
+				PacketProtocol.V4 -> BluenetProtocol.CHAR_SETUP_CONTROL4_UUID
+				PacketProtocol.V5 -> BluenetProtocol.CHAR_SETUP_CONTROL5_UUID
 			}
 		}
 		else {
 			return when (packetProtocol) {
-				3 -> BluenetProtocol.CHAR_CONFIG_CONTROL_UUID
-				else -> BluenetProtocol.CHAR_CONTROL4_UUID
+				PacketProtocol.V3 -> BluenetProtocol.CHAR_CONFIG_CONTROL_UUID
+				PacketProtocol.V4 -> BluenetProtocol.CHAR_CONTROL4_UUID
+				PacketProtocol.V5 -> BluenetProtocol.CHAR_CONTROL5_UUID
 			}
 		}
 	}
@@ -828,40 +886,21 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		val packetProtocol = getPacketProtocol()
 		if (connection.mode == CrownstoneMode.SETUP) {
 			return when (packetProtocol) {
-				3 -> BluenetProtocol.CHAR_SETUP_CONFIG_READ_UUID
-				else -> BluenetProtocol.CHAR_SETUP_RESULT_UUID
+				PacketProtocol.V3 -> BluenetProtocol.CHAR_SETUP_CONFIG_READ_UUID
+				PacketProtocol.V4 -> BluenetProtocol.CHAR_SETUP_RESULT_UUID
+				PacketProtocol.V5 -> BluenetProtocol.CHAR_SETUP_RESULT5_UUID
 			}
 		}
 		else {
 			return when (packetProtocol) {
-				3 -> BluenetProtocol.CHAR_CONFIG_READ_UUID
-				else -> BluenetProtocol.CHAR_RESULT_UUID
+				PacketProtocol.V3 -> BluenetProtocol.CHAR_CONFIG_READ_UUID
+				PacketProtocol.V4 -> BluenetProtocol.CHAR_RESULT_UUID
+				PacketProtocol.V5 -> BluenetProtocol.CHAR_RESULT5_UUID
 			}
 		}
 	}
 
-	private fun getPacketProtocol(): Int {
-		if (connection.mode == CrownstoneMode.SETUP) {
-			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
-				return 3
-			}
-			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-				return 3
-			}
-			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
-				return 3
-			}
-			else {
-				return 4
-			}
-		}
-		else {
-			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
-				return 3
-			}
-			else {
-				return 4
-			}
-		}
+	private fun getPacketProtocol(): PacketProtocol {
+		return connection.getPacketProtocol()
 	}
 }

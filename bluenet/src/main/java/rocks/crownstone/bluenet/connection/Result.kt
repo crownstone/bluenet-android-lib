@@ -118,8 +118,7 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 				return BluenetProtocol.CHAR_SETUP_RESULT_UUID
 			}
 			else {
-				// Try anyway
-				return BluenetProtocol.CHAR_SETUP_RESULT_UUID
+				return BluenetProtocol.CHAR_SETUP_RESULT5_UUID
 			}
 		}
 		else {
@@ -127,8 +126,7 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 				return BluenetProtocol.CHAR_RESULT_UUID
 			}
 			else {
-				// Try anyway
-				return BluenetProtocol.CHAR_RESULT_UUID
+				return BluenetProtocol.CHAR_RESULT5_UUID
 			}
 		}
 	}

@@ -7,7 +7,7 @@
 
 package rocks.crownstone.bluenet.structs
 
-import java.lang.Exception
+import kotlin.Exception
 
 object Errors {
 	// core promises
@@ -82,6 +82,8 @@ object Errors {
 	class TypeWrong(type: String): Exception("wrong type: $type")
 
 	class Full: Exception("full")
+
+	class NotImplemented: Exception("Not implemented")
 
 	class Result(result: ResultType): Exception("result: ${result.name}")
 

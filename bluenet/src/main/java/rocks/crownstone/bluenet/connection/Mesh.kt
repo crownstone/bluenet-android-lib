@@ -52,7 +52,7 @@ class Mesh(evtBus: EventBus, connection: ExtConnection) {
 	private fun writeMeshCommand(type: ControlType, type4: ControlTypeV4): Promise<Unit, Exception> {
 		val controlClass = Control(eventBus, connection)
 		val meshControlPacket = when(getPacketProtocol()) {
-			3 -> MeshControlPacket(ControlPacketV3(type))
+			PacketProtocol.V3 -> MeshControlPacket(ControlPacketV3(type))
 			else -> MeshControlPacket(ControlPacketV4(type4))
 		}
 		return controlClass.writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, MeshCommandPacket(meshControlPacket))
@@ -65,34 +65,13 @@ class Mesh(evtBus: EventBus, connection: ExtConnection) {
 	private fun writeMeshCommand(type: ControlType, type4: ControlTypeV4, payload: PacketInterface): Promise<Unit, Exception> {
 		val controlClass = Control(eventBus, connection)
 		val meshControlPacket = when(getPacketProtocol()) {
-			3 -> MeshControlPacket(ControlPacketV3(type, payload))
+			PacketProtocol.V3 -> MeshControlPacket(ControlPacketV3(type, payload))
 			else -> MeshControlPacket(ControlPacketV4(type4, payload))
 		}
 		return controlClass.writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, MeshCommandPacket(meshControlPacket))
 	}
 
-	private fun getPacketProtocol(): Int {
-		if (connection.mode == CrownstoneMode.SETUP) {
-			if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
-				return 3
-			}
-			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-				return 3
-			}
-			else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
-				return 3
-			}
-			else {
-				return 4
-			}
-		}
-		else {
-			if (connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
-				return 3
-			}
-			else {
-				return 4
-			}
-		}
+	private fun getPacketProtocol(): PacketProtocol {
+		return connection.getPacketProtocol()
 	}
 }

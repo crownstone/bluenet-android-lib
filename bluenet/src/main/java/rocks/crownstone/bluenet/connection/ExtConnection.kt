@@ -268,4 +268,36 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 			mode = CrownstoneMode.UNKNOWN
 		}
 	}
+
+	@Synchronized
+	fun getPacketProtocol(): PacketProtocol {
+			if (mode == CrownstoneMode.SETUP) {
+				if (hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
+					return PacketProtocol.V3
+				}
+				else if (hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
+					return PacketProtocol.V3
+				}
+				else if (hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
+					return PacketProtocol.V3
+				}
+				else if (hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL4_UUID)) {
+					return PacketProtocol.V4
+				}
+				else {
+					return PacketProtocol.V5
+				}
+			}
+			else {
+				if (hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)) {
+					return PacketProtocol.V3
+				}
+				else if (hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL4_UUID)) {
+					return PacketProtocol.V4
+				}
+				else {
+					return PacketProtocol.V5
+				}
+			}
+	}
 }
