@@ -15,12 +15,14 @@ import rocks.crownstone.bluenet.util.put
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 import rocks.crownstone.bluenet.util.Conversion
+import rocks.crownstone.bluenet.util.putUint8
+import rocks.crownstone.bluenet.util.toUint8
 import java.nio.ByteBuffer
 
-open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
-	val ids = ArrayList<Uint8>()
-	var type: MeshCommandType
-	var bitmask: Uint8 = 0U
+open class MeshCommandPacket(payload: PacketInterface, ids: List<Uint8>): PacketInterface {
+	private val payload = payload
+	private val ids = ArrayList<Uint8>()
+	val type: MeshCommandType
 	init {
 		type = when (payload::class) {
 			ControlPacketV3::class -> MeshCommandType.CONTROL
@@ -29,6 +31,7 @@ open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
 			MeshBeaconConfigPacket.BeaconConfigPacket::class -> MeshCommandType.BEACON_CONFIG
 			else -> MeshCommandType.UNKNOWN
 		}
+		this.ids.addAll(ids)
 	}
 
 	companion object {
@@ -36,9 +39,9 @@ open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
 		const val ID_SIZE = 1
 	}
 
-	fun addId(id: Uint8) {
-		ids.add(id)
-	}
+//	fun addId(id: Uint8) {
+//		ids.add(id)
+//	}
 
 	override fun getPacketSize(): Int {
 		return HEADER_SIZE + ids.size * ID_SIZE + payload.getPacketSize()
@@ -49,16 +52,20 @@ open class MeshCommandPacket(val payload: PacketInterface): PacketInterface {
 		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
-		bb.put(type.num)
-		bb.put(bitmask)
-		bb.put(Conversion.toUint8(ids.size))
+		bb.putUint8(type.num)
+		bb.putUint8(0U) // Reserved
+		bb.putUint8(ids.size.toUint8())
 		for (id in ids) {
-			bb.put(id)
+			bb.putUint8(id)
 		}
 		return payload.toBuffer(bb)
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
 		return false // Not implemented yet (no need?)
+	}
+
+	override fun toString(): String {
+		return "MeshCommandPacket(payload=$payload, ids=$ids, type=$type)"
 	}
 }

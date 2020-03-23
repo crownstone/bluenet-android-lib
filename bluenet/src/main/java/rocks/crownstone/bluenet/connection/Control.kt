@@ -526,7 +526,6 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise that resolves when the connected crownstone received the command.
 	 */
 	@Synchronized
-	@Deprecated("Use Mesh class instead")
 	fun meshCommand(packet: MeshCommandPacket): Promise<Unit, Exception> {
 		Log.i(TAG, "meshCommand $packet")
 		return writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, packet)

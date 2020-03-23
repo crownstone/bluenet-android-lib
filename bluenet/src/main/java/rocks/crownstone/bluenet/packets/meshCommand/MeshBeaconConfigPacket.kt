@@ -9,11 +9,14 @@ package rocks.crownstone.bluenet.packets.meshCommand
 
 import rocks.crownstone.bluenet.structs.IbeaconData
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.putShort
 import java.nio.ByteBuffer
 
-class MeshBeaconConfigPacket(beaconData: IbeaconData): MeshCommandPacket(BeaconConfigPacket(beaconData)) {
+// Also never used?
+@Deprecated("Deprecated, use state set command instead")
+class MeshBeaconConfigPacket(beaconData: IbeaconData, ids: List<Uint8> = emptyList()): MeshCommandPacket(BeaconConfigPacket(beaconData), ids) {
 	internal class BeaconConfigPacket(val beaconData: IbeaconData) : PacketInterface {
 		companion object {
 			const val SIZE = 21

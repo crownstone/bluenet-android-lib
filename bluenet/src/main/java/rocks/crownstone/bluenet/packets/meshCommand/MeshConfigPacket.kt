@@ -8,5 +8,8 @@
 package rocks.crownstone.bluenet.packets.meshCommand
 
 import rocks.crownstone.bluenet.packets.wrappers.v3.ConfigPacket
+import rocks.crownstone.bluenet.structs.Uint8
 
-class MeshConfigPacket(configPacket: ConfigPacket): MeshCommandPacket(configPacket)
+// Also never used?
+@Deprecated("Deprecated, use state set command instead")
+class MeshConfigPacket(configPacket: ConfigPacket, ids: List<Uint8>): MeshCommandPacket(configPacket, ids)
