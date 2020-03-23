@@ -435,15 +435,26 @@ enum class StateTypeV4(val num: Uint16) {
 	}
 }
 
-enum class PersistenceMode(val num: Uint8) {
-	STRATEGY1(0U),
-	FIRMWARE_DEFAULT(1U),
-	RAM(2U),
-	FLASH(3U),
+enum class PersistenceModeGet(val num: Uint8) {
+	CURRENT(0U),
+	STORED(1U),
+	FIRMWARE_DEFAULT(2U),
 	UNKNOWN(255U);
 	companion object {
-		private val map = values().associateBy(PersistenceMode::num)
-		fun fromNum(type: Uint8): PersistenceMode {
+		private val map = values().associateBy(PersistenceModeGet::num)
+		fun fromNum(type: Uint8): PersistenceModeGet {
+			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class PersistenceModeSet(val num: Uint8) {
+	TEMPORARY(0U),
+	STORED(1U),
+	UNKNOWN(255U);
+	companion object {
+		private val map = values().associateBy(PersistenceModeSet::num)
+		fun fromNum(type: Uint8): PersistenceModeSet {
 			return map[type] ?: return UNKNOWN
 		}
 	}

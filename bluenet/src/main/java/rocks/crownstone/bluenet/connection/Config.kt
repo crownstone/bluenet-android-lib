@@ -98,7 +98,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setIbeaconUuid(uuid: UUID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
+	fun setIbeaconUuid(uuid: UUID, persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconUuid $uuid")
 		return setConfig(ConfigType.IBEACON_PROXIMITY_UUID, StateTypeV4.IBEACON_PROXIMITY_UUID, UuidPacket(uuid), persistenceMode = persistenceMode)
 	}
@@ -110,7 +110,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun getIbeaconUuid(persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<UUID, Exception> {
+	fun getIbeaconUuid(persistenceMode: PersistenceModeGet = PersistenceModeGet.CURRENT): Promise<UUID, Exception> {
 		Log.i(TAG, "getIbeaconUuid")
 		if (getPacketProtocol() == PacketProtocol.V3) {
 //			return getConfig(ConfigType.IBEACON_PROXIMITY_UUID)
@@ -728,7 +728,12 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	// --- helper functions --- //
 	// ------------------------ //
 
-	private inline fun <reified T>getConfigValue(type: ConfigType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<T, Exception> {
+	private inline fun <reified T>getConfigValue(
+			type: ConfigType,
+			type4: StateTypeV4,
+			id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID,
+			persistenceMode: PersistenceModeGet = PersistenceModeGet.CURRENT
+	): Promise<T, Exception> {
 		if (getPacketProtocol() == PacketProtocol.V3) {
 			return getConfig(type)
 					.then {
@@ -749,7 +754,11 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		}
 	}
 
-	internal inline fun <reified T>getStateValue(type: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<T, Exception> {
+	internal inline fun <reified T>getStateValue(
+			type: StateTypeV4,
+			id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID,
+			persistenceMode: PersistenceModeGet = PersistenceModeGet.CURRENT
+	): Promise<T, Exception> {
 		Log.i(TAG, "getStateValue value type=${T::class}")
 		val arrPacket = ByteArrayPacket()
 		return getState(type, arrPacket, id, persistenceMode)
@@ -784,7 +793,12 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	internal fun <T : PacketInterface>getState(stateType: StateTypeV4, statePayloadPacket: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<T, Exception> {
+	internal fun <T : PacketInterface>getState(
+			stateType: StateTypeV4,
+			statePayloadPacket: T,
+			id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID,
+			persistenceMode: PersistenceModeGet = PersistenceModeGet.CURRENT
+	): Promise<T, Exception> {
 		val resultClass = Result(eventBus, connection)
 		val controlClass = Control(eventBus, connection)
 		val deferred = deferred<T, Exception>()
@@ -809,10 +823,10 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		}
 		else {
 			val writeCommand = fun(): Promise<Unit, Exception> {
-				val statePacket = StatePacketV5(stateType, id, persistenceMode, null)
+				val statePacket = StatePacketV5(stateType, id, persistenceMode.num, null)
 				return controlClass.writeGetState(statePacket)
 			}
-			val statePacket = StatePacketV5(stateType, id, persistenceMode, statePayloadPacket)
+			val statePacket = StatePacketV5(stateType, id, persistenceMode.num, statePayloadPacket)
 			resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
 					.success {
 						if (statePacket.type != stateType) {
@@ -828,11 +842,22 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	private inline fun <reified T>setConfigValue(type: ConfigType, type4: StateTypeV4, value: T, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
+	private inline fun <reified T>setConfigValue(
+			type: ConfigType,
+			type4: StateTypeV4,
+			value: T,
+			id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID,
+			persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED
+	): Promise<Unit, Exception> {
 		return setConfig(type, type4, ByteArrayPacket(Conversion.toByteArray(value)), id, persistenceMode)
 	}
 
-	private fun setConfig(type: ConfigType, type4: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
+	private fun setConfig(type: ConfigType,
+						  type4: StateTypeV4,
+						  packet: PacketInterface,
+						  id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID,
+						  persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED
+	): Promise<Unit, Exception> {
 		if (getPacketProtocol() == PacketProtocol.V3) {
 			val configPacket = ConfigPacket(type, packet)
 			Log.i(TAG, "setConfig $configPacket")
@@ -843,7 +868,11 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		}
 	}
 
-	internal fun setState(type: StateTypeV4, packet: PacketInterface, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceMode = PersistenceMode.STRATEGY1): Promise<Unit, Exception> {
+	internal fun setState(type: StateTypeV4,
+						  packet: PacketInterface,
+						  id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID,
+						  persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED
+	): Promise<Unit, Exception> {
 		val controlClass = Control(eventBus, connection)
 		if (getPacketProtocol() == PacketProtocol.V4) {
 			val statePacket = StatePacketV4(type, id, packet)
@@ -851,7 +880,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 			return controlClass.writeSetState(statePacket)
 		}
 		else {
-			val statePacket = StatePacketV5(type, id, persistenceMode, packet)
+			val statePacket = StatePacketV5(type, id, persistenceMode.num, packet)
 			Log.i(TAG, "setState $statePacket")
 			return controlClass.writeSetState(statePacket)
 		}

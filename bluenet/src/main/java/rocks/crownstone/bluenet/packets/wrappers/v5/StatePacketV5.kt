@@ -9,14 +9,14 @@ package rocks.crownstone.bluenet.packets.wrappers.v5
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.PayloadWrapperPacket
-import rocks.crownstone.bluenet.structs.PersistenceMode
 import rocks.crownstone.bluenet.structs.StateTypeV4
 import rocks.crownstone.bluenet.structs.Uint16
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class StatePacketV5(type: StateTypeV4, id: Uint16, persistenceMode: PersistenceMode, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+open class StatePacketV5(type: StateTypeV4, id: Uint16, persistenceMode: Uint8, payload: PacketInterface?): PayloadWrapperPacket(payload) {
 	override val TAG = this.javaClass.simpleName
 	companion object {
 		const val SIZE = 2+2+1+1
@@ -40,7 +40,7 @@ open class StatePacketV5(type: StateTypeV4, id: Uint16, persistenceMode: Persist
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		bb.putUint16(type.num)
 		bb.putUint16(id)
-		bb.putUint8(persistenceMode.num)
+		bb.putUint8(persistenceMode)
 		bb.putUint8(0U) // Reserved
 		return true
 	}
@@ -48,7 +48,7 @@ open class StatePacketV5(type: StateTypeV4, id: Uint16, persistenceMode: Persist
 	override fun headerFromBuffer(bb: ByteBuffer): Boolean {
 		type = StateTypeV4.fromNum(bb.getUint16())
 		id = bb.getUint16()
-		persistenceMode = PersistenceMode.fromNum(bb.getUint8())
+		persistenceMode = bb.getUint8()
 		bb.getUint8() // Reserved
 		return true
 	}
