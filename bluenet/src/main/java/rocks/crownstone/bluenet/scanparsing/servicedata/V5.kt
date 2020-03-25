@@ -48,6 +48,7 @@ internal object V5 {
 			ServiceDataType.ERROR -> return Shared.parseErrorPacket(bb, servicedata, false, false)
 			ServiceDataType.EXT_STATE -> return Shared.parseStatePacket(bb, servicedata, true, true)
 			ServiceDataType.EXT_ERROR -> return Shared.parseErrorPacket(bb, servicedata, true, true)
+			ServiceDataType.ALT_STATE -> return Shared.parseAltStatePacket(bb, servicedata)
 			else -> {
 				Log.v("V5", "invalid type")
 				return false

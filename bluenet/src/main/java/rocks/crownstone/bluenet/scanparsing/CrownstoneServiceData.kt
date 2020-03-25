@@ -50,8 +50,9 @@ class CrownstoneServiceData {
 	var energyUsed = 0L; internal set                    // Energy used in Joule.
 	var externalRssi: Int8 = 0; internal set             // RSSI to external crownstone, only valid when flagExternalData is true.
 	var timestamp = 0L; internal set                     // POSIX local time. Only valid when flagTimeSet is true.
-	var count: Uint16 = 0U; internal set                  // Sequence number of the service data. Only valid when flagTimeSet is false. Will overflow.
+	var count: Uint16 = 0U; internal set                 // Sequence number of the service data. Only valid when flagTimeSet is false. Will overflow.
 	var changingData = 0; internal set                   // Data that always changes for each new service data. Is a partial timestamp when time is set, counter when time is not set, or random value for old firmware.
+	var behaviourHash: Uint16 = 0U; internal set         // Part of behaviour master hash.
 	internal var validation = false
 
 	// Flags
@@ -182,6 +183,6 @@ class CrownstoneServiceData {
 	}
 
 	override fun toString(): String {
-		return "CrownstoneServiceData(version=$version, type=$type, serviceUuid=$serviceUuid, deviceType=$deviceType, operationMode=$operationMode, crownstoneId=$crownstoneId, switchState=$switchState, temperature=$temperature, powerUsageReal=$powerUsageReal, powerUsageApparent=$powerUsageApparent, powerFactor=$powerFactor, energyUsed=$energyUsed, externalRssi=$externalRssi, timestamp=$timestamp, count=$count, changingData=$changingData, validation=$validation, flagExternalData=$flagExternalData, flagSetup=$flagSetup, flagDimmerReady=$flagDimmerReady, flagDimmable=$flagDimmable, flagError=$flagError, flagSwitchLocked=$flagSwitchLocked, flagTimeSet=$flagTimeSet, flagSwitchCraft=$flagSwitchCraft, flagTapToToggleEnabled=$flagTapToToggleEnabled, flagBehaviourOverridden=$flagBehaviourOverridden, flagBehaviourEnabled=$flagBehaviourEnabled, errorOverCurrent=$errorOverCurrent, errorOverCurrentDimmer=$errorOverCurrentDimmer, errorChipTemperature=$errorChipTemperature, errorDimmerTemperature=$errorDimmerTemperature, errorDimmerFailureOn=$errorDimmerFailureOn, errorDimmerFailureOff=$errorDimmerFailureOff, errorTimestamp=$errorTimestamp, unique=$unique)"
+		return "CrownstoneServiceData(version=$version, type=$type, serviceUuid=$serviceUuid, deviceType=$deviceType, operationMode=$operationMode, crownstoneId=$crownstoneId, switchState=$switchState, temperature=$temperature, powerUsageReal=$powerUsageReal, powerUsageApparent=$powerUsageApparent, powerFactor=$powerFactor, energyUsed=$energyUsed, externalRssi=$externalRssi, timestamp=$timestamp, count=$count, changingData=$changingData, validation=$validation, flagExternalData=$flagExternalData, flagSetup=$flagSetup, flagDimmerReady=$flagDimmerReady, flagDimmable=$flagDimmable, flagError=$flagError, flagSwitchLocked=$flagSwitchLocked, flagTimeSet=$flagTimeSet, flagSwitchCraft=$flagSwitchCraft, flagTapToToggleEnabled=$flagTapToToggleEnabled, flagBehaviourOverridden=$flagBehaviourOverridden, flagBehaviourEnabled=$flagBehaviourEnabled, errorOverCurrent=$errorOverCurrent, errorOverCurrentDimmer=$errorOverCurrentDimmer, errorChipTemperature=$errorChipTemperature, errorDimmerTemperature=$errorDimmerTemperature, errorDimmerFailureOn=$errorDimmerFailureOn, errorDimmerFailureOff=$errorDimmerFailureOff, errorTimestamp=$errorTimestamp, unique=$unique, behaviourHash=$behaviourHash)"
 	}
 }

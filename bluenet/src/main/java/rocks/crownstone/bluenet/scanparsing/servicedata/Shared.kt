@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.structs.SwitchState
+import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 
@@ -34,6 +35,20 @@ internal object Shared {
 		else {
 			parseExtraFlags(bb.getUint8(), servicedata)
 		}
+		servicedata.validation = bb.get() == VALIDATION
+		return true
+	}
+
+	internal fun parseAltStatePacket(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
+		servicedata.flagExternalData = false
+		servicedata.crownstoneId = bb.getUint8()
+		servicedata.switchState = SwitchState(bb.getUint8())
+		parseFlags(bb.getUint8(), servicedata)
+		servicedata.behaviourHash = bb.getUint16()
+		bb.getUint16() // Reserved
+		bb.getUint32() // Reserved
+		parsePartialTimestamp(bb, servicedata)
+		bb.getUint8() // Reserved
 		servicedata.validation = bb.get() == VALIDATION
 		return true
 	}

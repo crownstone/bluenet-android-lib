@@ -501,10 +501,11 @@ enum class ServiceDataVersion(val num: Uint8) {
 }
 
 enum class ServiceDataType(val num: Uint8) {
-	STATE(0U), // Service data with state info
-	ERROR(1U), // Service data with error info
-	EXT_STATE(2U), // Service data of another crownstone with state info
-	EXT_ERROR(3U), // Service data of another crownstone with error info
+	STATE(0U), // Service data with state info.
+	ERROR(1U), // Service data with error info.
+	EXT_STATE(2U), // Service data of another crownstone with state info.
+	EXT_ERROR(3U), // Service data of another crownstone with error info.
+	ALT_STATE(4U), // Service data with alternative state info.
 	UNKNOWN(255U);
 	companion object {
 		private val map = ServiceDataType.values().associateBy(ServiceDataType::num)
