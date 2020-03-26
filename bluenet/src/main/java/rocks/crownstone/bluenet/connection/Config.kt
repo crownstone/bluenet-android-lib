@@ -706,6 +706,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
+	@Deprecated("Use control command instead.")
 	fun setTime(currentTime: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setTime $currentTime")
 		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.TIME, currentTime)

@@ -187,13 +187,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setTime(timestamp: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setTime $timestamp")
-		if (getPacketProtocol() == PacketProtocol.V3) {
-			return writeCommand(ControlType.SET_TIME, ControlTypeV4.UNKNOWN, timestamp)
-		}
-		else {
-			val config = Config(eventBus, connection)
-			return config.setTime(timestamp)
-		}
+		return writeCommand(ControlType.SET_TIME, ControlTypeV4.SET_TIME, timestamp)
 	}
 
 	/**
