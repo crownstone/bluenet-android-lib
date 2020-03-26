@@ -13,6 +13,7 @@ import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.resolve
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint64
+import java.util.*
 
 object Util {
 	// Check if Nth bit in a value is set
@@ -110,6 +111,18 @@ object Util {
 
 	fun roundUpToMultipleOf(num: Int, multiple: Int): Int {
 		return (((num + multiple - 1) / multiple) * multiple)
+	}
+
+	fun getLocalTimestamp(): Uint32 {
+		val timeZoneGmt = TimeZone.getTimeZone("GMT")
+		val calendarGmt = Calendar.getInstance(timeZoneGmt)
+		val gmtTimestamp = calendarGmt.time.time / 1000
+
+		val calendar = Calendar.getInstance()
+		val timeZone = calendar.timeZone
+		val secondsFromGmt = (timeZone.rawOffset / 1000).toLong()
+		val correctedTimestamp = gmtTimestamp + secondsFromGmt
+		return correctedTimestamp.toUint32()
 	}
 
 	fun waitPromise(timeMs: Long, handler: Handler): Promise<Unit, Exception> {

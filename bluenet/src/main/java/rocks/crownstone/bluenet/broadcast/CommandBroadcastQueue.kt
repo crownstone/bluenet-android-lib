@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.packets.broadcast.*
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
+import rocks.crownstone.bluenet.util.Util
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
@@ -127,7 +128,8 @@ class CommandBroadcastQueue {
 			CommandBroadcastItemType.BEHAVIOUR_SETTINGS -> CommandBroadcastType.BEHAVIOUR_SETTINGS
 		}
 		val validationTimestamp = when (firstItem.validationTimestamp) {
-			null -> Conversion.toUint32(BluenetProtocol.CAFEBABE) // TODO: use time from crownstones
+			null -> Conversion.toUint32(BluenetProtocol.CAFEBABE)
+//			null -> Util.getLocalTimestamp() // TODO: use time from crownstones
 			else -> firstItem.validationTimestamp
 		}
 		val packet = CommandBroadcastPacket(validationTimestamp, firstItem.sphereId, type, payload)
