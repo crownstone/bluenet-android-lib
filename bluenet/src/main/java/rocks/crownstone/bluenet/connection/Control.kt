@@ -231,22 +231,6 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommand(ControlType.GOTO_DFU, ControlTypeV4.GOTO_DFU)
 	}
 
-	@Synchronized
-	fun getBootloaderVersion(): Promise<String, Exception> {
-		Log.i(TAG, "getBootloaderVersion")
-		val resultPacket = ByteArrayPacket()
-		return writeCommandAndGetResult(ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
-				.then {
-					if (resultPacket.getPayload().size == 0) {
-						Log.w(TAG, "Empty bootloader version")
-						return@then Promise.ofFail<String, Exception>(Errors.SizeWrong())
-					}
-					val version = String(resultPacket.getPayload())
-					Log.i(TAG, "Bootloader version: $version")
-					return@then Promise.ofSuccess<String, Exception>(version)
-				}.unwrap()
-	}
-
 	/**
 	 * Reboot the crownstone.
 	 *
@@ -732,7 +716,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs, accessLevel)
 	}
 
-	private fun <T: PacketInterface>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<T, Exception> {
+	internal fun <T: PacketInterface>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<T, Exception> {
 		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, type, writePacket, accessLevel) }
 		return resultClass.getSingleResult(writeCommand, type, resultPacket, timeoutMs, accessLevel = accessLevel)
 				.then {

@@ -9,7 +9,14 @@ package rocks.crownstone.bluenet.connection
 
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
+import nl.komponents.kovenant.then
+import nl.komponents.kovenant.unwrap
+import rocks.crownstone.bluenet.packets.ByteArrayPacket
+import rocks.crownstone.bluenet.packets.EmptyPacket
+import rocks.crownstone.bluenet.packets.StringPacket
+import rocks.crownstone.bluenet.packets.other.UicrPacket
 import rocks.crownstone.bluenet.structs.BluenetProtocol
+import rocks.crownstone.bluenet.structs.ControlTypeV4
 import rocks.crownstone.bluenet.structs.CrownstoneMode
 import rocks.crownstone.bluenet.structs.Errors
 import rocks.crownstone.bluenet.util.EventBus
@@ -81,7 +88,11 @@ class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 		if (connection.mode != CrownstoneMode.DFU) {
 			// When not in DFU, we can try to read the bootloader version via control command.
 			val controlClass = Control(eventBus, connection)
-			return controlClass.getBootloaderVersion()
+			val resultPacket = StringPacket()
+			return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
+					.then {
+						return@then it.string
+					}
 		}
 		val deferred = deferred<String, Exception>()
 		connection.read(BluenetProtocol.DEVICE_INFO_SERVICE_UUID, BluenetProtocol.CHAR_FIRMWARE_REVISION_UUID, false)
@@ -95,4 +106,11 @@ class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
+	@Synchronized
+	fun getUicrData(): Promise<UicrPacket, Exception> {
+		Log.i(TAG, "getUicrData")
+		val controlClass = Control(eventBus, connection)
+		val resultPacket = UicrPacket()
+		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_UICR_DATA, EmptyPacket(), resultPacket)
+	}
 }
