@@ -16,7 +16,7 @@ import java.nio.ByteBuffer
 
 // Also never used?
 @Deprecated("Deprecated, use state set command instead")
-class MeshBeaconConfigPacket(beaconData: IbeaconData, ids: List<Uint8> = emptyList()): MeshCommandPacket(BeaconConfigPacket(beaconData), ids) {
+class MeshBeaconConfigPacket(beaconData: IbeaconData, ids: List<Uint8> = emptyList()): MeshCommandPacketV3(BeaconConfigPacket(beaconData), ids) {
 	internal class BeaconConfigPacket(val beaconData: IbeaconData) : PacketInterface {
 		companion object {
 			const val SIZE = 21
