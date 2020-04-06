@@ -46,4 +46,8 @@ class SunTimePacket(sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32): 
 		sunSetAfterMidnight = bb.getUint32()
 		return true
 	}
+
+	override fun toString(): String {
+		return "SunTimePacket(sunRiseAfterMidnight=$sunRiseAfterMidnight, sunSetAfterMidnight=$sunSetAfterMidnight)"
+	}
 }
