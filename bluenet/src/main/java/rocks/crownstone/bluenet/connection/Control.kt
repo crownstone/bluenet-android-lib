@@ -19,6 +19,7 @@ import rocks.crownstone.bluenet.packets.meshCommand.MeshCommandPacket
 import rocks.crownstone.bluenet.packets.multiSwitch.MultiSwitchItemPacket
 import rocks.crownstone.bluenet.packets.multiSwitch.MultiSwitchLegacyPacket
 import rocks.crownstone.bluenet.packets.multiSwitch.MultiSwitchPacket
+import rocks.crownstone.bluenet.packets.other.IbeaconConfigIdPacket
 import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
@@ -495,6 +496,19 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun keepAliveMeshAction(packet: MultiKeepAlivePacket): Promise<Unit, Exception> {
 		Log.i(TAG, "keepAliveMeshAction $packet")
 		return writeCommand(ControlType.KEEP_ALIVE_MESH, ControlTypeV4.UNKNOWN, packet)
+	}
+
+	/**
+	 * Set the ID of the ibeacon config.
+	 *
+	 * To interleave between two ibeacon configs, you can for example
+	 * set ID=0 at timestamp=0 with interval=600,
+	 * and ID=1 at timestamp=300 with interval=600.
+	 */
+	@Synchronized
+	fun setIbeaconConfigId(packet: IbeaconConfigIdPacket): Promise<Unit, Exception> {
+		Log.i(TAG, "setIbeaconConfigId $packet")
+		return writeCommand(ControlType.UNKNOWN, ControlTypeV4.SET_IBEACON_CONFIG_ID, packet)
 	}
 
 	/**
