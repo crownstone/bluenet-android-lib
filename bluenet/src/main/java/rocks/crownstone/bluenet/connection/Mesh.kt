@@ -13,6 +13,7 @@ import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.meshCommand.MeshCommandFlags
 import rocks.crownstone.bluenet.packets.meshCommand.MeshControlPacketV3
 import rocks.crownstone.bluenet.packets.meshCommand.MeshControlPacketV5
+import rocks.crownstone.bluenet.packets.other.IbeaconConfigIdPacket
 import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacketV3
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 import rocks.crownstone.bluenet.packets.wrappers.v5.StatePacketV5
@@ -67,6 +68,16 @@ class Mesh(evtBus: EventBus, connection: ExtConnection) {
 				packet,
 				MeshCommandFlags(broadcast = false, acked = true, useKnownIds = false),
 				ids = listOf(id))
+	}
+
+	@Synchronized
+	fun setIbeaconConfigId(packet: IbeaconConfigIdPacket, ids: List<Uint8>): Promise<Unit, Exception> {
+		return writeMeshCommand(
+				ControlType.UNKNOWN,
+				ControlTypeV4.SET_IBEACON_CONFIG_ID,
+				packet,
+				MeshCommandFlags(broadcast = true, acked = true, useKnownIds = false),
+				ids = ids)
 	}
 
 
