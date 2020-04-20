@@ -22,8 +22,8 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.structs.BluenetEvent
 import rocks.crownstone.bluenet.util.EventBus
