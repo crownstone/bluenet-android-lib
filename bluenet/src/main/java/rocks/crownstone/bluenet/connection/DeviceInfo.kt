@@ -14,6 +14,7 @@ import nl.komponents.kovenant.unwrap
 import rocks.crownstone.bluenet.packets.ByteArrayPacket
 import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.StringPacket
+import rocks.crownstone.bluenet.packets.other.BootloaderInfoPacket
 import rocks.crownstone.bluenet.packets.other.UicrPacket
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.structs.ControlTypeV4
@@ -88,10 +89,11 @@ class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 		if (connection.mode != CrownstoneMode.DFU) {
 			// When not in DFU, we can try to read the bootloader version via control command.
 			val controlClass = Control(eventBus, connection)
-			val resultPacket = StringPacket()
+			val resultPacket = BootloaderInfoPacket()
 			return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
 					.then {
-						return@then it.string
+						Log.d(TAG, it.toString())
+						return@then it.getVersionString()
 					}
 		}
 		val deferred = deferred<String, Exception>()
