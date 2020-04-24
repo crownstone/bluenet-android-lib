@@ -1,3 +1,10 @@
+/**
+ * Author: Crownstone Team
+ * Copyright: Crownstone (https://crownstone.rocks)
+ * Date: Jan 17, 2020
+ * License: LGPLv3+, Apache License 2.0, and/or MIT (triple-licensed)
+ */
+
 package rocks.crownstone.bluenet.packets.behaviour
 
 import rocks.crownstone.bluenet.packets.PacketInterface
@@ -46,7 +53,7 @@ class BehaviourDebugPacket: PacketInterface {
 
 	companion object {
 		const val NUM_PROFILES = 8
-		const val SIZE = 3 * Uint32.SIZE_BYTES + 5 * Uint8.SIZE_BYTES + 3 * Uint64.SIZE_BYTES + NUM_PROFILES * Uint64.SIZE_BYTES
+		const val SIZE = 3 * Uint32.SIZE_BYTES + 5 * Uint8.SIZE_BYTES + 4 * Uint64.SIZE_BYTES + NUM_PROFILES * Uint64.SIZE_BYTES
 	}
 
 	override fun getPacketSize(): Int {
