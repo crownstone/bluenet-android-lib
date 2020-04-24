@@ -13,6 +13,7 @@ import nl.komponents.kovenant.resolve
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v5.ResultPacketV5
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
@@ -26,33 +27,7 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getSingleResult(
 			writeCommand: () -> Promise<Unit, Exception>,
-			timeoutMs: Long,
-			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS),
-			accessLevel: AccessLevel? = null
-	): Promise<ResultPacketV4, Exception> {
-		val deferred = deferred<ResultPacketV4, Exception>()
-		connection.getSingleMergedNotification(getServiceUuid(), getResultCharacteristic(), writeCommand, timeoutMs, accessLevel)
-				.success {
-					val packet = ResultPacketV4()
-					if (!packet.fromArray(it)) {
-						deferred.reject(Errors.Parse("can't make a ResultPacketV4 from ${Conversion.bytesToString(it)}"))
-					}
-					else if (!acceptedResults.contains(packet.resultCode)) {
-						deferred.reject(Errors.Result(packet.resultCode))
-					}
-					else {
-						deferred.resolve(packet)
-					}
-				}
-				.fail {
-					deferred.reject(it)
-				}
-		return deferred.promise
-	}
-
-	@Synchronized
-	fun getSingleResult(
-			writeCommand: () -> Promise<Unit, Exception>,
+			protocol: ConnectionProtocol,
 			type: ControlTypeV4,
 			payload: PacketInterface,
 			timeoutMs: Long,
@@ -62,15 +37,29 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 		val deferred = deferred<Unit, Exception>()
 		connection.getSingleMergedNotification(getServiceUuid(), getResultCharacteristic(), writeCommand, timeoutMs, accessLevel)
 				.success {
-					val packet = ResultPacketV4(type, ResultType.UNKNOWN, payload)
-					if (!packet.fromArray(it) || packet.type != type) {
-						deferred.reject(Errors.Parse("can't make a ResultPacketV4 from ${Conversion.bytesToString(it)}"))
-					}
-					else if (!acceptedResults.contains(packet.resultCode)) {
-						deferred.reject(Errors.Result(packet.resultCode))
+					if (connection.getPacketProtocol() == PacketProtocol.V4) {
+						val packet = ResultPacketV4(type, ResultType.UNKNOWN, payload)
+						if (!packet.fromArray(it) || packet.type != type) {
+							deferred.reject(Errors.Parse("can't make a ResultPacketV4 from ${Conversion.bytesToString(it)}"))
+						}
+						else if (!acceptedResults.contains(packet.resultCode)) {
+							deferred.reject(Errors.Result(packet.resultCode))
+						}
+						else {
+							deferred.resolve()
+						}
 					}
 					else {
-						deferred.resolve()
+						val packet = ResultPacketV5(protocol, type, ResultType.UNKNOWN, payload)
+						if (!packet.fromArray(it) || packet.protocol != protocol || packet.type != type) {
+							deferred.reject(Errors.Parse("can't make a ResultPacketV5 from ${Conversion.bytesToString(it)}"))
+						}
+						else if (!acceptedResults.contains(packet.resultCode)) {
+							deferred.reject(Errors.Result(packet.resultCode))
+						}
+						else {
+							deferred.resolve()
+						}
 					}
 				}
 				.fail {
@@ -80,15 +69,39 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	@Synchronized
-	fun getMultipleResults(
+	fun getMultipleResultsV4(
 			writeCommand: () -> Promise<Unit, Exception>,
-			callback: ResultProcessCallback,
+			callback: ResultProcessCallbackV4,
 			timeoutMs: Long,
 			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS),
 			accessLevel: AccessLevel? = null
 	): Promise<Unit, Exception> {
 		val processCallback = fun (data: ByteArray): ProcessResult {
 			val packet = ResultPacketV4()
+			if (!packet.fromArray(data)) {
+				return ProcessResult.ERROR
+			}
+			else if (!acceptedResults.contains(packet.resultCode)) {
+				return ProcessResult.ERROR
+			}
+			else {
+				return callback(packet)
+			}
+		}
+
+		return connection.getMultipleMergedNotifications(getServiceUuid(), getResultCharacteristic(), writeCommand, processCallback, timeoutMs, accessLevel)
+	}
+
+	@Synchronized
+	fun getMultipleResultsV5(
+			writeCommand: () -> Promise<Unit, Exception>,
+			callback: ResultProcessCallbackV5,
+			timeoutMs: Long,
+			acceptedResults: List<ResultType> = listOf(ResultType.SUCCESS),
+			accessLevel: AccessLevel? = null
+	): Promise<Unit, Exception> {
+		val processCallback = fun (data: ByteArray): ProcessResult {
+			val packet = ResultPacketV5()
 			if (!packet.fromArray(data)) {
 				return ProcessResult.ERROR
 			}

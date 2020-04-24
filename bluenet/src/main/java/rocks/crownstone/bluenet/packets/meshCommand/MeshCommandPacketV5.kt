@@ -14,6 +14,7 @@ import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacketV3
 import rocks.crownstone.bluenet.util.put
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v5.ControlPacketV5
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.putUint8
 import rocks.crownstone.bluenet.util.toUint8
@@ -35,6 +36,7 @@ open class MeshCommandPacketV5(
 		type = when (payload::class) {
 			ControlPacketV3::class -> MeshCommandType.CONTROL
 			ControlPacketV4::class -> MeshCommandType.CONTROL
+			ControlPacketV5::class -> MeshCommandType.CONTROL
 			ConfigPacket::class -> MeshCommandType.CONFIG
 			MeshBeaconConfigPacket.BeaconConfigPacket::class -> MeshCommandType.BEACON_CONFIG
 			else -> MeshCommandType.UNKNOWN

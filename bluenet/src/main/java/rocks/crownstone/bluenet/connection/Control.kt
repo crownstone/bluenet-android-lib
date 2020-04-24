@@ -23,6 +23,7 @@ import rocks.crownstone.bluenet.packets.other.IbeaconConfigIdPacket
 import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v5.ControlPacketV5
 import rocks.crownstone.bluenet.packets.wrappers.v5.StatePacketV5
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.*
@@ -655,7 +656,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		}
 		val packet = when (getPacketProtocol()) {
 			PacketProtocol.V3 -> ControlPacketV3(type)
-			else -> ControlPacketV4(type4)
+			PacketProtocol.V4 -> ControlPacketV4(type4)
+			else -> ControlPacketV5(ConnectionProtocol.V5, type4)
 		}
 		return writeCommand(packet.getArray(), accessLevel)
 	}
@@ -672,7 +674,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		}
 		val packet = when (getPacketProtocol()) {
 			PacketProtocol.V3 -> ControlPacketV3(type, packet)
-			else -> ControlPacketV4(type4, packet)
+			PacketProtocol.V4 -> ControlPacketV4(type4, packet)
+			else -> ControlPacketV5(ConnectionProtocol.V5, type4, packet)
 		}
 		return writeCommand(packet.getArray(), accessLevel)
 	}
@@ -726,7 +729,11 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 
 	internal fun <T: PacketInterface>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<T, Exception> {
 		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, type, writePacket, accessLevel) }
-		return resultClass.getSingleResult(writeCommand, type, resultPacket, timeoutMs, accessLevel = accessLevel)
+		val protocol = when (getPacketProtocol()) {
+			PacketProtocol.V5 -> ConnectionProtocol.V5
+			else -> ConnectionProtocol.UNKNOWN
+		}
+		return resultClass.getSingleResult(writeCommand, protocol, type, resultPacket, timeoutMs, accessLevel = accessLevel)
 				.then {
 					return@then resultPacket
 				}

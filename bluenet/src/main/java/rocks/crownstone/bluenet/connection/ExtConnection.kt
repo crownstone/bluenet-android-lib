@@ -31,6 +31,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	private val eventBus = evtBus
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
+	private var protocolVersion: Uint8? = null
 //	var isConnected = false
 //		private set
 	var mode = CrownstoneMode.UNKNOWN
@@ -211,19 +212,29 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	private fun postConnect(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "postConnect $address")
 		checkMode()
+		encryptionManager.clearSessionData()
 		when (mode) {
 			CrownstoneMode.SETUP -> {
 				Log.i(TAG, "get session data and key")
-				return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID)
-						.then {
-							encryptionManager.parseSessionData(address, it, false)
-						}.unwrap()
-						.then {
-							bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
-						}.unwrap()
+				val v5 = hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID)
+				val sessionDataChar = when (v5) {
+					true -> BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID
+					false -> BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID
+				}
+				return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
 						.then {
 							encryptionManager.parseSessionKey(address, it)
 						}.unwrap()
+						.then {
+							bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, sessionDataChar)
+						}.unwrap()
+						.then {
+							encryptionManager.parseSessionData(address, it, isEncrypted = v5, setupMode = true, v5 = v5)
+						}.unwrap()
+						.then {
+							protocolVersion = it.protocolVersion
+							return@then Unit
+						}
 			}
 			CrownstoneMode.NORMAL -> {
 				if (encryptionManager.getKeySetFromAddress(address) == null) {
@@ -231,13 +242,22 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 					return Promise.ofSuccess(Unit)
 				}
 				Log.i(TAG, "get session data")
-				return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_NONCE_UUID)
+				val v5 = hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_DATA_UUID)
+				val sessionDataChar = when (v5) {
+					true -> BluenetProtocol.CHAR_SESSION_DATA_UUID
+					false -> BluenetProtocol.CHAR_SESSION_NONCE_UUID
+				}
+				return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, sessionDataChar)
 						.then {
 //							// TODO: is it ok to ignore any error in the session data parsing?
 //							// Ignore errors in parsing of session data: in case we have no keys for this crownstone, but want to write/read unencrypted data.
 //							Util.recoverableUnitPromise(encryptionManager.parseSessionData(address, it, true), { true })
-							encryptionManager.parseSessionData(address, it, true)
+							encryptionManager.parseSessionData(address, it, isEncrypted = true, setupMode = false, v5 = v5)
 						}.unwrap()
+						.then {
+							protocolVersion = it.protocolVersion
+							return@then Unit
+						}
 			}
 			CrownstoneMode.DFU -> {
 				// Refresh services
@@ -250,7 +270,6 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 			}
 		}
 	}
-
 
 	@Synchronized
 	private fun checkMode() {

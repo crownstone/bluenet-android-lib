@@ -14,6 +14,7 @@ import rocks.crownstone.bluenet.packets.wrappers.v3.CommandResultPacket
 import rocks.crownstone.bluenet.packets.SetupPacket
 import rocks.crownstone.bluenet.packets.SetupPacketV2
 import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v5.ResultPacketV5
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
@@ -103,7 +104,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		}
 
 		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL5_UUID)) {
-			return fastSetupV4(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
+			return fastSetupV5(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL4_UUID)) {
 			return fastSetupV4(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
@@ -234,6 +235,13 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		return performFastSetupV4(writeCommand)
 	}
 
+	private fun fastSetupV5(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshKeys, ibeaconData)
+		val control = Control(eventBus, connection)
+		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
+		return performFastSetupV5(writeCommand)
+	}
+
 	private fun performFastSetupV2(writeCommand: () -> Promise<Unit, Exception>, characteristicUuid: UUID): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 
@@ -268,7 +276,26 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		// Subscribe and write command
 		val resultClass = Result(eventBus, connection)
 		performFastSetup(
-				resultClass.getMultipleResults(writeCommand, processCallback, 3000, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
+				resultClass.getMultipleResultsV4(writeCommand, processCallback, 3000, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
+				deferred
+		)
+
+		return deferred.promise
+	}
+
+	private fun performFastSetupV5(writeCommand: () -> Promise<Unit, Exception>): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+
+		// Process notifications
+		val processCallback = fun (resultPacket: ResultPacketV5): ProcessResult {
+			val result = resultPacket.resultCode
+			return handleResult(result, deferred)
+		}
+
+		// Subscribe and write command
+		val resultClass = Result(eventBus, connection)
+		performFastSetup(
+				resultClass.getMultipleResultsV5(writeCommand, processCallback, 3000, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
 				deferred
 		)
 

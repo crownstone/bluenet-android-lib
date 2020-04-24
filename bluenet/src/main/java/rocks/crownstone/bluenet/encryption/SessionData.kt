@@ -7,21 +7,36 @@
 
 package rocks.crownstone.bluenet.encryption
 
+import rocks.crownstone.bluenet.packets.other.SessionDataPacket
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.structs.BluenetProtocol.SESSION_NONCE_LENGTH
 import rocks.crownstone.bluenet.structs.BluenetProtocol.VALIDATION_KEY_LENGTH
+import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
 
-data class SessionData(val sessionNonce: ByteArray, val validationKey: ByteArray, var tempKey: ByteArray? = null)
+data class SessionData(
+		val sessionNonce: ByteArray,
+		val validationKey: ByteArray,
+		val protocolVersion: Uint8? = null
+)
 
 object SessionDataParser {
 	private val TAG = this.javaClass.simpleName
 
-	fun getSessionData(decryptedData: ByteArray, wasEncrypted: Boolean): SessionData? {
-//		if (decryptedData == null) {
-//			return null
-//		}
+	fun getSessionData(decryptedData: ByteArray, wasEncrypted: Boolean, v5: Boolean): SessionData? {
+		if (v5) {
+			val packet = SessionDataPacket()
+			if (!packet.fromArray(decryptedData)) {
+				return null
+			}
+			if (Conversion.byteArrayToInt(packet.validation) != BluenetProtocol.CAFEBABE) {
+				Log.e(TAG, "validation failed: " + Conversion.bytesToString(decryptedData))
+				return null
+			}
+			return SessionData(packet.sessionNonce, packet.validationKey, packet.protocol)
+		}
+
 		// When the data was encrypted, the first 4 bytes should be CAFEBABE, to check if encryption succeeded.
 		if (wasEncrypted) {
 			if (decryptedData.size < VALIDATION_KEY_LENGTH + SESSION_NONCE_LENGTH) {

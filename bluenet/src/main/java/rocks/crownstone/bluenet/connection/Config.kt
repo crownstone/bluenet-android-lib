@@ -810,7 +810,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 				return controlClass.writeGetState(statePacket)
 			}
 			val statePacket = StatePacketV4(stateType, id, statePayloadPacket)
-			resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
+			resultClass.getSingleResult(writeCommand, ConnectionProtocol.UNKNOWN, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
 					.success {
 						if (statePacket.type != stateType) {
 							deferred.reject(Errors.Parse("Wrong state type: req=$stateType rec=${statePacket.type}"))
@@ -828,7 +828,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 				return controlClass.writeGetState(statePacket)
 			}
 			val statePacket = StatePacketV5(stateType, id, persistenceMode.num, statePayloadPacket)
-			resultClass.getSingleResult(writeCommand, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
+			resultClass.getSingleResult(writeCommand, ConnectionProtocol.V5, ControlTypeV4.GET_STATE, statePacket, BluenetConfig.TIMEOUT_GET_CONFIG)
 					.success {
 						if (statePacket.type != stateType) {
 							deferred.reject(Errors.Parse("Wrong state type: req=$stateType rec=${statePacket.type}"))

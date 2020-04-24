@@ -42,6 +42,7 @@ object BluenetProtocol {
 	// protocol v5
 	val CHAR_CONTROL5_UUID =       UUID.fromString("24f0000c-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_RESULT5_UUID =        UUID.fromString("24f0000d-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_SESSION_DATA_UUID =   UUID.fromString("24f0000e-7d10-4805-bfc1-7663a01c3bff")
 
 	// Setup service
 	val SETUP_SERVICE_UUID =             UUID.fromString("24f10000-7d10-4805-bfc1-7663a01c3bff")
@@ -60,6 +61,7 @@ object BluenetProtocol {
 	// protocol v5
 	val CHAR_SETUP_CONTROL5_UUID =       UUID.fromString("24f1000c-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SETUP_RESULT5_UUID =        UUID.fromString("24f1000d-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_SETUP_SESSION_DATA_UUID =   UUID.fromString("24f1000e-7d10-4805-bfc1-7663a01c3bff")
 
 	// Device Information Service
 	val DEVICE_INFO_SERVICE_UUID =    UUID.fromString("0000180a-0000-1000-8000-00805f9b34fb")
@@ -258,6 +260,17 @@ enum class ControlTypeV4(val num: Uint16) {
 		private val map = ControlTypeV4.values().associateBy(ControlTypeV4::num)
 		fun fromNum(type: Uint16): ControlTypeV4 {
 			return map[type] ?: return UNKNOWN
+		}
+	}
+}
+
+enum class ConnectionProtocol(val num: Uint8) {
+	UNKNOWN(0U),
+	V5(5U);
+	companion object {
+		private val map = values().associateBy(ConnectionProtocol::num)
+		fun fromNum(action: Uint8): ConnectionProtocol {
+			return map[action] ?: return UNKNOWN
 		}
 	}
 }

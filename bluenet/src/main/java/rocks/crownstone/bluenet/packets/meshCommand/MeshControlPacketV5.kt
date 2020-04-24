@@ -7,11 +7,11 @@
 
 package rocks.crownstone.bluenet.packets.meshCommand
 
-import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v5.ControlPacketV5
 import rocks.crownstone.bluenet.structs.Uint8
 
 class MeshControlPacketV5: MeshCommandPacketV5 {
-	constructor(controlPacket: ControlPacketV4,
+	constructor(controlPacket: ControlPacketV5,
 				flags: MeshCommandFlags,
 				transmissions: Uint8,
 				timeout: Uint8,

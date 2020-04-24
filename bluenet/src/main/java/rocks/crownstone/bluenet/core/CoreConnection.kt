@@ -453,6 +453,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 		promises.setBusy(Action.WRITE, deferred, BluenetConfig.TIMEOUT_WRITE) // Resolve later in onGattCharacteristicWrite
 		char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+//		char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
 		Log.d(TAG, "gatt.writeCharacteristic")
 		val result = char.setValue(data) && gatt.writeCharacteristic(char)
 		if (!result) {
@@ -802,6 +803,9 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 		}
 
 		val notificationCallback = fun (mergedNotification: ByteArray) {
+			// Don't reset timeout.
+//			handler.removeCallbacks(timeoutRunnable)
+//			handler.postDelayed(timeoutRunnable, timeoutMs)
 			when (callback(mergedNotification)) {
 				ProcessResult.NOT_DONE -> {
 					// Continue waiting for notifications

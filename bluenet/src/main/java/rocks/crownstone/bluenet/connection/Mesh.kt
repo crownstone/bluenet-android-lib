@@ -16,6 +16,7 @@ import rocks.crownstone.bluenet.packets.meshCommand.MeshControlPacketV5
 import rocks.crownstone.bluenet.packets.other.IbeaconConfigIdPacket
 import rocks.crownstone.bluenet.packets.wrappers.v3.ControlPacketV3
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
+import rocks.crownstone.bluenet.packets.wrappers.v5.ControlPacketV5
 import rocks.crownstone.bluenet.packets.wrappers.v5.StatePacketV5
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
@@ -95,7 +96,7 @@ class Mesh(evtBus: EventBus, connection: ExtConnection) {
 		val meshControlPacket = when(getPacketProtocol()) {
 			PacketProtocol.V3 -> MeshControlPacketV3(ControlPacketV3(type), ids)
 			PacketProtocol.V4 -> MeshControlPacketV3(ControlPacketV4(type4), ids)
-			else ->              MeshControlPacketV5(ControlPacketV4(type4), flags, transmissions, timeout, ids)
+			else ->              MeshControlPacketV5(ControlPacketV5(ConnectionProtocol.V5, type4), flags, transmissions, timeout, ids)
 		}
 //		return controlClass.writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, meshControlPacket)
 		return controlClass.meshCommand(meshControlPacket)
@@ -127,7 +128,7 @@ class Mesh(evtBus: EventBus, connection: ExtConnection) {
 		val meshControlPacket = when(getPacketProtocol()) {
 			PacketProtocol.V3 -> MeshControlPacketV3(ControlPacketV3(type, payload), ids)
 			PacketProtocol.V4 -> MeshControlPacketV3(ControlPacketV4(type4, payload), ids)
-			else ->              MeshControlPacketV5(ControlPacketV4(type4, payload), flags, transmissions, timeout, ids)
+			else ->              MeshControlPacketV5(ControlPacketV5(ConnectionProtocol.V5, type4, payload), flags, transmissions, timeout, ids)
 		}
 //		return controlClass.writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, meshControlPacket)
 		return controlClass.meshCommand(meshControlPacket)
