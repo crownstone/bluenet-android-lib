@@ -163,7 +163,7 @@ class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
 				.setZip(null, fileName)
 				.setMtu(23) // Same as iOS
 				.setPacketsReceiptNotificationsEnabled(true)
-//				.setNumberOfRetries(2)
+				.setNumberOfRetries(2)
 		// Controller can be used to pause / resume / abort.
 		val dfuServiceController = dfuServiceInitiator.start(context, service)
 		dfuDeferred = deferred

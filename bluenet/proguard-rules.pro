@@ -22,6 +22,8 @@
 
 #-optimizationpasses 5
 
+-keep class no.nordicsemi.android.dfu.** { *; }
+
 -assumenosideeffects class android.util.Log {
     public static *** d(...);
     public static *** v(...);
