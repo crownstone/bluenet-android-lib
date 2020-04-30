@@ -87,14 +87,21 @@ class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 	fun getBootloaderVersion(): Promise<String, Exception> {
 		Log.i(TAG, "getBootloaderVersion")
 		if (connection.mode != CrownstoneMode.DFU) {
-			// When not in DFU, we can try to read the bootloader version via control command.
-			val controlClass = Control(eventBus, connection)
-			val resultPacket = BootloaderInfoPacket()
-			return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
-					.then {
-						Log.d(TAG, it.toString())
-						return@then it.getVersionString()
-					}
+			if (!connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL_UUID)
+					&& !connection.hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_CONTROL4_UUID)) {
+				// When not in DFU, we can try to read the bootloader version via control command.
+				val controlClass = Control(eventBus, connection)
+				val resultPacket = BootloaderInfoPacket()
+				return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
+						.then {
+							Log.d(TAG, it.toString())
+							return@then it.getVersionString()
+						}
+			}
+			else {
+				// Old firmware doesn't have the bootloader version when not in DFU mode.
+				return Promise.ofFail(Errors.NotInMode(CrownstoneMode.DFU))
+			}
 		}
 		val deferred = deferred<String, Exception>()
 		connection.read(BluenetProtocol.DEVICE_INFO_SERVICE_UUID, BluenetProtocol.CHAR_FIRMWARE_REVISION_UUID, false)
