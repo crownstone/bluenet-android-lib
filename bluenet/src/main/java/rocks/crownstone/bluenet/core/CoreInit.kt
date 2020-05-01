@@ -741,6 +741,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		@Synchronized
 		override fun onReceive(context: Context, intent: Intent) {
 			if (intent.action == BluetoothAdapter.ACTION_STATE_CHANGED) {
+				Log.d(TAG, "bluetooth state: ${intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)}")
 				when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
 					BluetoothAdapter.STATE_ON -> {
 						handler.post {
