@@ -39,11 +39,15 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 				.success {
 					if (connection.getPacketProtocol() == PacketProtocol.V4) {
 						val packet = ResultPacketV4(type, ResultType.UNKNOWN, payload)
-						if (!packet.fromArray(it) || packet.type != type) {
-							deferred.reject(Errors.Parse("can't make a ResultPacketV4 from ${Conversion.bytesToString(it)}"))
+						val parseSuccess = packet.fromArray(it)
+						if (packet.type != type) {
+							deferred.reject(Errors.Parse("wrong type, got ${packet.type}, expected $type"))
 						}
 						else if (!acceptedResults.contains(packet.resultCode)) {
 							deferred.reject(Errors.Result(packet.resultCode))
+						}
+						else if (!parseSuccess) {
+							deferred.reject(Errors.Parse("can't make a ResultPacketV4 from ${Conversion.bytesToString(it)}"))
 						}
 						else {
 							deferred.resolve()
@@ -51,11 +55,15 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 					}
 					else {
 						val packet = ResultPacketV5(protocol, type, ResultType.UNKNOWN, payload)
-						if (!packet.fromArray(it) || packet.protocol != protocol || packet.type != type) {
-							deferred.reject(Errors.Parse("can't make a ResultPacketV5 from ${Conversion.bytesToString(it)}"))
+						val parseSuccess = packet.fromArray(it)
+						if (packet.type != type) {
+							deferred.reject(Errors.Parse("wrong type, got ${packet.type}, expected $type"))
 						}
 						else if (!acceptedResults.contains(packet.resultCode)) {
 							deferred.reject(Errors.Result(packet.resultCode))
+						}
+						else if (!parseSuccess) {
+							deferred.reject(Errors.Parse("can't make a ResultPacketV5 from ${Conversion.bytesToString(it)}"))
 						}
 						else {
 							deferred.resolve()
