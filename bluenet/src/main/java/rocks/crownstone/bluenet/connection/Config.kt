@@ -98,9 +98,9 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setIbeaconUuid(uuid: UUID, persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED): Promise<Unit, Exception> {
+	fun setIbeaconUuid(uuid: UUID, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconUuid $uuid")
-		return setConfig(ConfigType.IBEACON_PROXIMITY_UUID, StateTypeV4.IBEACON_PROXIMITY_UUID, UuidPacket(uuid), persistenceMode = persistenceMode)
+		return setConfig(ConfigType.IBEACON_PROXIMITY_UUID, StateTypeV4.IBEACON_PROXIMITY_UUID, UuidPacket(uuid), id = id, persistenceMode = persistenceMode)
 	}
 
 	/**
@@ -110,7 +110,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun getIbeaconUuid(persistenceMode: PersistenceModeGet = PersistenceModeGet.CURRENT): Promise<UUID, Exception> {
+	fun getIbeaconUuid(id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceModeGet = PersistenceModeGet.CURRENT): Promise<UUID, Exception> {
 		Log.i(TAG, "getIbeaconUuid")
 		if (getPacketProtocol() == PacketProtocol.V3) {
 //			return getConfig(ConfigType.IBEACON_PROXIMITY_UUID)
@@ -125,7 +125,7 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		}
 		else {
 			val resultPacket = UuidPacket()
-			return getState(StateTypeV4.IBEACON_PROXIMITY_UUID, resultPacket, persistenceMode = persistenceMode)
+			return getState(StateTypeV4.IBEACON_PROXIMITY_UUID, resultPacket, id = id, persistenceMode = persistenceMode)
 					.then {
 						return@then resultPacket.uuid
 					}
@@ -139,9 +139,9 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setIbeaconMajor(major: Uint16): Promise<Unit, Exception> {
+	fun setIbeaconMajor(major: Uint16, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconMajor $major")
-		return setConfigValue(ConfigType.IBEACON_MAJOR, StateTypeV4.IBEACON_MAJOR, major)
+		return setConfigValue(ConfigType.IBEACON_MAJOR, StateTypeV4.IBEACON_MAJOR, major, id = id, persistenceMode = persistenceMode)
 	}
 
 	/**
@@ -151,9 +151,9 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setIbeaconMinor(minor: Uint16): Promise<Unit, Exception> {
+	fun setIbeaconMinor(minor: Uint16, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID, persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED): Promise<Unit, Exception> {
 		Log.i(TAG, "setIbeaconMinor $minor")
-		return setConfigValue(ConfigType.IBEACON_MINOR, StateTypeV4.IBEACON_MINOR, minor)
+		return setConfigValue(ConfigType.IBEACON_MINOR, StateTypeV4.IBEACON_MINOR, minor, id = id, persistenceMode = persistenceMode)
 	}
 
 
