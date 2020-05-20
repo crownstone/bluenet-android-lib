@@ -120,7 +120,7 @@ object Util {
 
 		val calendar = Calendar.getInstance()
 		val timeZone = calendar.timeZone
-		val secondsFromGmt = (timeZone.rawOffset / 1000).toLong()
+		val secondsFromGmt = ((timeZone.rawOffset + timeZone.dstSavings) / 1000).toLong()
 		val correctedTimestamp = gmtTimestamp + secondsFromGmt
 		return correctedTimestamp.toUint32()
 	}
