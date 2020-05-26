@@ -13,6 +13,7 @@ import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.resolve
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint64
+import java.text.SimpleDateFormat
 import java.util.*
 
 object Util {
@@ -123,6 +124,20 @@ object Util {
 		val secondsFromGmt = ((timeZone.rawOffset + timeZone.dstSavings) / 1000).toLong()
 		val correctedTimestamp = gmtTimestamp + secondsFromGmt
 		return correctedTimestamp.toUint32()
+	}
+
+	fun getDate(timestamp: Uint32): Date {
+		val timeZoneGmt = TimeZone.getTimeZone("GMT")
+		val calendarGmt = Calendar.getInstance(timeZoneGmt)
+
+		val calendar = Calendar.getInstance()
+		val timeZone = calendar.timeZone
+		val msFromGmt = (timeZone.rawOffset + timeZone.dstSavings).toLong()
+		return Date(timestamp.toLong() * 1000L - msFromGmt)
+	}
+
+	fun getTimestampString(timestamp: Uint32, format: String = "yyyy.MM.dd HH:mm:ss"): String {
+		return SimpleDateFormat(format, Locale.US).format(getDate(timestamp))
 	}
 
 	fun waitPromise(timeMs: Long, handler: Handler): Promise<Unit, Exception> {
