@@ -43,11 +43,11 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 						if (packet.type != type) {
 							deferred.reject(Errors.Parse("wrong type, got ${packet.type}, expected $type"))
 						}
-						else if (!acceptedResults.contains(packet.resultCode)) {
+						else if (packet.resultCode != ResultType.UNKNOWN && !acceptedResults.contains(packet.resultCode)) {
 							deferred.reject(Errors.Result(packet.resultCode))
 						}
 						else if (!parseSuccess) {
-							deferred.reject(Errors.Parse("can't make a ResultPacketV4 from ${Conversion.bytesToString(it)}"))
+							deferred.reject(Errors.Parse("can't make a ResultPacketV4 with payload ${payload.javaClass.simpleName} from ${Conversion.bytesToString(it)}"))
 						}
 						else {
 							deferred.resolve()
@@ -59,11 +59,11 @@ class Result (evtBus: EventBus, connection: ExtConnection) {
 						if (packet.type != type) {
 							deferred.reject(Errors.Parse("wrong type, got ${packet.type}, expected $type"))
 						}
-						else if (!acceptedResults.contains(packet.resultCode)) {
+						else if (packet.resultCode != ResultType.UNKNOWN && !acceptedResults.contains(packet.resultCode)) {
 							deferred.reject(Errors.Result(packet.resultCode))
 						}
 						else if (!parseSuccess) {
-							deferred.reject(Errors.Parse("can't make a ResultPacketV5 from ${Conversion.bytesToString(it)}"))
+							deferred.reject(Errors.Parse("can't make a ResultPacketV5 with payload ${payload.javaClass.simpleName} from ${Conversion.bytesToString(it)}"))
 						}
 						else {
 							deferred.resolve()

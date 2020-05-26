@@ -43,7 +43,6 @@ class MultiSwitchPacket: PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
 		return false
 	}
 }
@@ -67,7 +66,6 @@ class MultiSwitchItemPacket(var id: Uint8, var switchValue: Uint8): PacketInterf
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
 		return false
 	}
 }

@@ -36,7 +36,10 @@ open class UuidPacket(uuid: UUID): PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		arr = ByteArray(bb.remaining())
+		if (bb.remaining() < getPacketSize()) {
+			return false
+		}
+		arr = ByteArray(getPacketSize())
 		bb.get(arr)
 		uuid = Conversion.bytesToUuid16(arr)
 		return true

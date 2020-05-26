@@ -38,7 +38,7 @@ class MeshBeaconConfigPacket(beaconData: IbeaconData, ids: List<Uint8> = emptyLi
 		}
 
 		override fun fromBuffer(bb: ByteBuffer): Boolean {
-			return false // Not implemented yet (no need?)
+			return false
 		}
 	}
 }

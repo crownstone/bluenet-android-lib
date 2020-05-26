@@ -45,9 +45,10 @@ interface PacketInterface {
 	 * Deserialize packet from byte array.
 	 */
 	fun fromArray(array: ByteArray): Boolean {
-		if (array.size < getPacketSize()) {
-			return false
-		}
+		// Let the packets do the size check themselves, so they can parse partially.
+//		if (array.size < getPacketSize()) {
+//			return false
+//		}
 		val bb = ByteBuffer.wrap(array)
 		bb.order(ByteOrder.LITTLE_ENDIAN)
 		return fromBuffer(bb)

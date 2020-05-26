@@ -31,7 +31,7 @@ class KeepAlivePacket(var action: KeepAliveAction, var switchValue: Uint8, var t
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < SIZE) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		action = KeepAliveAction.fromNum(Conversion.toUint8(bb.get()))

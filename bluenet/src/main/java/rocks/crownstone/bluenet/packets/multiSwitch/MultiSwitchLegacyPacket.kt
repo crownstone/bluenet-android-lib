@@ -49,7 +49,6 @@ class MultiSwitchLegacyPacket: PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
 		return false
 	}
 }
@@ -75,7 +74,6 @@ class MultiSwitchLegacyItemPacket(var id: Uint8, var switchValue: Uint8, val tim
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
 		return false
 	}
 }

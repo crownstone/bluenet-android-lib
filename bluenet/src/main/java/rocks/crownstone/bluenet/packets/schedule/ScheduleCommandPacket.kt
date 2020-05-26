@@ -30,6 +30,6 @@ class ScheduleCommandPacket(private val index: Uint8, private val entry: Schedul
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		return false
 	}
 }

@@ -44,7 +44,7 @@ class KeepAliveSameTimeout(val timeout: Uint16): PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		return false
 	}
 }
 
@@ -68,6 +68,6 @@ class KeepAliveSameTimeoutItem(val id: Uint8, val actionSwitchValue: KeepAliveAc
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		return false
 	}
 }

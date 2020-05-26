@@ -68,6 +68,6 @@ class SetupPacketV2(val stoneId: Uint8,
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		return false
 	}
 }

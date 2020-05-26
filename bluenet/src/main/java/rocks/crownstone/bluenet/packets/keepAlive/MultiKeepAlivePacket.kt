@@ -38,6 +38,6 @@ class MultiKeepAlivePacket(val payload: PacketInterface): PacketInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		return false
 	}
 }

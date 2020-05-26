@@ -42,7 +42,7 @@ class BehaviourIndexAndHashPacket(index: BehaviourIndex, hash: BehaviourHashPack
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		if (bb.remaining() < SIZE) {
+		if (bb.remaining() < getPacketSize()) {
 			return false
 		}
 		index = bb.getUint8()

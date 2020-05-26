@@ -31,7 +31,6 @@ class BroadcastSwitchItemPacket(var id: Uint8, var switchValue: Uint8): PacketIn
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
 		return false
 	}
 }

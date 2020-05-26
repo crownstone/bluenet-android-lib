@@ -73,7 +73,6 @@ class BroadcastItemListPacket: CommandBroadcastPayloadInterface {
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		// Not implemented yet (no need?)
 		return false
 	}
 

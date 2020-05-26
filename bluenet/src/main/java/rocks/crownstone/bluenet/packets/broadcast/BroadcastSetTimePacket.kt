@@ -63,6 +63,6 @@ class BroadcastSetTimePacket(val currentTime: Uint32?, val sunRiseAfterMidnight:
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		return false
 	}
 }

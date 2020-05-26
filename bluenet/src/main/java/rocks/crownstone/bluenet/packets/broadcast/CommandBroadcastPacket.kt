@@ -47,7 +47,7 @@ class CommandBroadcastPacket(val validationTimestamp: Uint32, val sphereId: Sphe
 	}
 
 	override fun fromBuffer(bb: ByteBuffer): Boolean {
-		return false // Not implemented yet (no need?)
+		return false
 	}
 
 	override fun toString(): String {
