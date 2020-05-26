@@ -694,7 +694,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 
 
 	// Results with simple value
-	private inline fun <reified R>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<R, Exception> {
+	internal inline fun <reified R>writeCommandAndGetResult(type: ControlTypeV4, writePacket: PacketInterface, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<R, Exception> {
 		val resultPacket = ByteArrayPacket()
 		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs, accessLevel)
 				.then {
@@ -712,7 +712,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	// Commands with simple value, and no result payload.
-	private inline fun <reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<Unit, Exception> {
+	internal inline fun <reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<Unit, Exception> {
 		val writePacket = ByteArrayPacket(Conversion.toByteArray(writeValue))
 		val resultPacket = EmptyPacket()
 		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs, accessLevel)
@@ -722,7 +722,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 	// Commands with simple value
-	private inline fun <T: PacketInterface, reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<T, Exception> {
+	internal inline fun <T: PacketInterface, reified V>writeCommandAndGetResult(type: ControlTypeV4, writeValue: V, resultPacket: T, timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT, accessLevel: AccessLevel? = null): Promise<T, Exception> {
 		val writePacket = ByteArrayPacket(Conversion.toByteArray(writeValue))
 		return writeCommandAndGetResult(type, writePacket, resultPacket, timeoutMs, accessLevel)
 	}

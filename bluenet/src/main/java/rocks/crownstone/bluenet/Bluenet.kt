@@ -24,7 +24,6 @@ import rocks.crownstone.bluenet.scanhandling.NearestDevices
 import rocks.crownstone.bluenet.scanhandling.ScanHandler
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.*
-import java.util.*
 
 /**
  * The main library class.
@@ -61,6 +60,7 @@ class Bluenet(looper: Looper? = null) {
 	lateinit var state: State; private set
 	lateinit var mesh: Mesh; private set
 	lateinit var deviceInfo: DeviceInfo; private set
+	lateinit var debugData: DebugData; private set
 	lateinit var dfu: Dfu; private set
 	lateinit var broadCast: CommandBroadcaster; private set
 	lateinit var backgroundBroadcaster: BackgroundBroadcaster; private set
@@ -142,6 +142,7 @@ class Bluenet(looper: Looper? = null) {
 		state = State(eventBus, connection)
 		mesh = Mesh(eventBus, connection)
 		deviceInfo = DeviceInfo(eventBus, connection)
+		debugData = DebugData(eventBus, connection)
 		dfu = Dfu(eventBus, connection, context)
 		iBeaconRanger = IbeaconRanger(eventBus, looper)
 		broadCast = CommandBroadcaster(eventBus, libState, bleCore, encryptionManager, looper)
