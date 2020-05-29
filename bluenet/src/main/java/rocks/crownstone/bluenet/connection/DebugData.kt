@@ -13,6 +13,7 @@ import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesRequestPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesType
+import rocks.crownstone.bluenet.packets.switchHistory.SwitchHistoryListPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
@@ -63,5 +64,18 @@ class DebugData(evtBus: EventBus, connection: ExtConnection) {
 		val writePacket = PowerSamplesRequestPacket(type, index)
 		val resultPacket = PowerSamplesPacket()
 		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_POWER_SAMPLES, writePacket, resultPacket)
+	}
+
+	/**
+	 * Get a history of switch commands.
+	 *
+	 * @return Promise with switch history as value.
+	 */
+	@Synchronized
+	fun getSwitchHistory(): Promise<SwitchHistoryListPacket, Exception> {
+		Log.i(TAG, "getSwitchHistory")
+		val controlClass = Control(eventBus, connection)
+		val resultPacket = SwitchHistoryListPacket()
+		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_SWITCH_HISTORY, EmptyPacket(), resultPacket)
 	}
 }
