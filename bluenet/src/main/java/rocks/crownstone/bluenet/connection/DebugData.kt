@@ -10,7 +10,6 @@ package rocks.crownstone.bluenet.connection
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.then
 import rocks.crownstone.bluenet.packets.EmptyPacket
-import rocks.crownstone.bluenet.packets.Uint32Packet
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesRequestPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesType
