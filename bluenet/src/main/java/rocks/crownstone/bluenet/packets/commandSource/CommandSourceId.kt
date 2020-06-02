@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.structs.Uint8
 
 enum class CommandSourceType(val num: Uint8) {
 	ENUM(0U),
+	BEHAVIOUR(1U),
 	BROADCAST(3U),
 	UNKNOWN(255U);
 	companion object {
