@@ -33,8 +33,9 @@ class CommandSourcePacket: PacketInterface {
 			return false
 		}
 		val b1 = bb.getUint8()
-		viaMesh = Util.isBitSet(b1, 7)
-		val typeNum = b1 and 7U
+		viaMesh = Util.isBitSet(b1, 0)
+		val typeMask: Uint8 = 224U
+		val typeNum = ((b1 and typeMask).toUInt() shr 5).toUint8()
 		type = CommandSourceType.fromNum(typeNum)
 		id = bb.getUint8()
 		return true
