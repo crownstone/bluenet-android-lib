@@ -10,6 +10,7 @@ package rocks.crownstone.bluenet.connection
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.then
 import rocks.crownstone.bluenet.packets.EmptyPacket
+import rocks.crownstone.bluenet.packets.other.AdcRestartsPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesRequestPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesType
@@ -43,13 +44,14 @@ class DebugData(evtBus: EventBus, connection: ExtConnection) {
 	/**
 	 * Get the number of ADC restarts.
 	 *
-	 * @return Promise with number of ADC restarts as value.
+	 * @return Promise with ADC restarts packet as value.
 	 */
 	@Synchronized
-	fun getAdcRestarts(): Promise<Uint32, Exception> {
+	fun getAdcRestarts(): Promise<AdcRestartsPacket, Exception> {
 		Log.i(TAG, "getAdcRestarts")
 		val controlClass = Control(eventBus, connection)
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_ADC_RESTARTS, EmptyPacket())
+		val resultPacket = AdcRestartsPacket()
+		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_ADC_RESTARTS, EmptyPacket(), resultPacket)
 	}
 
 	/**
