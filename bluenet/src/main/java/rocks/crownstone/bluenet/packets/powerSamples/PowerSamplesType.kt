@@ -20,3 +20,11 @@ enum class PowerSamplesType(val num: Uint8) {
 		}
 	}
 }
+
+fun PowerSamplesIndices(type: PowerSamplesType): MutableList<Uint8> {
+	return when (type) {
+		PowerSamplesType.SWITCHCRAFT -> arrayListOf(0U, 1U, 2U)
+		PowerSamplesType.SWITCHCRAFT_NON_TRIGGERED -> arrayListOf(0U, 1U, 2U)
+		PowerSamplesType.UNKNOWN -> arrayListOf()
+	}
+}

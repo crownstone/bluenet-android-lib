@@ -9,8 +9,10 @@ package rocks.crownstone.bluenet.connection
 
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.then
+import nl.komponents.kovenant.unwrap
 import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.other.AdcRestartsPacket
+import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesIndices
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesRequestPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesType
@@ -57,16 +59,47 @@ class DebugData(evtBus: EventBus, connection: ExtConnection) {
 	/**
 	 * Get power samples of an interesting event.
 	 *
+	 * Gets all indices of given type.
+	 *
+	 * @return Promise with list of power samples as value.
+	 */
+	@Synchronized
+	fun getPowerSamples(type: PowerSamplesType): Promise<List<PowerSamplesPacket>, Exception> {
+		val indices = PowerSamplesIndices(type)
+		Log.i(TAG, "getPowerSamples type=$type indices=$indices")
+		val powerSamples = ArrayList<PowerSamplesPacket>()
+		return getNextPowerSamples(type, indices, powerSamples)
+	}
+
+	private fun getNextPowerSamples(type: PowerSamplesType, indices: MutableList<Uint8>, powerSamples: MutableList<PowerSamplesPacket>):
+			Promise<List<PowerSamplesPacket>, Exception> {
+		if (indices.isEmpty()) {
+			Log.d(TAG, "Power samples: $powerSamples")
+			return Promise.ofSuccess(powerSamples)
+		}
+		val index: Uint8 = indices.removeAt(0)
+		return getPowerSamples(type, index)
+				.then {
+					powerSamples.add(it)
+					getNextPowerSamples(type, indices, powerSamples)
+				}.unwrap()
+	}
+
+	/**
+	 * Get power samples of an interesting event.
+	 *
 	 * @return Promise with power samples as value.
 	 */
 	@Synchronized
 	fun getPowerSamples(type: PowerSamplesType, index: Uint8): Promise<PowerSamplesPacket, Exception> {
-		Log.i(TAG, "getPowerSamples")
+		Log.i(TAG, "getPowerSamples type=$type index=$index")
 		val controlClass = Control(eventBus, connection)
 		val writePacket = PowerSamplesRequestPacket(type, index)
 		val resultPacket = PowerSamplesPacket()
 		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_POWER_SAMPLES, writePacket, resultPacket)
 	}
+
+
 
 	/**
 	 * Get a history of switch commands.
