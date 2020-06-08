@@ -15,6 +15,8 @@ import java.nio.ByteBuffer
 class CommandSourcePacket: PacketInterface {
 	var viaMesh: Boolean = false
 		private set
+	var reserved: Uint8 = 0U
+		private set
 	var type: CommandSourceType = CommandSourceType.ENUM
 		private set
 	var id: Uint8 = CommandSourceId.UNKNOWN.num
@@ -34,8 +36,12 @@ class CommandSourcePacket: PacketInterface {
 		}
 		val b1 = bb.getUint8()
 		viaMesh = Util.isBitSet(b1, 0)
-		val typeMask: Uint8 = 224U
-		val typeNum = ((b1 and typeMask).toUInt() shr 5).toUint8()
+		val reservedMask: Uint8 = 15U // 4 bits
+		reserved = (b1.toUInt() shr 1).toUint8() and reservedMask
+//		val typeMask: Uint8 = 224U
+//		val typeNum = ((b1 and typeMask).toUInt() shr 5).toUint8()
+		val typeMask: Uint8 = 7U // 3 bits
+		val typeNum = (b1.toUInt() shr 5).toUint8() and typeMask
 		type = CommandSourceType.fromNum(typeNum)
 		id = bb.getUint8()
 		return true
@@ -47,8 +53,8 @@ class CommandSourcePacket: PacketInterface {
 
 	override fun toString(): String {
 		return when (type) {
-			CommandSourceType.ENUM -> "CommandSourcePacket(viaMesh=$viaMesh, type=$type, id=${CommandSourceId.fromNum(id)})"
-			else -> "CommandSourcePacket(viaMesh=$viaMesh, type=$type, id=$id)"
+			CommandSourceType.ENUM -> "CommandSourcePacket(viaMesh=$viaMesh, reserved=$reserved, type=$type, id=${CommandSourceId.fromNum(id)})"
+			else -> "CommandSourcePacket(viaMesh=$viaMesh, reserved=$reserved, type=$type, id=$id)"
 		}
 	}
 }
