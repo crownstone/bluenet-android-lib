@@ -12,8 +12,8 @@ import rocks.crownstone.bluenet.structs.Uint8
 enum class PowerSamplesType(val num: Uint8) {
 	SWITCHCRAFT(0U),
 	SWITCHCRAFT_NON_TRIGGERED(1U),
-	NOW(3U),
-	NOW_UNFILTERED(4U),
+	NOW_FILTERED(2U),
+	NOW_UNFILTERED(3U),
 	UNKNOWN(255U);
 	companion object {
 		private val map = values().associateBy(PowerSamplesType::num)
@@ -27,7 +27,7 @@ fun PowerSamplesIndices(type: PowerSamplesType): MutableList<Uint8> {
 	return when (type) {
 		PowerSamplesType.SWITCHCRAFT -> arrayListOf(0U, 1U, 2U)
 		PowerSamplesType.SWITCHCRAFT_NON_TRIGGERED -> arrayListOf(0U, 1U, 2U)
-		PowerSamplesType.NOW -> arrayListOf(0U, 1U)
+		PowerSamplesType.NOW_FILTERED -> arrayListOf(0U, 1U)
 		PowerSamplesType.NOW_UNFILTERED -> arrayListOf(0U, 1U)
 		PowerSamplesType.UNKNOWN -> arrayListOf()
 	}
