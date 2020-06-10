@@ -723,6 +723,29 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.TIME)
 	}
 
+	/**
+	 * Set soft on speed.
+	 *
+	 * @param speed          Speed ranging from 1 until 100.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setSoftOnSpeed(speed: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "setSoftOnSpeed $speed")
+		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.SOFT_ON_SPEED, speed)
+	}
+
+	/**
+	 * Get current soft on speed.
+	 *
+	 * @return Promise with soft on speed as value.
+	 */
+	@Synchronized
+	fun getSoftOnSpeed(): Promise<Uint8, Exception> {
+		Log.i(TAG, "getSoftOnSpeed")
+		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.SOFT_ON_SPEED)
+	}
+
 
 
 	// ------------------------ //
