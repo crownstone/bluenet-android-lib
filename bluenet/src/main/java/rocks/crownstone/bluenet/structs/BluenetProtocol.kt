@@ -259,6 +259,10 @@ enum class ControlTypeV4(val num: Uint16) {
 	GET_ADC_RESTARTS(81U),
 	GET_SWITCH_HISTORY(82U),
 	GET_POWER_SAMPLES(83U),
+	GET_SCHEDULER_MIN_FREE(84U),
+	GET_RESET_REASON(85U),
+	GET_GPREGRET(86U),
+	GET_ADC_CHANNEL_SWAPS(87U),
 	UNKNOWN(0xFFFFU);
 	companion object {
 		private val map = ControlTypeV4.values().associateBy(ControlTypeV4::num)
