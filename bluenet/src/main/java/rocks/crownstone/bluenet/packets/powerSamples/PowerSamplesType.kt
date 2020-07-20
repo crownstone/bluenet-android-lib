@@ -14,6 +14,7 @@ enum class PowerSamplesType(val num: Uint8) {
 	SWITCHCRAFT_NON_TRIGGERED(1U),
 	NOW_FILTERED(2U),
 	NOW_UNFILTERED(3U),
+	SOFT_FUSE(4U),
 	UNKNOWN(255U);
 	companion object {
 		private val map = values().associateBy(PowerSamplesType::num)
@@ -29,6 +30,7 @@ fun PowerSamplesIndices(type: PowerSamplesType): MutableList<Uint8> {
 		PowerSamplesType.SWITCHCRAFT_NON_TRIGGERED -> arrayListOf(0U, 1U, 2U)
 		PowerSamplesType.NOW_FILTERED -> arrayListOf(0U, 1U)
 		PowerSamplesType.NOW_UNFILTERED -> arrayListOf(0U, 1U)
+		PowerSamplesType.SOFT_FUSE -> arrayListOf(0U)
 		PowerSamplesType.UNKNOWN -> arrayListOf()
 	}
 }
