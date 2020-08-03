@@ -15,6 +15,7 @@ import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.other.AdcChannelSwapsPacket
 import rocks.crownstone.bluenet.packets.other.AdcRestartsPacket
 import rocks.crownstone.bluenet.packets.other.GpregretPacket
+import rocks.crownstone.bluenet.packets.other.RamStatsPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesIndices
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesRequestPacket
@@ -193,6 +194,18 @@ class DebugData(evtBus: EventBus, connection: ExtConnection) {
 		val resultPacket = GpregretPacket()
 		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_GPREGRET, writePacket, resultPacket)
 	}
-	
-	
+
+	/**
+	 * Get RAM statistics.
+	 *
+	 * @return Promise with RAM statistics packet as value.
+	 */
+	@Synchronized
+	fun getRamStats(): Promise<RamStatsPacket, Exception> {
+		Log.i(TAG, "getRamStats")
+		val controlClass = Control(eventBus, connection)
+		val resultPacket = RamStatsPacket()
+		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_RAM_STATS, EmptyPacket(), resultPacket)
+	}
+
 }
