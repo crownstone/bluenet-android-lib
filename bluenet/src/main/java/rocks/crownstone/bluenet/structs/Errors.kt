@@ -85,7 +85,7 @@ object Errors {
 
 	class NotImplemented: Exception("Not implemented")
 
-	class Result(result: ResultType): Exception("result: ${result.name}")
+	class Result(val result: ResultType): Exception("result: ${result.name}")
 
 	class Timeout: Exception("timed out")
 
