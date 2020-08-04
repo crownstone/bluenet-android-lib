@@ -264,6 +264,7 @@ enum class ControlTypeV4(val num: Uint16) {
 	GET_GPREGRET(86U),
 	GET_ADC_CHANNEL_SWAPS(87U),
 	GET_RAM_STATS(88U),
+	CLEAN_FLASH(100U),
 	UNKNOWN(0xFFFFU);
 	companion object {
 		private val map = ControlTypeV4.values().associateBy(ControlTypeV4::num)

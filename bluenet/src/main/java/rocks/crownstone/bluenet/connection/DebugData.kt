@@ -208,4 +208,13 @@ class DebugData(evtBus: EventBus, connection: ExtConnection) {
 		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_RAM_STATS, EmptyPacket(), resultPacket)
 	}
 
+	/**
+	 * Clean up flash
+	 */
+	@Synchronized
+	fun cleanFlash(): Promise<Unit, Exception> {
+		Log.i(TAG, "cleanFlash")
+		val controlClass = Control(eventBus, connection)
+		return controlClass.writeCommandAndGetResult(ControlTypeV4.CLEAN_FLASH, EmptyPacket())
+	}
 }

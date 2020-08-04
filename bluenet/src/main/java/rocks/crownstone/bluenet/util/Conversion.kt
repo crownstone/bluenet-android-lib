@@ -410,6 +410,11 @@ object Conversion {
 		Log.v(TAG, "class: ${T::class}")
 		// Using T::class doesn't work, maybe because unsigned ints are still experimental.
 		when (T::class.simpleName) {
+			"Unit" -> {
+				if (array.size != 0) {
+					throw Errors.Parse("Expected size of 0, size=${array.size}")
+				}
+			}
 			"Byte", "UByte" -> {
 				if (array.size != 1) {
 					throw Errors.Parse("Expected size of 1, size=${array.size}")
@@ -430,6 +435,8 @@ object Conversion {
 			}
 		}
 		when (T::class.simpleName) {
+			"Unit" ->
+				return Unit as T
 			"Byte" ->
 				return array[offset] as T
 			"UByte" ->
@@ -452,6 +459,9 @@ object Conversion {
 	inline fun <reified T> toByteArray(value: T): ByteArray {
 		// Using T::class doesn't work, maybe because unsigned ints are still experimental.
 		when (T::class.simpleName) {
+			"Unit" -> {
+				return ByteArray(0)
+			}
 			"Boolean" -> {
 				val uint8: Uint8 = if (value as Boolean) 1U else 0U
 				return uint8ToByteArray(uint8)
