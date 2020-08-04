@@ -8,6 +8,7 @@
 package rocks.crownstone.bluenet.connection
 
 import nl.komponents.kovenant.Promise
+import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.then
 import nl.komponents.kovenant.unwrap
 import rocks.crownstone.bluenet.packets.ByteArrayPacket
@@ -22,9 +23,7 @@ import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesRequestPacket
 import rocks.crownstone.bluenet.packets.powerSamples.PowerSamplesType
 import rocks.crownstone.bluenet.packets.switchHistory.SwitchHistoryListPacket
 import rocks.crownstone.bluenet.structs.*
-import rocks.crownstone.bluenet.util.Conversion
-import rocks.crownstone.bluenet.util.EventBus
-import rocks.crownstone.bluenet.util.Log
+import rocks.crownstone.bluenet.util.*
 
 /**
  * Class to get debug information.
@@ -86,9 +85,13 @@ class DebugData(evtBus: EventBus, connection: ExtConnection) {
 		val indices = PowerSamplesIndices(type)
 		Log.i(TAG, "getPowerSamples type=$type indices=$indices")
 		val powerSamples = ArrayList<PowerSamplesPacket>()
-		return getNextPowerSamples(type, indices, powerSamples)
+//		return getNextPowerSamples(type, indices, powerSamples)
+		return getNextPowerSamples(type, 0U, powerSamples)
 	}
 
+	/**
+	 * Gets power samples of given list of indices.
+	 */
 	private fun getNextPowerSamples(type: PowerSamplesType, indices: MutableList<Uint8>, powerSamples: MutableList<PowerSamplesPacket>):
 			Promise<List<PowerSamplesPacket>, Exception> {
 		if (indices.isEmpty()) {
@@ -101,6 +104,35 @@ class DebugData(evtBus: EventBus, connection: ExtConnection) {
 					powerSamples.add(it)
 					getNextPowerSamples(type, indices, powerSamples)
 				}.unwrap()
+	}
+
+	/**
+	 * Gets power samples at given index, then continues with next indices, until the result code is WRONG_PARAMETER.
+	 */
+	private fun getNextPowerSamples(type: PowerSamplesType, index: Uint8, powerSamples: MutableList<PowerSamplesPacket>):
+			Promise<List<PowerSamplesPacket>, Exception> {
+		val deferred = deferred<List<PowerSamplesPacket>, Exception>()
+		getPowerSamples(type, index)
+				.success { samples ->
+					powerSamples.add(samples)
+					val nextIndex: Uint8 = (index + 1U).toUint8()
+					getNextPowerSamples(type, nextIndex, powerSamples)
+							.success {
+								deferred.resolve(powerSamples)
+							}
+							.fail {
+								deferred.reject(it)
+							}
+				}
+				.fail {
+					if (it is Errors.Result && it.result == ResultType.WRONG_PARAMETER) {
+						deferred.resolve(powerSamples)
+					}
+					else {
+						deferred.reject(it)
+					}
+				}
+		return deferred.promise
 	}
 
 	/**
