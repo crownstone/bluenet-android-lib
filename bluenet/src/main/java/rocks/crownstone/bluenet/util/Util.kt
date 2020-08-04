@@ -177,7 +177,11 @@ object Util {
 	 * Makes a promise recoverable.
 	 *
 	 * @param promise The promise to recover.
-	 * @param recoverPromise Function that returns a new promise, based on the error. Example: { error ->	return@recoverablePromise Promise.ofSuccess(5) }
+	 * @param recoverPromise Function that returns a new promise, based on the error. Example:
+	 *                           fun (error: Exception): Promise<Unit, Exception> {
+	 *                               if (error is Errors.Timeout) { return Promise.ofSuccess(Unit) }
+	 *                               return Promise.ofFail(error)
+	 *                           }
 	 * @return Promise that resolves when original promise resolves, or the recoverPromise when the original promise is rejected.
 	 */
 	fun <T>recoverablePromise(promise: Promise<T, Exception>, recoverPromise: (error: Exception) -> Promise<T, Exception>): Promise<T, Exception> {
