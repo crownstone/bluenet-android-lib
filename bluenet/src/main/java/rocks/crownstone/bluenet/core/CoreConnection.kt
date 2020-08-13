@@ -741,6 +741,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			if (!done) {
 				done = true
 				unsubscribe(serviceUuid, characteristicUuid, unsubId)
+						.fail { Log.i(TAG, "Failed to unsubscribe") }
 						.always {
 							deferred.reject(Errors.Timeout())
 						}
@@ -816,6 +817,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			if (!done) {
 				done = true
 				unsubscribe(serviceUuid, characteristicUuid, unsubId)
+						.fail { Log.i(TAG, "Failed to unsubscribe") }
 						.always {
 							deferred.reject(Errors.Timeout())
 						}

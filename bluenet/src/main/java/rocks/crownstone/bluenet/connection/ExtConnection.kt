@@ -100,7 +100,35 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	@Synchronized
 	fun waitForDisconnect(clearCache: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_WAIT_FOR_DISCONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "waitForDisconnect timeoutMs=$timeoutMs clearCache=$clearCache")
-		return bleCore.waitForDisconnect(clearCache, timeoutMs)
+		return waitForDisconnectAttempt(clearCache, timeoutMs, BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPTS)
+	}
+
+	@Synchronized
+	private fun waitForDisconnectAttempt(clearCache: Boolean, timeoutMs: Long, attemptsLeft: Int): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		bleCore.waitForDisconnect(clearCache, timeoutMs)
+				.success {
+					deferred.resolve()
+				}
+				.fail { coreException ->
+					if (attemptsLeft < 1) {
+						deferred.reject(coreException)
+						return@fail
+					}
+					if (coreException !is Errors.Busy) {
+						deferred.reject(coreException)
+						return@fail
+					}
+					// Retry after waiting.
+					bleCore.wait(BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPT_WAIT).always {
+						waitForDisconnectAttempt(clearCache, timeoutMs, attemptsLeft - 1)
+								.success { deferred.resolve() }
+								.fail { recursiveException ->
+									deferred.reject(recursiveException)
+								}
+					}
+				}
+		return deferred.promise
 	}
 
 	/**

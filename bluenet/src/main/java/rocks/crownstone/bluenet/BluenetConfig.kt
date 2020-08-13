@@ -34,6 +34,11 @@ object BluenetConfig {
 
 	val CONNECT_RETRIES = 3
 
+	val SETUP_WAIT_FOR_SUCCESS_TIME: Long = 4000
+
+	val WAIT_FOR_DISCONNECT_ATTEMPTS = 15
+	val WAIT_FOR_DISCONNECT_ATTEMPT_WAIT: Long = 200
+
 	val COMMAND_BROADCAST_INTERVAL_MS = 250 // Time for each packet to be advertised.
 	val COMMAND_BROADCAST_TIME_MS = 1500 // Time for each command to be advertised. Should be a multiple of interval.
 	val COMMAND_BROADCAST_RELIABLE_TIME_MS = 5000 // Time for a command that needs high reliability to be advertised. Should be a multiple of interval.

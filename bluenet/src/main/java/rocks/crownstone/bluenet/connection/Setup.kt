@@ -8,6 +8,7 @@
 package rocks.crownstone.bluenet.connection
 
 import nl.komponents.kovenant.*
+import rocks.crownstone.bluenet.BluenetConfig
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.encryption.MeshKeySet
 import rocks.crownstone.bluenet.packets.wrappers.v3.CommandResultPacket
@@ -257,7 +258,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 
 		// Subscribe and write command
 		performFastSetup(
-				connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, characteristicUuid, writeCommand, processCallback, 3000),
+				connection.getMultipleMergedNotifications(BluenetProtocol.SETUP_SERVICE_UUID, characteristicUuid, writeCommand, processCallback, BluenetConfig.SETUP_WAIT_FOR_SUCCESS_TIME),
 				deferred
 		)
 
@@ -276,7 +277,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		// Subscribe and write command
 		val resultClass = Result(eventBus, connection)
 		performFastSetup(
-				resultClass.getMultipleResultsV4(writeCommand, processCallback, 3000, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
+				resultClass.getMultipleResultsV4(writeCommand, processCallback, BluenetConfig.SETUP_WAIT_FOR_SUCCESS_TIME, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
 				deferred
 		)
 
@@ -295,7 +296,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 		// Subscribe and write command
 		val resultClass = Result(eventBus, connection)
 		performFastSetup(
-				resultClass.getMultipleResultsV5(writeCommand, processCallback, 3000, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
+				resultClass.getMultipleResultsV5(writeCommand, processCallback, BluenetConfig.SETUP_WAIT_FOR_SUCCESS_TIME, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
 				deferred
 		)
 
@@ -351,6 +352,7 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 				notificationPromise,
 				fun (error: Exception): Promise<Unit, Exception> {
 					// If the promise failed with a timeout error, assume it was a success (because we assume the crownstone rebooted before sending the notification).
+					Log.i(TAG, "notification error: $error")
 					if (error is Errors.Timeout) {
 						sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
 						return Promise.ofSuccess(Unit)
@@ -359,13 +361,24 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 				}
 		)
 				.then {
-					connection.waitForDisconnect(true)
+					// Wait for disconnect, but let it always resolve.
+					Util.recoverableUnitPromise(
+							connection.waitForDisconnect(true)
+									.fail {
+										Log.i(TAG, "Device didn't disconnect, disconnect ourselves.")
+										connection.disconnect(true)
+									},
+							fun (error: Exception): Boolean {
+								return true
+							}
+					)
 				}.unwrap()
 				.then {
 					sendProgress(FastSetupStep.DISCONNECTED, deferred.promise.isDone())
 					deferred.resolve()
 				}
 				.fail {
+					// Always disconnect in case of failure.
 					connection.disconnect(true)
 							.always {
 								if (!deferred.promise.isDone()) {
