@@ -278,7 +278,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 		ActivityCompat.requestPermissions(
 				activity,
-				arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+				arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
 				REQ_CODE_PERMISSIONS_LOCATION)
 
 		return true
@@ -318,7 +318,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 		ActivityCompat.requestPermissions(
 				activity,
-				arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+				arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
 				REQ_CODE_PERMISSIONS_LOCATION)
 
 		handler.postDelayed(getLocationPermissionTimeout, LOCATION_SERVICE_PERMISSION_TIMEOUT)
@@ -356,7 +356,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 					// Only lock once on correct thread. (Is the lock even required then?)
 					synchronized(this) {
 						handler.removeCallbacks(getLocationPermissionTimeout)
-						if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_COARSE_LOCATION &&
+						if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
 								grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 							// Permission granted.
 							Log.i(TAG, "handlePermissionResult granted")
@@ -715,7 +715,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 			Log.i(TAG, "isLocationPermissionGranted true")
 			return true
 		}
-		val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+		val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
 		val result = permissionCheck == PackageManager.PERMISSION_GRANTED
 		Log.i(TAG, "isLocationPermissionGranted $result")
 		return result
