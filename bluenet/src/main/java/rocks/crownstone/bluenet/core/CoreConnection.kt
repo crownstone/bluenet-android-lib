@@ -122,7 +122,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	 * @return Promise
 	 */
 	@Synchronized
-	fun disconnect(): Promise<Unit, Exception> {
+	private fun disconnect(): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect")
 		if (!isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
@@ -163,6 +163,104 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 			}
 		}
 		return deferred.promise
+	}
+
+	/**
+	 * Wait for the device to disconnect us, and release the BluetoothGatt resources.
+	 *
+	 * @param clearCache Whether to clear the cache, this is useful when you expect the services to change next time you connect.
+	 * @param timeoutMs Time in ms to wait for the disconnect.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun waitForDisconnect(clearCache: Boolean, timeoutMs: Long): Promise<Unit, Exception> {
+		Log.i(TAG, "waitForDisconnect")
+		val gatt = this.currentGatt
+		if (gatt == null) {
+			Log.d(TAG, "already closed")
+			return Promise.ofSuccess(Unit)
+		}
+		if (promises.isBusy()) {
+			Log.w(TAG, "busy")
+			return Promise.ofFail(Errors.Busy())
+		}
+		val deferred = deferred<Unit, Exception>()
+		val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
+		Log.i(TAG, "state=${getStateString(state)}")
+		when (state) {
+			BluetoothProfile.STATE_DISCONNECTED -> {
+				closeFinal(clearCache)
+				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
+						.success { deferred.resolve() }
+			}
+			BluetoothProfile.STATE_CONNECTED -> {
+				if (promises.isBusy()) {
+					return Promise.ofFail(Errors.Busy())
+				}
+				promises.setBusy(Action.DISCONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
+			}
+			else -> {
+				deferred.reject(Errors.BusyWrongState())
+			}
+		}
+		return deferred.promise
+	}
+
+	/**
+	 * Disconnects from device, releases BluetoothGatt resources, and cleans up.
+	 *
+	 * @param clearCache Whether to clear the cache, this is useful when you expect the services to change next time you connect.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun close(clearCache: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "close")
+//		if (!isBleReady()) {
+//			return Promise.ofSuccess(Unit) // Always closed when BLE is off?? // TODO: check this
+//		}
+		val gatt = this.currentGatt
+		if (gatt == null) {
+			Log.d(TAG, "already closed")
+			return Promise.ofSuccess(Unit)
+		}
+		if (promises.isBusy()) {
+			Log.w(TAG, "busy")
+			return Promise.ofFail(Errors.Busy())
+		}
+		val deferred = deferred<Unit, Exception>()
+		val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
+		Log.i(TAG, "state=${getStateString(state)}")
+		when (state) {
+			BluetoothProfile.STATE_DISCONNECTED -> {
+				closeFinal(clearCache)
+				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
+						.success { deferred.resolve() }
+			}
+			BluetoothProfile.STATE_CONNECTED -> {
+				disconnect()
+						.always {
+							wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
+									. success {
+										closeFinal(clearCache)
+										deferred.resolve()
+									}
+						}
+			}
+			else -> {
+				deferred.reject(Errors.BusyWrongState())
+			}
+		}
+		return deferred.promise
+	}
+
+	@Synchronized
+	private fun closeFinal(clearCache: Boolean) {
+		if (clearCache) {
+			refreshGatt()
+		}
+		Log.i(TAG, "gatt.close")
+		currentGatt?.close()
+		currentGatt = null
 	}
 
 	/**
@@ -266,64 +364,6 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 				}
 			}
 		}
-	}
-
-
-	/**
-	 * Disconnects from device, releases BluetoothGatt resources, and cleans up.
-	 *
-	 * @param clearCache Whether to clear the cache, this is useful when you expect the services to change next time you connect.
-	 * @return Promise
-	 */
-	@Synchronized
-	fun close(clearCache: Boolean): Promise<Unit, Exception> {
-		Log.i(TAG, "close")
-//		if (!isBleReady()) {
-//			return Promise.ofSuccess(Unit) // Always closed when BLE is off?? // TODO: check this
-//		}
-		val gatt = this.currentGatt
-		if (gatt == null) {
-			Log.d(TAG, "already closed")
-			return Promise.ofSuccess(Unit)
-		}
-		if (promises.isBusy()) {
-			Log.w(TAG, "busy")
-			return Promise.ofFail(Errors.Busy())
-		}
-		val deferred = deferred<Unit, Exception>()
-		val state = bleManager.getConnectionState(gatt.device, BluetoothProfile.GATT)
-		Log.i(TAG, "state=${getStateString(state)}")
-		when (state) {
-			BluetoothProfile.STATE_DISCONNECTED -> {
-				closeFinal(clearCache)
-				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
-						.success { deferred.resolve() }
-			}
-			BluetoothProfile.STATE_CONNECTED -> {
-				disconnect()
-						.always {
-							wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
-									. success {
-										closeFinal(clearCache)
-										deferred.resolve()
-									}
-						}
-			}
-			else -> {
-				deferred.reject(Errors.BusyWrongState())
-			}
-		}
-		return deferred.promise
-	}
-
-	@Synchronized
-	private fun closeFinal(clearCache: Boolean) {
-		if (clearCache) {
-			refreshGatt()
-		}
-		Log.i(TAG, "gatt.close")
-		currentGatt?.close()
-		currentGatt = null
 	}
 
 	/**

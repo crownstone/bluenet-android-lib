@@ -97,6 +97,12 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		return bleCore.close(clearCache)
 	}
 
+	@Synchronized
+	fun waitForDisconnect(clearCache: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_WAIT_FOR_DISCONNECT): Promise<Unit, Exception> {
+		Log.i(TAG, "waitForDisconnect timeoutMs=$timeoutMs clearCache=$clearCache")
+		return bleCore.waitForDisconnect(clearCache, timeoutMs)
+	}
+
 	/**
 	 * Encrypt and write data.
 	 */

@@ -11,6 +11,7 @@ object BluenetConfig {
 	// Timeouts in ms
 	val TIMEOUT_CONNECT: Long =             12000 // 8000 wasn't enough for the lenovo P2.
 	val TIMEOUT_DISCONNECT: Long =          3000
+	val TIMEOUT_WAIT_FOR_DISCONNECT: Long = 10000
 	val TIMEOUT_DISCOVER: Long =            8000
 	val TIMEOUT_READ: Long =                3000
 	val TIMEOUT_WRITE: Long =               4000
