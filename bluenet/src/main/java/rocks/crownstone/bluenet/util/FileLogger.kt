@@ -153,7 +153,7 @@ class FileLogger(context: Context) {
 	}
 
 	private fun getLogFiles(): Array<File>? {
-		return logDir.listFiles(FilenameFilter { dir, filename ->
+		return logDir?.listFiles(FilenameFilter { dir, filename ->
 			return@FilenameFilter (filename.startsWith(filenamePrefix) && filename.endsWith(filenamePostfix))
 		})
 	}
