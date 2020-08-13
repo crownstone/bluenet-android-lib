@@ -359,16 +359,19 @@ class Setup(evtBus: EventBus, connection: ExtConnection) {
 				}
 		)
 				.then {
-					connection.disconnect()
+					connection.waitForDisconnect(true)
 				}.unwrap()
 				.then {
 					sendProgress(FastSetupStep.DISCONNECTED, deferred.promise.isDone())
 					deferred.resolve()
 				}
 				.fail {
-					if (!deferred.promise.isDone()) {
-						deferred.reject(it)
-					}
+					connection.disconnect(true)
+							.always {
+								if (!deferred.promise.isDone()) {
+									deferred.reject(it)
+								}
+							}
 				}
 	}
 }
