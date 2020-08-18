@@ -79,6 +79,7 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	 */
 	@Synchronized
 	fun track(ibeaconUuid: UUID, referenceId: String) {
+		Log.d(TAG, "track ibeaconUuid=$ibeaconUuid referenceId=$referenceId")
 		trackedUuids.put(ibeaconUuid, referenceId)
 		resume()
 	}
@@ -90,15 +91,18 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	 */
 	@Synchronized
 	fun stopTracking(ibeaconUuid: UUID) {
+		Log.d(TAG, "stopTracking ibeaconUuid=$ibeaconUuid")
 		trackedUuids.remove(ibeaconUuid)
 		lastSeenRegion.remove(ibeaconUuid)
 		inRegion.remove(ibeaconUuid)
-		val keys = deviceMap.keys
-		for (key in keys) {
-			if (deviceMap[key]?.ibeaconData?.uuid == ibeaconUuid) {
-				deviceMap.remove(key)
+
+		val iterator = deviceMap.iterator()
+		while (iterator.hasNext()) {
+			if (iterator.next().value.ibeaconData.uuid == ibeaconUuid) {
+				iterator.remove()
 			}
 		}
+
 		if (trackedUuids.isEmpty()) {
 			pause()
 		}
