@@ -23,6 +23,9 @@ internal object V3 {
 		}
 		servicedata.setDeviceTypeFromServiceUuid()
 		servicedata.operationMode = OperationMode.NORMAL
+
+		// Get first 4 encrypted bytes as changing data (but leave the bb position as it is).
+		servicedata.changingData = bb.getInt(bb.position())
 		return true
 	}
 

@@ -147,6 +147,6 @@ internal object Shared {
 		else {
 			servicedata.count = partialTimestamp
 		}
-		servicedata.changingData = partialTimestamp.toInt()
+//		servicedata.changingData = partialTimestamp.toInt()
 	}
 }
