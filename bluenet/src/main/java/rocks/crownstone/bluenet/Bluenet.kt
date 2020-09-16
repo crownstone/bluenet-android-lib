@@ -539,6 +539,18 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
+	 * Checks and requests background location permission, required for scanning in background.
+	 *
+	 * @param activity Activity to be used to ask for permissions.
+	 *                 The activity can implement Activity.onRequestPermissionsResult() to see if the user canceled.
+	 *                 The request code will be BleCore.REQ_CODE_PERMISSIONS_BACKGROUND_LOCATION
+	 */
+	@Synchronized
+	fun requestBackgroundLocationPermission(activity: Activity) {
+		bleCore.requestBackgroundLocationPermission(activity)
+	}
+
+	/**
 	 * Handles a permission request result, simply passed on from Activity.onRequestPermissionsResult().
 	 *
 	 * @return return true if permission result was handled, false otherwise.

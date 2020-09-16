@@ -52,6 +52,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	private var scannerReady = false
 
 	// Keep up promises
+	private var backgroundLocationPermissionPromise: Deferred<Unit, Exception>? = null
 	private var locationPermissionPromise: Deferred<Unit, Exception>? = null
 	private var enableBlePromise: Deferred<Unit, Exception>? = null
 	private var enableLocationServicePromise: Deferred<Unit, Exception>? = null
@@ -69,6 +70,9 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 
 		// The request code to enable location services.
 		const val REQ_CODE_ENABLE_LOCATION_SERVICE = 57003
+
+		// The permission request code for requesting background location (required for ble scanning in background).
+		const val REQ_CODE_PERMISSIONS_BACKGROUND_LOCATION = 57004
 
 		// Timeout for a location service permission request. If timeout expires, promise is rejected or resolved.
 		// This only serves as fallback in case handlePermissionResult() is not called.
@@ -276,9 +280,14 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 			return false
 		}
 
-		ActivityCompat.requestPermissions(
+		val permissionRequests = when (Build.VERSION.SDK_INT < 29) {
+			true -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+			false -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+		}
+
+				ActivityCompat.requestPermissions(
 				activity,
-				arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+				permissionRequests,
 				REQ_CODE_PERMISSIONS_LOCATION)
 
 		return true
@@ -316,9 +325,14 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		}
 		locationPermissionPromise = deferred
 
+		val permissionRequests = when (Build.VERSION.SDK_INT < 29) {
+			true -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+			false -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+		}
+
 		ActivityCompat.requestPermissions(
 				activity,
-				arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+				permissionRequests,
 				REQ_CODE_PERMISSIONS_LOCATION)
 
 		handler.postDelayed(getLocationPermissionTimeout, LOCATION_SERVICE_PERMISSION_TIMEOUT)
@@ -343,6 +357,97 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		locationPermissionPromise = null
 	}
 
+
+
+	/**
+	 * Checks and requests background location permission, required for scanning in background.
+	 *
+	 * @param activity Activity to be used to ask for permissions.
+	 *                 The activity can implement Activity.onRequestPermissionsResult() to see if the user canceled.
+	 *                 The request code will be BleCore.REQ_CODE_PERMISSIONS_BACKGROUND_LOCATION
+	 * @return False when unable to make the request
+	 */
+	@Synchronized
+	fun requestBackgroundLocationPermission(activity: Activity): Boolean {
+		Log.i(TAG, "requestBackgroundLocationPermission activity=$activity")
+
+		if (isBackgroundLocationPermissionGranted()) {
+			Log.i(TAG, "no need to request")
+			return true
+		}
+
+		if (!isActivityValid(activity)) {
+			Log.w(TAG,"Invalid activity")
+			return false
+		}
+
+		ActivityCompat.requestPermissions(
+				activity,
+				arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+				REQ_CODE_PERMISSIONS_BACKGROUND_LOCATION)
+
+		return true
+	}
+
+	/**
+	 * Checks and gets background location permission, required for scanning in background.
+	 *
+	 * Does not check if location service is enabled.
+	 *
+	 * @param activity Activity that will be used to ask for permissions (if needed).
+	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
+	 *                 and from there calls BleCore.handlePermissionResult().
+	 * @return Promise that will be resolved when permissions are granted.
+	 */
+	@Synchronized
+	fun getBackgroundLocationPermission(activity: Activity?): Promise<Unit, Exception> {
+		Log.i(TAG, "getBackgroundLocationPermission activity=$activity")
+		val deferred = deferred<Unit, Exception>()
+		val promise = deferred.promise
+
+		if (isBackgroundLocationPermissionGranted()) {
+			deferred.resolve()
+			return promise
+		}
+
+		if (activity == null || !isActivityValid(activity)) {
+			deferred.reject(Exception("Invalid activity"))
+			return promise
+		}
+
+		if (backgroundLocationPermissionPromise != null) {
+			deferred.reject(Exception("busy"))
+			return promise
+		}
+		backgroundLocationPermissionPromise = deferred
+
+		ActivityCompat.requestPermissions(
+				activity,
+				arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+				REQ_CODE_PERMISSIONS_BACKGROUND_LOCATION)
+
+		handler.postDelayed(getBackgroundLocationPermissionTimeout, LOCATION_SERVICE_PERMISSION_TIMEOUT)
+
+		// Wait for result
+		return promise
+	}
+
+	private val getBackgroundLocationPermissionTimeout = Runnable {
+		onBackgroundLocationPermissionTimeout()
+	}
+
+	@Synchronized
+	fun onBackgroundLocationPermissionTimeout() {
+		Log.i(TAG, "onBackgroundLocationPermissionTimeout")
+		if (isLocationPermissionGranted()) {
+			backgroundLocationPermissionPromise?.resolve()
+		}
+		else {
+			backgroundLocationPermissionPromise?.reject(Exception("background location permission not granted after timeout"))
+		}
+		backgroundLocationPermissionPromise = null
+	}
+
 	/**
 	 * Handles a permission request result, simply passed on from Activity.onRequestPermissionsResult().
 	 *
@@ -356,19 +461,56 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 					// Only lock once on correct thread. (Is the lock even required then?)
 					synchronized(this) {
 						handler.removeCallbacks(getLocationPermissionTimeout)
-						if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_FINE_LOCATION &&
+						for (i in 0 until permissions.size) {
+							Log.i(TAG, "permission=${permissions[i]} granted=${grantResults[i]}")
+							if (permissions[i] == Manifest.permission.ACCESS_FINE_LOCATION && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+								Log.i(TAG, "handlePermissionResult granted")
+								eventBus.emit(BluenetEvent.LOCATION_PERMISSION_GRANTED)
+								locationPermissionPromise?.resolve()
+								locationPermissionPromise = null
+							}
+							if (permissions[i] == Manifest.permission.ACCESS_BACKGROUND_LOCATION && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+								Log.i(TAG, "handlePermissionResult granted")
+								eventBus.emit(BluenetEvent.BACKGROUND_LOCATION_PERMISSION_GRANTED)
+								backgroundLocationPermissionPromise?.resolve()
+								backgroundLocationPermissionPromise = null
+							}
+						}
+						if (locationPermissionPromise != null) {
+							Log.i(TAG, "location permission denied")
+							locationPermissionPromise?.reject(Exception("location permission denied"))
+							locationPermissionPromise = null
+						}
+						if (backgroundLocationPermissionPromise != null) {
+							Log.i(TAG, "background location permission denied")
+							backgroundLocationPermissionPromise?.reject(Exception("background location permission denied"))
+							backgroundLocationPermissionPromise = null
+						}
+
+					}
+				}
+				return true
+			}
+
+			REQ_CODE_PERMISSIONS_BACKGROUND_LOCATION -> {
+				handler.post {
+					// Post, so that this code is executed on correct thread.
+					// Only lock once on correct thread. (Is the lock even required then?)
+					synchronized(this) {
+						handler.removeCallbacks(getBackgroundLocationPermissionTimeout)
+						if (permissions.isNotEmpty() && permissions[0] == Manifest.permission.ACCESS_BACKGROUND_LOCATION &&
 								grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 							// Permission granted.
 							Log.i(TAG, "handlePermissionResult granted")
-							eventBus.emit(BluenetEvent.LOCATION_PERMISSION_GRANTED)
-							locationPermissionPromise?.resolve()
+							eventBus.emit(BluenetEvent.BACKGROUND_LOCATION_PERMISSION_GRANTED)
+							backgroundLocationPermissionPromise?.resolve()
 						}
 						else {
 							// Permission not granted.
 							Log.i(TAG, "handlePermissionResult denied")
-							locationPermissionPromise?.reject(Exception("location permission denied"))
+							backgroundLocationPermissionPromise?.reject(Exception("background location permission denied"))
 						}
-						locationPermissionPromise = null
+						backgroundLocationPermissionPromise = null
 					}
 				}
 				return true
@@ -718,6 +860,21 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
 		val result = permissionCheck == PackageManager.PERMISSION_GRANTED
 		Log.i(TAG, "isLocationPermissionGranted $result")
+		return result
+	}
+
+	/**
+	 * Check if background location permission is granted.
+	 */
+	@Synchronized
+	fun isBackgroundLocationPermissionGranted(): Boolean {
+		if (Build.VERSION.SDK_INT < 29) {
+			Log.i(TAG, "isBackgroundLocationPermissionGranted true")
+			return true
+		}
+		val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+		val result = permissionCheck == PackageManager.PERMISSION_GRANTED
+		Log.i(TAG, "isBackgroundLocationPermissionGranted $result")
 		return result
 	}
 
