@@ -46,13 +46,20 @@ class DeviceInfo(evtBus: EventBus, connection: ExtConnection) {
 			return Promise.ofFail(Errors.Mode("Not in normal or setup mode"))
 		}
 		val deferred = deferred<String, Exception>()
-		connection.read(BluenetProtocol.DEVICE_INFO_SERVICE_UUID, BluenetProtocol.CHAR_FIRMWARE_REVISION_UUID, false)
+		val control = Control(eventBus, connection)
+		control.writeCommandAndGetResult<String>(ControlTypeV4.GET_FIRMWARE_VERSION, EmptyPacket())
 				.success {
-					val version = String(it)
-					deferred.resolve(version)
+					deferred.resolve(it)
 				}
 				.fail {
-					deferred.reject(it)
+					connection.read(BluenetProtocol.DEVICE_INFO_SERVICE_UUID, BluenetProtocol.CHAR_FIRMWARE_REVISION_UUID, false)
+							.success {
+								val version = String(it)
+								deferred.resolve(version)
+							}
+							.fail {
+								deferred.reject(it)
+							}
 				}
 		return deferred.promise
 	}

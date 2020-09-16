@@ -129,6 +129,15 @@ object Conversion {
 		return Base64.encodeToString(bytes, Base64.NO_WRAP)
 	}
 
+	fun byteArrayToString(bytes: ByteArray, offset: Int = 0, length: Int? = null): String {
+		val stringSize = (length ?: bytes.size - offset)
+		return String(bytes, offset, stringSize)
+	}
+
+	fun stringToByteArray(string: String): ByteArray {
+		return string.toByteArray()
+	}
+
 //	@JvmOverloads
 	fun byteArrayToInt(bytes: ByteArray, offset: Int = 0): Int {
 		val bb = ByteBuffer.wrap(bytes)
@@ -430,6 +439,11 @@ object Conversion {
 					throw Errors.Parse("Expected size of 4, size=${array.size}")
 				}
 			}
+			"String" -> {
+				if (array.isEmpty()) {
+					throw Errors.Parse("Expected size > 0")
+				}
+			}
 			else -> {
 				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 			}
@@ -451,6 +465,8 @@ object Conversion {
 				return toUint32(byteArrayToInt(array, offset)) as T
 			"Float" ->
 				return byteArrayToFloat(array, offset) as T
+			"String" ->
+				return byteArrayToString(array, offset) as T
 			else ->
 				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 		}
@@ -480,6 +496,8 @@ object Conversion {
 				return uint32ToByteArray(value as Uint32)
 			"Float" ->
 				return floatToByteArray(value as Float)
+			"String" ->
+				return stringToByteArray(value as String)
 			else ->
 				throw Errors.Parse("Unexpected type: ${T::class.simpleName}")
 		}

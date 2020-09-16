@@ -23,6 +23,7 @@ enum class BluenetEvent {
 	BLE_TURNED_OFF,                    // Bluetooth is turned off.
 	NO_LOCATION_SERVICE_PERMISSION,    // Sent when location service permission is required, but not granted.
 	LOCATION_PERMISSION_GRANTED,       // Sent when location service permission is granted.
+	BACKGROUND_LOCATION_PERMISSION_GRANTED, // Sent when background location service permission is granted.
 	LOCATION_SERVICE_TURNED_ON,        // Sent when location service is turned on.
 	LOCATION_SERVICE_TURNED_OFF,       // Sent when location service is turned off.
 	CORE_SCANNER_READY,                // Core scanner is ready to be used. Used internally.
