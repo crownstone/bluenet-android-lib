@@ -245,15 +245,19 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		initBle()
 		return getLocationPermission(activity)
 				.then {
+					Log.i(TAG, "makeScannerReady: initScanner")
 					initScanner()
 				}
 				.then {
+					Log.i(TAG, "makeScannerReady: enableBle")
 					enableBle(activity)
 				}.unwrap()
 				.then {
+					Log.i(TAG, "makeScannerReady: enableLocationService")
 					enableLocationService(activity)
 				}.unwrap()
 				.then {
+					Log.i(TAG, "makeScannerReady: setScanner")
 					setScanner()
 				}
 	}
