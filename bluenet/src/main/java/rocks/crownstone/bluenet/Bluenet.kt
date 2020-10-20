@@ -265,8 +265,7 @@ class Bluenet(looper: Looper? = null) {
 			deferred.resolve()
 			return
 		}
-		Util.waitPromise(100, handler)
-				.success { checkReady(deferred) }
+		handler.postDelayed({checkReady(deferred)}, 100)
 	}
 
 	/**
