@@ -105,7 +105,7 @@ object RC5 {
 		var b = data[1]
 		for (i in RC5_ROUNDS downTo 1) {
 			b = rotateRight((b - expandedKey[2*i + 1]).toUint16(), a.toInt() % 16) xor a
-			a = rotateRight((a - expandedKey[2*i]).toUint16()    , b.toInt() % 16)
+			a = rotateRight((a - expandedKey[2*i]).toUint16()    , b.toInt() % 16) xor b
 		}
 		val decrypted = ArrayList<Uint16>(2)
 		decrypted.add(Conversion.toUint16(a - expandedKey[0]))
