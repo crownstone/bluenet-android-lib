@@ -7,11 +7,9 @@
 
 package rocks.crownstone.bluenet.connection
 
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
-import nl.komponents.kovenant.then
-import nl.komponents.kovenant.unwrap
+import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
+import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.wrappers.v3.StatePacket
 import rocks.crownstone.bluenet.packets.schedule.ScheduleListPacket
 import rocks.crownstone.bluenet.structs.*
@@ -125,7 +123,23 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getTime(): Promise<Uint32, Exception> {
 		Log.i(TAG, "getTime")
-		return getStateValue(StateType.TIME, StateTypeV4.TIME)
+		val deferred = deferred<Uint32, Exception>()
+		getStateValue<Uint32>(StateType.TIME, StateTypeV4.TIME)
+				.success() {
+					deferred.resolve(it)
+				}
+				.fail() {
+					Log.i(TAG, "Failed to get state time, trying via control command. Error: $it")
+					val control = Control(eventBus, connection)
+					control.writeCommandAndGetResult<Uint32>(ControlTypeV4.GET_TIME, EmptyPacket())
+							.success() {
+								deferred.resolve(it)
+							}
+							.fail {
+								deferred.reject(it)
+							}
+				}
+		return deferred.promise
 	}
 
 	/**
@@ -140,60 +154,6 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 		return promise.then {
 			ErrorState(it)
 		}
-	}
-
-	@Synchronized
-	fun getSwitchCraftBuffers(): Promise<List<Int16>, Exception> {
-		Log.i(TAG, "getSwitchCraftBuffers")
-		val deferred = deferred<List<Int16>, Exception>()
-		val allSamples = ArrayList<Int16>()
-		getSwitchCraftBuffer(StateType.SWITCHCRAFT_LAST_BUF1)
-				.then {
-					allSamples.addAll(it)
-					getSwitchCraftBuffer(StateType.SWITCHCRAFT_LAST_BUF2)
-				}.unwrap()
-				.then {
-					allSamples.addAll(it)
-					getSwitchCraftBuffer(StateType.SWITCHCRAFT_LAST_BUF3)
-				}.unwrap()
-				.then {
-					allSamples.addAll(it)
-					deferred.resolve(allSamples)
-				}
-				.fail { deferred.reject(it) }
-		return deferred.promise
-	}
-
-	@Synchronized
-	private fun getSwitchCraftBuffer(buf: StateType): Promise<List<Int16>, Exception> {
-		Log.i(TAG, "getSwitchCraftBuffers")
-		val deferred = deferred<List<Int16>, Exception>()
-		getState(buf)
-				.then {
-					val arr = it.getPayload()
-					if (arr == null) {
-						deferred.reject(Errors.Parse("state payload expected"))
-						return@then
-//						return@then Promise.ofFail<ByteArray, Exception>(Errors.Parse("state payload expected"))
-					}
-					if (arr.size < 2) {
-						deferred.reject(Errors.Parse("payload too small"))
-						return@then
-//						return@then Promise.ofFail<ByteArray, Exception>(Errors.Parse("payload too small"))
-					}
-//					val length = Conversion.byteArrayTo<Uint16>(arr)
-					val length = Conversion.toUint16(Conversion.byteArrayToShort(arr))
-					if (arr.size - 2 < length.toInt() * 2) {
-						deferred.reject(Errors.Parse("payload too small for length"))
-						return@then
-//						return@then Promise.ofFail<ByteArray, Exception>(Errors.Parse("payload too small for length"))
-					}
-					val samples = Conversion.byteArrayToInt16Array(arr, 2)
-					deferred.resolve(samples)
-//					return@then Promise.ofSuccess<List<Uint16>, Exception>(samples)
-				}
-				.fail { deferred.reject(it) }
-		return deferred.promise
 	}
 
 
