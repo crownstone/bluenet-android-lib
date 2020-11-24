@@ -265,8 +265,7 @@ class Bluenet(looper: Looper? = null) {
 			deferred.resolve()
 			return
 		}
-		Util.waitPromise(100, handler)
-				.success { checkReady(deferred) }
+		handler.postDelayed({checkReady(deferred)}, 100)
 	}
 
 	/**
@@ -494,6 +493,29 @@ class Bluenet(looper: Looper? = null) {
 			eventBus.emit(BluenetEvent.SUN_TIME_CHANGED, sphereId)
 		}
 	}
+
+	/**
+	 * Set whether to use time as validation for broadcasts.
+	 */
+	@Synchronized
+	fun setTimeBasedValidation(sphereId: SphereId?, enable: Boolean) {
+		var changed = false
+		if (sphereId == null) {
+			for (state in libState.sphereState) {
+				changed = changed || (state.value.useTimeForBroadcastValidation != enable)
+				state.value.useTimeForBroadcastValidation = enable
+			}
+		}
+		else {
+			val state = libState.sphereState[sphereId] ?: return
+			changed = changed || (state.useTimeForBroadcastValidation != enable)
+			state.useTimeForBroadcastValidation = enable
+		}
+		if (changed) {
+			eventBus.emit(BluenetEvent.USE_TIME_BASED_VALIDATION_CHANGED, sphereId)
+		}
+	}
+
 
 //	/**
 //	 * Set the keys for encryption and decryption.

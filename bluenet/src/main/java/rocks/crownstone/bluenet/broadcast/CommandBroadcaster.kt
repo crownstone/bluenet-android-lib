@@ -39,7 +39,7 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
 	private val handler = Handler(looper)
-	private val queue = CommandBroadcastQueue()
+	private val queue = CommandBroadcastQueue(state)
 	private val broadcastPacketBuilder = BroadcastPacketBuilder(libState, encryptionManager)
 	private var startTime = 0L
 	private var broadcasting = false

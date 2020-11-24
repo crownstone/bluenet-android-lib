@@ -36,7 +36,7 @@ class FileLogger(context: Context) {
 		private val logTimestampFormat = SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ss.SSS", Locale.ENGLISH)
 		private val fileNameTimestampFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH)
 		const val filenamePrefix = "log_"
-		const val filenamePostfix = ".txt"
+		const val filenamePostfix = ".log"
 		const val minFreeSpace = (10 * 1024 * 1024L) // 1 MB, checked when before writing a line.
 		const val writePermissionRequestCode = 3491
 		private var hasWritePermissions = true

@@ -51,6 +51,7 @@ enum class BluenetEvent {
 	TAP_TO_TOGGLE_CHANGED,             // Tap to toggle state changed.        SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
 	IGNORE_FOR_BEHAVIOUR_CHANGED,      // Ignore for behaviour state changed. SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
 	SUN_TIME_CHANGED,                  // Sun time changed.                   SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
+	USE_TIME_BASED_VALIDATION_CHANGED, // Using time based validation changed. SphereId that changed as data, or null for all spheres. Current state can be found in BluenetState.
 	CURRENT_SPHERE_CHANGED,            // Current sphere changed. Current SphereId as data, or null for none. Current state can be found in BluenetState.
 	PROFILE_ID_CHANGED,                // Profile id changed. SphereId that changed as data. Current state can be found in BluenetState.
 	DEVICE_TOKEN_CHANGED,              // Device token changed. SphereId that changed as data. Current state can be found in BluenetState.
@@ -105,6 +106,7 @@ data class SphereSettings(
  * @param ignoreMeForBehaviour    Whether this device should be ignored for behaviour presence.
  * @param sunRiseAfterMidnight    Seconds after midnight at which sun rises.
  * @param sunSetAfterMidnight     Seconds after midnight at which sun sets.
+ * @param useTimeForBroadcastValidation Whether to use timestamp as encryption validation for broadcasts.
  */
 data class SphereState(
 		var settings: SphereSettings,
@@ -115,7 +117,8 @@ data class SphereState(
 		var rssiOffset: Int = 0,                   // TODO: this is a setting.
 		var ignoreMeForBehaviour: Boolean = false, // TODO: this is a setting.
 		var sunRiseAfterMidnight: Int32 = -1,
-		var sunSetAfterMidnight: Int32 = -1
+		var sunSetAfterMidnight: Int32 = -1,
+		var useTimeForBroadcastValidation: Boolean = false
 )
 
 data class KeyData(val keySet: KeySet, val ibeaconUuid: UUID)

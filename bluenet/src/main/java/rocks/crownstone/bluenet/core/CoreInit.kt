@@ -221,13 +221,16 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	fun tryMakeScannerReady(activity: Activity?) {
 		Log.i(TAG, "tryMakeScannerReady")
 		initBle()
-		getLocationPermission(activity)
-				.success {
-					initScanner()
-					requestEnableBle(activity)
-					requestEnableLocationService(activity)
-					setScanner()
-				}
+		if (isLocationPermissionGranted()) {
+			Log.i(TAG, "tryMakeScannerReady: initScanner")
+			initScanner()
+			requestEnableBle(activity)
+			requestEnableLocationService(activity)
+			setScanner()
+		}
+		else {
+			requestLocationPermission(activity)
+		}
 	}
 
 	/**
@@ -245,15 +248,19 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		initBle()
 		return getLocationPermission(activity)
 				.then {
+					Log.i(TAG, "makeScannerReady: initScanner")
 					initScanner()
 				}
 				.then {
+					Log.i(TAG, "makeScannerReady: enableBle")
 					enableBle(activity)
 				}.unwrap()
 				.then {
+					Log.i(TAG, "makeScannerReady: enableLocationService")
 					enableLocationService(activity)
 				}.unwrap()
 				.then {
+					Log.i(TAG, "makeScannerReady: setScanner")
 					setScanner()
 				}
 	}
@@ -267,7 +274,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	 * @return False when unable to make the request
 	 */
 	@Synchronized
-	fun requestLocationPermission(activity: Activity): Boolean {
+	fun requestLocationPermission(activity: Activity?): Boolean {
 		Log.i(TAG, "requestLocationPermission activity=$activity")
 
 		if (isLocationPermissionGranted()) {
@@ -286,7 +293,7 @@ open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 		}
 
 				ActivityCompat.requestPermissions(
-				activity,
+				activity as Activity,
 				permissionRequests,
 				REQ_CODE_PERMISSIONS_LOCATION)
 

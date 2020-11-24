@@ -22,10 +22,11 @@ import kotlin.collections.ArrayList
  * Selects which items to broadcast next.
  * Each item can have a promise that will be resolved when it has been advertised long enough.
  */
-class CommandBroadcastQueue {
+class CommandBroadcastQueue(state: BluenetState) {
 	private val TAG = this.javaClass.simpleName
 	private val queue = LinkedList<CommandBroadcastItem>()
 	private val advertisedItems = ArrayList<CommandBroadcastItem>()
+	private val libState = state
 
 	/**
 	 * Add an item to the queue.
@@ -127,9 +128,17 @@ class CommandBroadcastQueue {
 			CommandBroadcastItemType.SET_TIME -> CommandBroadcastType.SET_TIME
 			CommandBroadcastItemType.BEHAVIOUR_SETTINGS -> CommandBroadcastType.BEHAVIOUR_SETTINGS
 		}
+
+		// Some commands may have a validation timestamp set, if so: use that timestamp.
+		// Otherwise, use the crownstone's timestamp, or deprecated CAFEBABE.
 		val validationTimestamp = when (firstItem.validationTimestamp) {
-			null -> Conversion.toUint32(BluenetProtocol.CAFEBABE)
-//			null -> Util.getLocalTimestamp() // TODO: use time from crownstones
+			null -> {
+				val useTimeForBroadcastValidation: Boolean = libState.sphereState[firstItem.sphereId]?.useTimeForBroadcastValidation ?: false
+				when (useTimeForBroadcastValidation) {
+					true -> Util.getLocalTimestamp() // TODO: use time from crownstones
+					false -> Conversion.toUint32(BluenetProtocol.CAFEBABE)
+				}
+			}
 			else -> firstItem.validationTimestamp
 		}
 		val packet = CommandBroadcastPacket(validationTimestamp, firstItem.sphereId, type, payload)

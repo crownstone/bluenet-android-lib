@@ -32,8 +32,8 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
 	private var protocolVersion: Uint8? = null
-//	var isConnected = false
-//		private set
+	var isReady: Boolean = false
+		private set
 	var mode = CrownstoneMode.UNKNOWN
 		private set
 
@@ -46,6 +46,16 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
 		val deferred = deferred<Unit, Exception>()
+
+		if (isReady && address.equals(bleCore.getConnectedAddress())) {
+			// Assume we didn't disconnect and reconnect without calling disconnect() or waitForDisconnect().
+			// TODO: maybe subscribe to disconnect event to set isReady to false?
+			Log.i(TAG, "Already connected")
+			deferred.resolve()
+			return deferred.promise
+		}
+
+		isReady = false
 		connectionAttempt(address, timeoutMs, retries)
 				.then {
 					mode = CrownstoneMode.UNKNOWN
@@ -55,7 +65,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 					postConnect(address)
 				}.unwrap()
 				.success {
-//					isConnected = true
+					isReady = true
 					deferred.resolve()
 				}
 				.fail {
@@ -94,6 +104,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	@Synchronized
 	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
+		isReady = false
 		return bleCore.close(clearCache)
 	}
 
@@ -101,6 +112,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	fun waitForDisconnect(clearCache: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_WAIT_FOR_DISCONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "waitForDisconnect timeoutMs=$timeoutMs clearCache=$clearCache")
 		return waitForDisconnectAttempt(clearCache, timeoutMs, BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPTS)
+				.success { isReady = false }
 	}
 
 	@Synchronized
