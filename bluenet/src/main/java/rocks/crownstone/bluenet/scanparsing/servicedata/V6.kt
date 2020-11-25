@@ -29,6 +29,7 @@ internal object V6 {
 		servicedata.type = ServiceDataType.fromNum(Conversion.toUint8(bb.get()))
 		when (servicedata.type) {
 			ServiceDataType.STATE -> return Shared.parseSetupPacket(bb, servicedata, false, false)
+			ServiceDataType.HUB_STATE -> return Shared.parseHubDataPacket(bb, servicedata)
 			else -> return false
 		}
 	}

@@ -44,14 +44,15 @@ internal object V5 {
 		return parseServiceData(decryptedBB, servicedata)
 	}
 
-	private fun parseServiceData(bb: ByteBuffer, servicedata: CrownstoneServiceData): Boolean {
-		servicedata.type = ServiceDataType.fromNum(Conversion.toUint8(bb.get()))
-		when (servicedata.type) {
-			ServiceDataType.STATE -> return Shared.parseStatePacket(bb, servicedata, false, false)
-			ServiceDataType.ERROR -> return Shared.parseErrorPacket(bb, servicedata, false, false)
-			ServiceDataType.EXT_STATE -> return Shared.parseStatePacket(bb, servicedata, true, true)
-			ServiceDataType.EXT_ERROR -> return Shared.parseErrorPacket(bb, servicedata, true, true)
-			ServiceDataType.ALT_STATE -> return Shared.parseAltStatePacket(bb, servicedata)
+	private fun parseServiceData(bb: ByteBuffer, serviceData: CrownstoneServiceData): Boolean {
+		serviceData.type = ServiceDataType.fromNum(Conversion.toUint8(bb.get()))
+		when (serviceData.type) {
+			ServiceDataType.STATE -> return Shared.parseStatePacket(bb, serviceData, false, false)
+			ServiceDataType.ERROR -> return Shared.parseErrorPacket(bb, serviceData, false, false)
+			ServiceDataType.EXT_STATE -> return Shared.parseStatePacket(bb, serviceData, true, true)
+			ServiceDataType.EXT_ERROR -> return Shared.parseErrorPacket(bb, serviceData, true, true)
+			ServiceDataType.ALT_STATE -> return Shared.parseAltStatePacket(bb, serviceData)
+			ServiceDataType.HUB_STATE -> return Shared.parseHubDataPacket(bb, serviceData)
 			else -> {
 				Log.v("V5", "invalid type")
 				return false

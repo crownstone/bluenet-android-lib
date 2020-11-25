@@ -504,7 +504,9 @@ enum class DeviceType(val num: Uint8) {
 	GUIDESTONE(2U),
 	CROWNSTONE_BUILTIN(3U),
 	CROWNSTONE_DONGLE(4U),
-	CROWNSTONE_BUILTIN_ONE(5U);
+	CROWNSTONE_BUILTIN_ONE(5U),
+	CROWNSTONE_PLUG_ONE(6U),
+	CROWNSTONE_HUB(7U);
 	companion object {
 		private val map = DeviceType.values().associateBy(DeviceType::num)
 		//		fun fromInt(type: Int) = map.getOrDefault(type, UNKNOWN)
@@ -544,6 +546,7 @@ enum class ServiceDataType(val num: Uint8) {
 	EXT_STATE(2U), // Service data of another crownstone with state info.
 	EXT_ERROR(3U), // Service data of another crownstone with error info.
 	ALT_STATE(4U), // Service data with alternative state info.
+	HUB_STATE(5U), // Service data with hub state info.
 	UNKNOWN(255U);
 	companion object {
 		private val map = ServiceDataType.values().associateBy(ServiceDataType::num)

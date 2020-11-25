@@ -77,6 +77,16 @@ class CrownstoneServiceData {
 	var errorDimmerFailureOff = false;  internal set     // The dimmer is always (partially) off.
 	var errorTimestamp: Uint32 = 0U;    internal set     // Timestamp of the first error.
 
+	// Hub data
+	var hubData: ByteArray = ByteArray(9);            internal set   // Simply an array of data, protocol undefined as of yet.
+	var hubFlagUartAlive = false;                          internal set   // Whether the UART connection is alive (heartbeats are received).
+	var hubFlagUartAliveEncrypted = false;                 internal set   // Whether the UART connection is alive (encrypted heartbeats are received).
+	var hubFlagUartEncryptionRequiredByStone = false;      internal set   // Whether the encrypted UART is required by the Crownstone.
+	var hubFlagUartEncryptionRequiredByHub = false;        internal set   // Whether the encrypted UART is required by the hub.
+	var hubFlagHasBeenSetup = false;                       internal set   // Whether the hub has been set up.
+	var hubFlagHasInternet = false;                        internal set   // Whether the hub has internet connection.
+	var hubFlagHasError = false;                           internal set   // Whether the hub has some error.
+
 	var unique = false; internal set // Whether this service data was different from the previous.
 
 	/**
@@ -183,6 +193,19 @@ class CrownstoneServiceData {
 	}
 
 	override fun toString(): String {
-		return "CrownstoneServiceData(version=$version, type=$type, serviceUuid=$serviceUuid, deviceType=$deviceType, operationMode=$operationMode, crownstoneId=$crownstoneId, switchState=$switchState, temperature=$temperature, powerUsageReal=$powerUsageReal, powerUsageApparent=$powerUsageApparent, powerFactor=$powerFactor, energyUsed=$energyUsed, externalRssi=$externalRssi, timestamp=$timestamp, count=$count, changingData=$changingData, validation=$validation, flagExternalData=$flagExternalData, flagSetup=$flagSetup, flagDimmerReady=$flagDimmerReady, flagDimmable=$flagDimmable, flagError=$flagError, flagSwitchLocked=$flagSwitchLocked, flagTimeSet=$flagTimeSet, flagSwitchCraft=$flagSwitchCraft, flagTapToToggleEnabled=$flagTapToToggleEnabled, flagBehaviourOverridden=$flagBehaviourOverridden, flagBehaviourEnabled=$flagBehaviourEnabled, errorOverCurrent=$errorOverCurrent, errorOverCurrentDimmer=$errorOverCurrentDimmer, errorChipTemperature=$errorChipTemperature, errorDimmerTemperature=$errorDimmerTemperature, errorDimmerFailureOn=$errorDimmerFailureOn, errorDimmerFailureOff=$errorDimmerFailureOff, errorTimestamp=$errorTimestamp, unique=$unique, behaviourHash=$behaviourHash)"
+		return "CrownstoneServiceData(version=$version, type=$type, serviceUuid=$serviceUuid, deviceType=$deviceType, operationMode=$operationMode" +
+				", crownstoneId=$crownstoneId, switchState=$switchState, temperature=$temperature" +
+				", powerUsageReal=$powerUsageReal, powerUsageApparent=$powerUsageApparent, powerFactor=$powerFactor, energyUsed=$energyUsed" +
+				", externalRssi=$externalRssi, timestamp=$timestamp, count=$count, changingData=$changingData, validation=$validation" +
+				", flagExternalData=$flagExternalData, flagSetup=$flagSetup, flagDimmerReady=$flagDimmerReady, flagDimmable=$flagDimmable, flagError=$flagError" +
+				", flagSwitchLocked=$flagSwitchLocked, flagTimeSet=$flagTimeSet, flagSwitchCraft=$flagSwitchCraft, flagTapToToggleEnabled=$flagTapToToggleEnabled" +
+				", flagBehaviourOverridden=$flagBehaviourOverridden, flagBehaviourEnabled=$flagBehaviourEnabled" +
+				", errorOverCurrent=$errorOverCurrent, errorOverCurrentDimmer=$errorOverCurrentDimmer, errorChipTemperature=$errorChipTemperature" +
+				", errorDimmerTemperature=$errorDimmerTemperature, errorDimmerFailureOn=$errorDimmerFailureOn, errorDimmerFailureOff=$errorDimmerFailureOff" +
+				", errorTimestamp=$errorTimestamp, unique=$unique, behaviourHash=$behaviourHash" +
+				", hubFlagUartAlive=$hubFlagUartAlive, hubFlagUartAliveEncrypted=$hubFlagUartAliveEncrypted" +
+				", hubFlagUartEncryptionRequiredByStone=$hubFlagUartEncryptionRequiredByStone, hubFlagUartEncryptionRequiredByHub=$hubFlagUartEncryptionRequiredByHub" +
+				", hubFlagHasBeenSetup=$hubFlagHasBeenSetup, hubFlagHasInternet=$hubFlagHasInternet, hubFlagHasError=$hubFlagHasError" +
+				")"
 	}
 }

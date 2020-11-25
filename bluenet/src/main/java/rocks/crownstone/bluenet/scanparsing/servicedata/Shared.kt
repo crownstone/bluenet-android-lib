@@ -11,7 +11,6 @@ import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
 import rocks.crownstone.bluenet.structs.SwitchState
-import rocks.crownstone.bluenet.structs.Uint16
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 
@@ -78,6 +77,16 @@ internal object Shared {
 		return true
 	}
 
+	internal fun parseHubDataPacket(bb: ByteBuffer, serviceData: CrownstoneServiceData): Boolean {
+		serviceData.crownstoneId = bb.getUint8()
+		parseHubFlags(bb.getUint8(), serviceData)
+		bb.get(serviceData.hubData)
+		parsePartialTimestamp(bb, serviceData)
+		bb.getUint8() // Reserved
+		serviceData.validation = bb.get() == VALIDATION
+		return true
+	}
+
 	internal fun parseSetupPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.switchState = SwitchState(bb.getUint8())
 		parseFlags(bb.getUint8(), servicedata)
@@ -116,6 +125,17 @@ internal object Shared {
 		servicedata.errorDimmerTemperature = Util.isBitSet(bitmask,3)
 		servicedata.errorDimmerFailureOn   = Util.isBitSet(bitmask,4)
 		servicedata.errorDimmerFailureOff  = Util.isBitSet(bitmask,5)
+	}
+
+	private fun parseHubFlags(flags: Uint8, serviceData: CrownstoneServiceData) {
+		serviceData.hubFlagUartAlive                     = Util.isBitSet(flags, 0)
+		serviceData.hubFlagUartAliveEncrypted            = Util.isBitSet(flags, 1)
+		serviceData.hubFlagUartEncryptionRequiredByStone = Util.isBitSet(flags, 2)
+		serviceData.hubFlagUartEncryptionRequiredByHub   = Util.isBitSet(flags, 3)
+		serviceData.hubFlagHasBeenSetup                  = Util.isBitSet(flags, 4)
+		serviceData.hubFlagHasInternet                   = Util.isBitSet(flags, 5)
+		serviceData.hubFlagHasError                      = Util.isBitSet(flags, 6)
+		serviceData.flagTimeSet                          = Util.isBitSet(flags, 7)
 	}
 
 	private fun parsePowerFactor(bb: ByteBuffer, servicedata: CrownstoneServiceData) {
