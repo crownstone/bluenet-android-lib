@@ -24,6 +24,7 @@ import rocks.crownstone.bluenet.packets.schedule.ScheduleCommandPacket
 import rocks.crownstone.bluenet.packets.wrappers.v4.ControlPacketV4
 import rocks.crownstone.bluenet.packets.wrappers.v4.StatePacketV4
 import rocks.crownstone.bluenet.packets.wrappers.v5.ControlPacketV5
+import rocks.crownstone.bluenet.packets.wrappers.v5.ResultPacketV5
 import rocks.crownstone.bluenet.packets.wrappers.v5.StatePacketV5
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.*
@@ -522,6 +523,55 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun meshCommand(packet: MeshCommandPacket): Promise<Unit, Exception> {
 		Log.i(TAG, "meshCommand $packet")
 		return writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, packet)
+	}
+
+	/**
+	 * Send hub data, and get the reply.
+	 *
+	 * @param
+	 */
+	@Synchronized
+	fun hubData(packet: PacketInterface, timeoutMs: Long = 5000): Promise<PacketInterface, Exception> {
+		Log.i(TAG, "hubData $packet")
+
+		// Will store the reply from the hub.
+		var replyPacket: PacketInterface? = null
+
+		val resultCallback = fun (resultPacket: ResultPacketV5): ProcessResult {
+			if (resultPacket.type != ControlTypeV4.HUB_DATA) {
+				Log.w(TAG, "Wrong type: ${resultPacket.type}")
+				return ProcessResult.ERROR
+			}
+			if (resultPacket.protocol != ConnectionProtocol.V5) {
+				Log.w(TAG, "Wrong protocol: ${resultPacket.protocol}")
+				return ProcessResult.ERROR
+			}
+			when (resultPacket.resultCode) {
+				ResultType.WAIT_FOR_SUCCESS -> {
+					Log.i(TAG, "Hub data sent to hub, waiting for reply.")
+					return ProcessResult.NOT_DONE
+				}
+				ResultType.SUCCESS -> {
+					Log.i(TAG, "Received reply from hub.")
+					replyPacket = resultPacket.getPayloadPacket()
+					return ProcessResult.DONE
+				}
+				else -> {
+					Log.w(TAG, "Hub data failed: ${resultPacket.resultCode}")
+					return ProcessResult.ERROR
+				}
+			}
+		}
+
+		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, ControlTypeV4.HUB_DATA, packet) }
+		return resultClass.getMultipleResultsV5(
+				writeCommand,
+				resultCallback,
+				timeoutMs,
+				listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)
+		).then {
+			return@then replyPacket ?: ByteArrayPacket()
+		}
 	}
 
 	/**
