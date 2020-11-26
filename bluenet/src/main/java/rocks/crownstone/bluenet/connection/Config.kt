@@ -746,6 +746,20 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.SOFT_ON_SPEED)
 	}
 
+	/**
+	 * Set uart key.
+	 *
+	 * @param uartKey        Key to encrypt the UART (16 byte long).
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setUartKey(uartKey: ByteArray): Promise<Unit, Exception> {
+		Log.i(TAG, "setUartKey $uartKey")
+		if (uartKey.size != 16) {
+			return Promise.ofFail(Errors.SizeWrong())
+		}
+		return setConfig(ConfigType.UNKNOWN, StateTypeV4.UART_KEY, ByteArrayPacket(uartKey))
+	}
 
 
 	// ------------------------ //
