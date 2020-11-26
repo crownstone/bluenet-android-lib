@@ -531,8 +531,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	 * @param
 	 */
 	@Synchronized
-	fun hubData(packet: PacketInterface, timeoutMs: Long = 5000): Promise<PacketInterface, Exception> {
-		Log.i(TAG, "hubData $packet")
+	fun hubData(hubDataPacket: HubDataPacket, timeoutMs: Long = 5000): Promise<PacketInterface, Exception> {
+		Log.i(TAG, "hubData $hubDataPacket")
 
 		// Will store the reply from the hub.
 		var replyPacket: PacketInterface? = null
@@ -552,8 +552,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 					return ProcessResult.NOT_DONE
 				}
 				ResultType.SUCCESS -> {
-					Log.i(TAG, "Received reply from hub.")
 					replyPacket = resultPacket.getPayloadPacket()
+					Log.i(TAG, "Received reply from hub: $replyPacket")
 					return ProcessResult.DONE
 				}
 				else -> {
@@ -563,7 +563,7 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 			}
 		}
 
-		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, ControlTypeV4.HUB_DATA, packet) }
+		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, ControlTypeV4.HUB_DATA, hubDataPacket) }
 		return resultClass.getMultipleResultsV5(
 				writeCommand,
 				resultCallback,
