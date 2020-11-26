@@ -528,7 +528,9 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	/**
 	 * Send hub data, and get the reply.
 	 *
-	 * @param
+	 * @param hubDataPacket  A packet with data to send to the hub.
+	 * @param timeoutMs      Timeout in ms.
+	 * @return               Promise with the reply data.
 	 */
 	@Synchronized
 	fun hubData(hubDataPacket: HubDataPacket, timeoutMs: Long = 5000): Promise<PacketInterface, Exception> {
