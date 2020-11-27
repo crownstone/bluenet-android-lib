@@ -24,7 +24,7 @@ class FileLogger(context: Context) {
 	private val logDir = context.getExternalFilesDir(null)
 	private var enabled = false
 	private var logFile: File? = null
-	private var logFileDate: Date? = null
+	private var logFileDate: Calendar? = null
 	private var logFileStream: DataOutputStream? = null
 
 	init {
@@ -38,6 +38,7 @@ class FileLogger(context: Context) {
 		const val filenamePrefix = "log_"
 		const val filenamePostfix = ".log"
 		const val minFreeSpace = (10 * 1024 * 1024L) // 1 MB, checked when before writing a line.
+		const val logFileExpirationTimeMs: Long = (7 * 24 * 60 * 60 * 1000) // Logs older than a week should be removed.
 		const val writePermissionRequestCode = 3491
 		private var hasWritePermissions = true
 
@@ -101,18 +102,22 @@ class FileLogger(context: Context) {
 		if (logFileStream == null) {
 			return createLogFile()
 		}
+
 		val freeSpace = logFile?.freeSpace ?: return false
 		if (freeSpace < minFreeSpace) {
 			stop()
 			return false
 		}
 		try {
-			if (logFileDate?.day != Date().day) {
+			if (logFileDate?.get(Calendar.DAY_OF_WEEK) != Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
+				// Close the current log file.
 				logFileStream?.close()
+
+				// Create the new log file.
 				return createLogFile()
 			}
 		} catch (e: IOException) {
-			Log.e("BleLog", "Error closing logfile", e)
+			Log.e(TAG, "Error closing logfile", e)
 			return false
 		}
 		return true
@@ -120,13 +125,15 @@ class FileLogger(context: Context) {
 
 	@Synchronized
 	private fun createLogFile(): Boolean {
-		logFileDate = Date()
-		val fileName = filenamePrefix + fileNameTimestampFormat.format(logFileDate) + filenamePostfix
-
-		//		File path = new File(Environment.getExternalStorageDirectory().getPath() + "/" + _logDir);
+		Log.i(TAG, "createLogFile")
+		logFileDate = Calendar.getInstance()
+		val fileName = filenamePrefix + fileNameTimestampFormat.format(logFileDate!!.time) + filenamePostfix
 		logFile = File(logDir, fileName)
 
-		//		path.mkdirs();
+		// Also remove logs that expired.
+		val thresholdTimestampMs = Calendar.getInstance().time.time - logFileExpirationTimeMs
+		cleanLogFiles(thresholdTimestampMs)
+
 		try {
 			logFileStream = DataOutputStream(FileOutputStream(logFile))
 		} catch (e: FileNotFoundException) {
@@ -158,6 +165,46 @@ class FileLogger(context: Context) {
 		})
 	}
 
+	/**
+	 * Delete old log files.
+	 *
+	 * @param timestampMs    Posix timestamp in ms: all files older than this timestamp will be removed.
+	 * @return               True on success.
+	 */
+	fun cleanLogFiles(timestampMs: Long): Boolean {
+		Log.i(TAG, "cleanLogFiles timestampMs=$timestampMs")
+		if (!hasWritePermissions) {
+			return false
+		}
+		val files = getLogFiles()
+		if (files == null) {
+			return true
+		}
+
+		var result = true
+		for (file in files) {
+			if (file.absolutePath == logFile?.absolutePath) {
+				// Always skip the current log file.
+				continue
+			}
+
+			Log.d(TAG, "file=${file.name} modified=${file.lastModified()}")
+			if (file.lastModified() < timestampMs) {
+				try {
+					Log.w(TAG, "Deleting ${file.name}")
+					result = result && file.delete()
+				}
+				catch (e: SecurityException) {
+					result = false
+				}
+			}
+		}
+		return result
+	}
+
+	/**
+	 * Delete all log files.
+	 */
 	fun clearLogFiles(): Boolean {
 		if (!hasWritePermissions) {
 			return false
