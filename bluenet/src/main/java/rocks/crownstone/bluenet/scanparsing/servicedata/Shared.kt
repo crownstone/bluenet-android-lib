@@ -10,6 +10,7 @@ package rocks.crownstone.bluenet.scanparsing.servicedata
 import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.scanparsing.CrownstoneServiceData
+import rocks.crownstone.bluenet.structs.OperationMode
 import rocks.crownstone.bluenet.structs.SwitchState
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
@@ -84,6 +85,9 @@ internal object Shared {
 		parsePartialTimestamp(bb, serviceData)
 		bb.getUint8() // Reserved
 		serviceData.validation = bb.get() == VALIDATION
+		if (serviceData.operationMode == OperationMode.SETUP) {
+			serviceData.changingData = serviceData.count.toInt()
+		}
 		return true
 	}
 
