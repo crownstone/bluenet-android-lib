@@ -536,6 +536,8 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 	fun hubData(hubDataPacket: HubDataPacket, timeoutMs: Long = 5000): Promise<PacketInterface, Exception> {
 		Log.i(TAG, "hubData $hubDataPacket")
 
+		val deferred = deferred<PacketInterface, Exception>()
+
 		// Will store the reply from the hub.
 		var replyPacket: PacketInterface? = null
 
@@ -566,14 +568,25 @@ class Control(evtBus: EventBus, connection: ExtConnection) {
 		}
 
 		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, ControlTypeV4.HUB_DATA, hubDataPacket) }
-		return resultClass.getMultipleResultsV5(
+		resultClass.getMultipleResultsV5(
 				writeCommand,
 				resultCallback,
 				timeoutMs,
 				listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)
-		).then {
-			return@then replyPacket ?: ByteArrayPacket()
-		}
+		)
+				.success {
+					deferred.resolve(replyPacket ?: ByteArrayPacket())
+				}
+				.fail {
+					if (it is Errors.NotificationTimeout) {
+						deferred.reject(Errors.HubDataReplyTimeout())
+					}
+					else {
+						deferred.reject(it)
+					}
+				}
+
+		return deferred.promise
 	}
 
 	/**

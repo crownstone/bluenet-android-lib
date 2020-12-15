@@ -87,7 +87,9 @@ object Errors {
 
 	class Result(val result: ResultType): Exception("result: ${result.name}")
 
-	class Timeout: Exception("timed out")
+	open class Timeout(msg: String =""): Exception("timed out: ($msg)")
+	class NotificationTimeout: Timeout("notification") // Expected a notification from a BLE connection, but didn't get one before timeout.
+	class HubDataReplyTimeout: Timeout("hub reply") // Expected a reply from the hub, but didn't get one before timeout.
 
 	class Aborted: Exception("aborted")
 
