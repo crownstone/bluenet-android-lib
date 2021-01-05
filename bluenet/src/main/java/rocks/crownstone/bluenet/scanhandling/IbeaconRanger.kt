@@ -230,7 +230,8 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 			val referenceId = trackedUuids[uuid] ?: ""
 			list[uuid] = referenceId
 		}
-		return IbeaconRegionEventData(changedUuid, list)
+		val changedReferenceId = trackedUuids[changedUuid] ?: ""
+		return IbeaconRegionEventData(changedUuid, changedReferenceId, list)
 	}
 
 
