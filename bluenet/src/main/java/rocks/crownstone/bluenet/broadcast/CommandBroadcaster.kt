@@ -18,6 +18,7 @@ import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_RELIABLE_TIME_MS
 import rocks.crownstone.bluenet.BluenetConfig.COMMAND_BROADCAST_TIME_MS
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
+import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.broadcast.*
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
@@ -201,6 +202,23 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 				commandItem,
 				COMMAND_BROADCAST_TIME_MS,
 				validationTimestamp
+		)
+		add(item, autoExecute)
+		return deferred.promise
+	}
+
+	@Synchronized
+	fun noop(sphereId: SphereId, autoExecute: Boolean = true): Promise<Unit, Exception> {
+		val deferred = deferred<Unit, Exception>()
+		val commandItem = EmptyPacket()
+		val item = CommandBroadcastItem(
+				deferred,
+				sphereId,
+				CommandBroadcastItemType.NO_OP,
+				null,
+				commandItem,
+//				COMMAND_BROADCAST_TIME_MS
+				COMMAND_BROADCAST_INTERVAL_MS
 		)
 		add(item, autoExecute)
 		return deferred.promise

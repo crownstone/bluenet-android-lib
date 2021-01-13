@@ -17,6 +17,7 @@ import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Log
 
 enum class CommandBroadcastItemType {
+	NO_OP,
 	SWITCH,
 	SET_TIME,
 	BEHAVIOUR_SETTINGS,

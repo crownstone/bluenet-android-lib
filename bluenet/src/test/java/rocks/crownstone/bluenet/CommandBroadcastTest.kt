@@ -31,7 +31,7 @@ class CommandBroadcastTest {
 		val bluenetState = BluenetState(sphereState, null)
 
 		encryptionManager = EncryptionManager(eventBus, bluenetState)
-		commandBroadcastQueue = CommandBroadcastQueue()
+		commandBroadcastQueue = CommandBroadcastQueue(bluenetState)
 		broadcastPacketBuilder = BroadcastPacketBuilder(bluenetState, encryptionManager)
 		val keySet = KeySet(
 				"adminKeyForCrown",

@@ -124,6 +124,7 @@ class CommandBroadcastQueue(state: BluenetState) {
 			else -> BroadcastSingleItemPacket()
 		}
 		val type = when (firstItem.type) {
+			CommandBroadcastItemType.NO_OP -> CommandBroadcastType.NO_OP
 			CommandBroadcastItemType.SWITCH -> CommandBroadcastType.MULTI_SWITCH
 			CommandBroadcastItemType.SET_TIME -> CommandBroadcastType.SET_TIME
 			CommandBroadcastItemType.BEHAVIOUR_SETTINGS -> CommandBroadcastType.BEHAVIOUR_SETTINGS
