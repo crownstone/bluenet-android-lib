@@ -552,6 +552,7 @@ enum class ServiceDataType(val num: Uint8) {
 	EXT_ERROR(3U), // Service data of another crownstone with error info.
 	ALT_STATE(4U), // Service data with alternative state info.
 	HUB_STATE(5U), // Service data with hub state info.
+	MICROAPP_DATA(6U), // Service data with microapp data.
 	UNKNOWN(255U);
 	companion object {
 		private val map = ServiceDataType.values().associateBy(ServiceDataType::num)

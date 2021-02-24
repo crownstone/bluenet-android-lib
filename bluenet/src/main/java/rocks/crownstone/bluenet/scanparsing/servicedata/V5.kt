@@ -53,6 +53,7 @@ internal object V5 {
 			ServiceDataType.EXT_ERROR -> return Shared.parseErrorPacket(bb, serviceData, true, true)
 			ServiceDataType.ALT_STATE -> return Shared.parseAltStatePacket(bb, serviceData)
 			ServiceDataType.HUB_STATE -> return Shared.parseHubDataPacket(bb, serviceData)
+			ServiceDataType.MICROAPP_DATA -> return Shared.parseMicroappDataPacket(bb, serviceData)
 			else -> {
 				Log.v("V5", "invalid type")
 				return false

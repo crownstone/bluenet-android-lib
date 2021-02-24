@@ -91,6 +91,18 @@ internal object Shared {
 		return true
 	}
 
+	internal fun parseMicroappDataPacket(bb: ByteBuffer, serviceData: CrownstoneServiceData): Boolean {
+		var flags = bb.getUint8()
+		serviceData.flagTimeSet = Util.isBitSet(flags, 0)
+
+		serviceData.microappUuid = bb.getUint16()
+		bb.get(serviceData.microappData)
+		serviceData.crownstoneId = bb.getUint8()
+		parsePartialTimestamp(bb, serviceData)
+		serviceData.validation = (bb.get() == VALIDATION)
+		return true
+	}
+
 	internal fun parseSetupPacket(bb: ByteBuffer, servicedata: CrownstoneServiceData, external: Boolean, withRssi: Boolean): Boolean {
 		servicedata.switchState = SwitchState(bb.getUint8())
 		parseFlags(bb.getUint8(), servicedata)

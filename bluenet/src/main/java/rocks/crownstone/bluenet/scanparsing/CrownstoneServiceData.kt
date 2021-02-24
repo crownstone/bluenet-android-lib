@@ -87,6 +87,10 @@ class CrownstoneServiceData {
 	var hubFlagHasInternet = false;                        internal set   // Whether the hub has internet connection.
 	var hubFlagHasError = false;                           internal set   // Whether the hub has some error.
 
+	// Microapp data
+	var microappUuid: Uint16 = 0U;                    internal set // The UUID of the microapp.
+	var microappData: ByteArray = ByteArray(8);  internal set // The microapp data.
+
 	var unique = false; internal set // Whether this service data was different from the previous.
 
 	/**
@@ -206,6 +210,7 @@ class CrownstoneServiceData {
 				", hubFlagUartAlive=$hubFlagUartAlive, hubFlagUartAliveEncrypted=$hubFlagUartAliveEncrypted" +
 				", hubFlagUartEncryptionRequiredByStone=$hubFlagUartEncryptionRequiredByStone, hubFlagUartEncryptionRequiredByHub=$hubFlagUartEncryptionRequiredByHub" +
 				", hubFlagHasBeenSetup=$hubFlagHasBeenSetup, hubFlagHasInternet=$hubFlagHasInternet, hubFlagHasError=$hubFlagHasError" +
+				", microappUuid=$microappUuid, microappData=$microappData" +
 				")"
 	}
 }
