@@ -21,7 +21,7 @@ import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import java.lang.IllegalStateException
 
-open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper) : CoreConnection(appContext, evtBus, looper) {
+open class CoreAdvertiser(appContext: Context, evtBus: EventBus, looper: Looper) : CoreInit(appContext, evtBus, looper) {
 	private var advertiserSettingsBuilder = AdvertiseSettings.Builder()
 	private var advertiseCallback: AdvertiseCallback? = null
 	private var backgroundAdvertiserSettingsBuilder = AdvertiseSettings.Builder()

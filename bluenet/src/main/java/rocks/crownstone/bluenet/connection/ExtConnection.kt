@@ -10,6 +10,7 @@ package rocks.crownstone.bluenet.connection
 import android.os.SystemClock
 import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
+import rocks.crownstone.bluenet.core.CoreConnection
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.structs.*
@@ -29,7 +30,7 @@ import java.util.*
 class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
 	private val eventBus = evtBus
-	private val bleCore = bleCore
+	private val bleCore = CoreConnection(bleCore)
 	private val encryptionManager = encryptionManager
 	private var protocolVersion: Uint8? = null
 	var isReady: Boolean = false

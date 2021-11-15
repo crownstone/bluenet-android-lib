@@ -20,7 +20,16 @@ import java.util.*
 /**
  * Class that adds connection functions to the bluetooth LE core class.
  */
-open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper) : CoreInit(appContext, evtBus, looper) {
+open class CoreConnection(bleCore: BleCore) {
+	private val TAG = "CoreConnection"
+
+	private val bleCore = bleCore
+	private val context = bleCore.context
+	private val handler = bleCore.handler
+	private val bleManager = bleCore.bleManager
+	private val bleAdapter = bleCore.bleAdapter
+
+	private val promises = CorePromises(handler)
 	private var currentGatt: BluetoothGatt? = null
 
 	// The notification callbacks are stored in a dedicated eventbus.
@@ -29,7 +38,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	private val notificationEventBus = EventBus()
 
 	init {
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
+		bleCore.eventBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
 	}
 
 	/**
@@ -42,7 +51,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	@Synchronized
 	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		if (!isBleReady()) {
+		if (!bleCore.isBleReady()) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
 		val gatt = this.currentGatt
@@ -124,7 +133,7 @@ open class CoreConnection(appContext: Context, evtBus: EventBus, looper: Looper)
 	@Synchronized
 	private fun disconnect(): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect")
-		if (!isBleReady()) {
+		if (!bleCore.isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
 			return Promise.ofSuccess(Unit) // Always disconnected when BLE is off
 		}

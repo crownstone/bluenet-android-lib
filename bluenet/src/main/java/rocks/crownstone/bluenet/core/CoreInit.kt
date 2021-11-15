@@ -34,13 +34,12 @@ import rocks.crownstone.bluenet.util.Log
  */
 open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
 	protected val TAG = "BleCore"
-	protected val eventBus = evtBus
-	protected val context = appContext
-	protected val handler = Handler(looper)
-	protected val promises = CorePromises(handler)
+	internal val eventBus = evtBus
+	internal val context = appContext
+	internal val handler = Handler(looper)
 
-	protected lateinit var bleManager: BluetoothManager
-	protected lateinit var bleAdapter: BluetoothAdapter
+	internal lateinit var bleManager: BluetoothManager
+	internal lateinit var bleAdapter: BluetoothAdapter
 	protected lateinit var scanner: BluetoothLeScanner
 	protected lateinit var advertiser: BluetoothLeAdvertiser
 
