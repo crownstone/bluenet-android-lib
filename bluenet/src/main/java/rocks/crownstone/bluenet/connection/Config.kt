@@ -761,6 +761,18 @@ class Config(evtBus: EventBus, connection: ExtConnection) {
 		return setConfig(ConfigType.UNKNOWN, StateTypeV4.UART_KEY, ByteArrayPacket(uartKey))
 	}
 
+	/**
+	 * Set behaviour settings.
+	 * This should normally not be done via config, but via a broadcast.
+	 *
+	 * @param settings       The new behaviour settings.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setBehaviourSettings(settings: BehaviourSettings): Promise<Unit, Exception> {
+		Log.i(TAG, "setBehaviourSettings $settings")
+		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.BEHAVIOUR_SETTINGS, settings.num)
+	}
 
 	// ------------------------ //
 	// --- helper functions --- //
