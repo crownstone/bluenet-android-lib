@@ -13,6 +13,7 @@ import java.util.Calendar
 import java.util.TimeZone
 
 object PartialTime {
+	private val TAG = this.javaClass.simpleName
 	private const val HALF_UINT16: Long = 0x7FFF
 	private const val MAX_UINT16: Long = 0xFFFF
 
@@ -25,15 +26,15 @@ object PartialTime {
 	 * @return               The reconstructed timestamp.
 	 */
 	fun reconstructTimestamp(lsbTimestamp: Uint16): Long {
-		val timeZone = TimeZone.getTimeZone("GMT")
-		val calendar = Calendar.getInstance(timeZone)
-		val gmtTimestamp = calendar.time.time / 1000
-		return reconstructTimestamp(gmtTimestamp, lsbTimestamp)
+		val gmtTimestamp = Util.getGmtTimestamp()
+		val reconstructTimestamp = reconstructTimestamp(gmtTimestamp, lsbTimestamp)
+		Log.v(TAG, "gmtTimestamp=$gmtTimestamp reconstructTimestamp=$reconstructTimestamp")
+		return reconstructTimestamp.toLong()
 	}
 
 
 	/**
-	 * Reconstructs a full timestamp from the current unix timestamp and a partial timestamp.
+	 * Reconstructs a full timestamp from the given unix timestamp and a partial timestamp.
 	 *
 	 * Works as long as the source of the partial timestamp is not more than 9 hours off.
 	 *
@@ -41,15 +42,18 @@ object PartialTime {
 	 * @param lsbTimestamp   Partial timestamp.
 	 * @return               The reconstructed timestamp.
 	 */
-	fun reconstructTimestamp(unixTimestamp: Long, lsbTimestamp: Uint16): Long {
-		val calendar = Calendar.getInstance()
-		val timeZone = calendar.timeZone
-		val secondsFromGmt = (timeZone.rawOffset / 1000).toLong()
-		val correctedTimestamp = unixTimestamp + secondsFromGmt
+	fun reconstructTimestamp(unixTimestamp: Long, lsbTimestamp: Uint16): Uint32 {
+//		val calendar = Calendar.getInstance()
+//		val timeZone = calendar.timeZone
+//		val secondsFromGmt = ((timeZone.rawOffset + timeZone.dstSavings) / 1000).toLong()
+//		val correctedTimestamp = unixTimestamp + secondsFromGmt
+
+		val correctedTimestamp = Util.getLocalTimestamp(unixTimestamp).toLong()
+		Log.v(TAG, "unixTimestamp=$unixTimestamp correctedTimestamp=$correctedTimestamp lsbTimestamp=$lsbTimestamp")
 
 		var reconstructedTimestamp = combineTimestamp(correctedTimestamp.toUint32(), lsbTimestamp)
 
-		val delta = correctedTimestamp - reconstructedTimestamp
+		val delta = correctedTimestamp - reconstructedTimestamp.toLong()
 		if (delta > -HALF_UINT16 && delta < HALF_UINT16) {
 			return reconstructedTimestamp
 		} else if (delta < -HALF_UINT16) {
@@ -68,12 +72,13 @@ object PartialTime {
 	 * @param lsbTimestamp   Partial timestamp.
 	 * @return               Timestamp with the least significant bytes replaced by the partial timestamp.
 	 */
-	private fun combineTimestamp(timestamp: Uint32, lsbTimestamp: Uint16): Long {
-		val arr = Conversion.uint32ToByteArray(timestamp)
-		val arrLsb = Conversion.uint16ToByteArray(lsbTimestamp)
-		arr[0] = arrLsb[0]
-		arr[1] = arrLsb[1]
-		return Conversion.byteArrayToInt(arr).toLong()
+	private fun combineTimestamp(timestamp: Uint32, lsbTimestamp: Uint16): Uint32 {
+		return (timestamp and 0xFFFF0000.toUint32()) + (lsbTimestamp.toUint32() and 0x0000FFFF.toUint32())
+//		val arr = Conversion.uint32ToByteArray(timestamp)
+//		val arrLsb = Conversion.uint16ToByteArray(lsbTimestamp)
+//		arr[0] = arrLsb[0]
+//		arr[1] = arrLsb[1]
+//		return Conversion.byteArrayToInt(arr)
 	}
 
 // // Other method:

@@ -17,6 +17,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object Util {
+	private val TAG = this.javaClass.simpleName
+
 	// Check if Nth bit in a value is set
 	fun isBitSet(value: Long, bit: Int): Boolean {
 		return value and (1L shl bit) != 0L
@@ -114,11 +116,19 @@ object Util {
 		return (((num + multiple - 1) / multiple) * multiple)
 	}
 
-	fun getLocalTimestamp(): Uint32 {
+	fun getGmtTimestamp(): Long {
 		val timeZoneGmt = TimeZone.getTimeZone("GMT")
 		val calendarGmt = Calendar.getInstance(timeZoneGmt)
 		val gmtTimestamp = calendarGmt.time.time / 1000
+		return gmtTimestamp
+	}
 
+	fun getLocalTimestamp(): Uint32 {
+		val gmtTimestamp = getGmtTimestamp()
+		return getLocalTimestamp(gmtTimestamp)
+	}
+
+	fun getLocalTimestamp(gmtTimestamp: Long): Uint32 {
 		val calendar = Calendar.getInstance()
 		val timeZone = calendar.timeZone
 		val secondsFromGmt = ((timeZone.rawOffset + timeZone.dstSavings) / 1000).toLong()
