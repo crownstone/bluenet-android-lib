@@ -40,7 +40,7 @@ class Bluenet(looper: Looper? = null) {
 	private val handler: Handler
 	private lateinit var context: Context
 	private lateinit var bleCore: BleCore
-	private lateinit var connection: ExtConnection
+	private lateinit var connections: ConnectionManager
 	private var bleScanner: BleScanner? = null
 	private var scanHandler: ScanHandler? = null
 	private lateinit var service: BackgroundServiceManager
@@ -53,19 +53,9 @@ class Bluenet(looper: Looper? = null) {
 //	private var scannerReadyPromises = ArrayList<Deferred<Unit, Exception>>()
 	private var scannerReadyPromise: Deferred<Unit, Exception>? = null
 
-	// Public variables, used to write and read services.
-	lateinit var setup: Setup; private set
-	lateinit var control: Control; private set
-	lateinit var config: Config; private set
-	lateinit var state: State; private set
-	lateinit var mesh: Mesh; private set
-	lateinit var deviceInfo: DeviceInfo; private set
-	lateinit var debugData: DebugData; private set
-	lateinit var dfu: Dfu; private set
+	// Public variables
 	lateinit var broadCast: CommandBroadcaster; private set
 	lateinit var backgroundBroadcaster: BackgroundBroadcaster; private set
-
-	// Public variables
 	lateinit var iBeaconRanger: IbeaconRanger; private set
 
 	init {
@@ -135,15 +125,7 @@ class Bluenet(looper: Looper? = null) {
 
 		bleCore = BleCore(context, eventBus, looper)
 		bleCore.initBle()
-		connection = ExtConnection(eventBus, bleCore, encryptionManager)
-		setup = Setup(eventBus, connection)
-		control = Control(eventBus, connection)
-		config = Config(eventBus, connection)
-		state = State(eventBus, connection)
-		mesh = Mesh(eventBus, connection)
-		deviceInfo = DeviceInfo(eventBus, connection)
-		debugData = DebugData(eventBus, connection)
-		dfu = Dfu(eventBus, connection, context)
+		connections = ConnectionManager(eventBus, bleCore, encryptionManager)
 		iBeaconRanger = IbeaconRanger(eventBus, looper)
 		broadCast = CommandBroadcaster(eventBus, libState, bleCore, encryptionManager, looper)
 		backgroundBroadcaster = BackgroundBroadcaster(eventBus, libState, bleCore, encryptionManager, looper)
@@ -173,9 +155,7 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun destroy() {
 		bleScanner?.stopScan()
-		connection.disconnect()
-
-
+		connections.destroy()
 		iBeaconRanger.destroy()
 		service.destroy()
 		// TODO: more?
@@ -744,7 +724,7 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return connection.connect(address, timeoutMs)
+		return connections.getConnection(address).connect(address, timeoutMs)
 	}
 
 	/**
@@ -754,10 +734,44 @@ class Bluenet(looper: Looper? = null) {
 	 * @return Promise that resolves when disconnected.
 	 */
 	@Synchronized
-	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
+	fun disconnect(address: DeviceAddress, clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
-		return connection.disconnect(clearCache)
+		return connections.getConnection(address).disconnect(clearCache)
 	}
+
+	fun control(address: DeviceAddress): Control {
+		return Control(eventBus, connections.getConnection(address))
+	}
+
+	fun config(address: DeviceAddress): Config {
+		return Config(eventBus, connections.getConnection(address))
+	}
+
+	fun state(address: DeviceAddress): State {
+		return State(eventBus, connections.getConnection(address))
+	}
+
+	fun mesh(address: DeviceAddress): Mesh {
+		return Mesh(eventBus, connections.getConnection(address))
+	}
+
+	fun deviceInfo(address: DeviceAddress): DeviceInfo {
+		return DeviceInfo(eventBus, connections.getConnection(address))
+	}
+
+	fun debugData(address: DeviceAddress): DebugData {
+		return DebugData(eventBus, connections.getConnection(address))
+	}
+
+	fun setup(address: DeviceAddress): Setup {
+		return Setup(eventBus, connections.getConnection(address))
+	}
+
+	fun dfu(address: DeviceAddress): Dfu {
+		return Dfu(eventBus, connections.getConnection(address), context)
+	}
+
+
 
 	/**
 	 * Waits for given time, then resolves.

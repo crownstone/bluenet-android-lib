@@ -13,6 +13,7 @@ import rocks.crownstone.bluenet.packets.behaviour.BehaviourIndex
 import rocks.crownstone.bluenet.packets.behaviour.BehaviourPacket
 import rocks.crownstone.bluenet.packets.behaviour.INDEX_UNKNOWN
 import rocks.crownstone.bluenet.packets.behaviour.IndexedBehaviourPacket
+import rocks.crownstone.bluenet.structs.DeviceAddress
 import rocks.crownstone.bluenet.util.Log
 import java.util.*
 import kotlin.collections.ArrayList
@@ -56,12 +57,12 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 	 *
 	 * @return Promise with behaviours.
 	 */
-	fun sync(): Promise<List<IndexedBehaviourPacket>, Exception> {
+	fun sync(address: DeviceAddress): Promise<List<IndexedBehaviourPacket>, Exception> {
 		Log.i(TAG, "sync")
 		val deferred = deferred<List<IndexedBehaviourPacket>, Exception>()
 		indicesToGet.clear()
 		remoteBehaviours.clear()
-		bluenet.control.getBehaviourIndices()
+		bluenet.control(address).getBehaviourIndices()
 				.success {
 					for (b in it.indicesWithHash) {
 						val index = b.index
@@ -84,7 +85,7 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 							remoteBehaviours.add(b)
 						}
 					}
-					getBehaviours()
+					getBehaviours(address)
 							.success {
 								Log.d(TAG, "remoteBehaviours: $remoteBehaviours")
 								deferred.resolve(remoteBehaviours)
@@ -99,18 +100,18 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 		return deferred.promise
 	}
 
-	private fun getBehaviours(): Promise<Unit, Exception> {
+	private fun getBehaviours(address: DeviceAddress): Promise<Unit, Exception> {
 		if (indicesToGet.isEmpty()) {
 			return Promise.ofSuccess(Unit)
 		}
 		val index = indicesToGet.peek().toUByte()
 		Log.d(TAG, "get behaviour $index")
-		return bluenet.control.getBehaviour(index)
+		return bluenet.control(address).getBehaviour(index)
 				.then {
 					Log.d(TAG, "got behaviour: $it")
 					remoteBehaviours.add(it)
 					indicesToGet.remove()
-					return@then getBehaviours()
+					return@then getBehaviours(address)
 				}.unwrap()
 	}
 }

@@ -12,6 +12,7 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.*
 import rocks.crownstone.bluenet.core.CoreConnection
 import rocks.crownstone.bluenet.encryption.AccessLevel
+import rocks.crownstone.bluenet.encryption.ConnectionEncryption
 import rocks.crownstone.bluenet.encryption.EncryptionManager
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
@@ -32,6 +33,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	private val eventBus = evtBus
 	private val bleCore = CoreConnection(bleCore)
 	private val encryptionManager = encryptionManager
+	private val connectionEncryptionManager = ConnectionEncryption(encryptionManager)
 	private var protocolVersion: Uint8? = null
 	var isReady: Boolean = false
 		private set
@@ -162,7 +164,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				data
 			}
 			else -> {
-				encryptionManager.encrypt(address, data, accessLevel)
+				connectionEncryptionManager.encrypt(address, data, accessLevel)
 			}
 		}
 		if (encryptedData == null) {
@@ -183,7 +185,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		}
 		return bleCore.read(serviceUuid, characteristicUuid)
 				.then {
-					encryptionManager.decryptPromise(address, it)
+					connectionEncryptionManager.decryptPromise(address, it)
 				}.unwrap()
 	}
 
@@ -208,7 +210,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 		}
 		return bleCore.getSingleMergedNotification(serviceUuid, characteristicUuid, writeCommand, timeoutMs)
 				.then {
-					encryptionManager.decryptPromise(address, it, accessLevel)
+					connectionEncryptionManager.decryptPromise(address, it, accessLevel)
 				}.unwrap()
 				.success {
 					Log.i(TAG, "received merged notification on $characteristicUuid ${Conversion.bytesToString(it)}")
@@ -223,7 +225,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 			return Promise.ofFail(Errors.NotConnected())
 		}
 		val processCallBack = fun (mergedNotification: ByteArray): ProcessResult {
-			val decryptedData = encryptionManager.decrypt(address, mergedNotification, accessLevel)
+			val decryptedData = connectionEncryptionManager.decrypt(address, mergedNotification, accessLevel)
 			if (decryptedData == null) {
 				return ProcessResult.ERROR
 			}
@@ -259,7 +261,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 	private fun postConnect(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "postConnect $address")
 		checkMode()
-		encryptionManager.clearSessionData()
+		connectionEncryptionManager.clearSessionData()
 		when (mode) {
 			CrownstoneMode.SETUP -> {
 				Log.i(TAG, "get session data and key")
@@ -270,13 +272,13 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 				}
 				return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
 						.then {
-							encryptionManager.parseSessionKey(address, it)
+							connectionEncryptionManager.parseSessionKey(address, it)
 						}.unwrap()
 						.then {
 							bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, sessionDataChar)
 						}.unwrap()
 						.then {
-							encryptionManager.parseSessionData(address, it, isEncrypted = v5, setupMode = true, v5 = v5)
+							connectionEncryptionManager.parseSessionData(address, it, isEncrypted = v5, setupMode = true, v5 = v5)
 						}.unwrap()
 						.then {
 							protocolVersion = it.protocolVersion
@@ -299,7 +301,7 @@ class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: Encry
 //							// TODO: is it ok to ignore any error in the session data parsing?
 //							// Ignore errors in parsing of session data: in case we have no keys for this crownstone, but want to write/read unencrypted data.
 //							Util.recoverableUnitPromise(encryptionManager.parseSessionData(address, it, true), { true })
-							encryptionManager.parseSessionData(address, it, isEncrypted = true, setupMode = false, v5 = v5)
+							connectionEncryptionManager.parseSessionData(address, it, isEncrypted = true, setupMode = false, v5 = v5)
 						}.unwrap()
 						.then {
 							protocolVersion = it.protocolVersion
