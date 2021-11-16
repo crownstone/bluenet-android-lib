@@ -23,9 +23,10 @@ import rocks.crownstone.bluenet.util.Util
 import java.util.*
 
 /**
- * Extends the connection with:
- * - Encryption.
+ * Class for a single BLE connection with Bluenet specific implementation:
  * - Reading of session data.
+ * - Encryption.
+ * - Reconnection attempts.
  * - Checking of Crownstone mode.
  */
 class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {

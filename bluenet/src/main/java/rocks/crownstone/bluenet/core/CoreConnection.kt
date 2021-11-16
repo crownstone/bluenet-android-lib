@@ -18,7 +18,8 @@ import rocks.crownstone.bluenet.util.*
 import java.util.*
 
 /**
- * Class that adds connection functions to the bluetooth LE core class.
+ * Class for a single BLE connection.
+ * - Does not implement any Bluenet specific protocol.
  */
 open class CoreConnection(bleCore: BleCore) {
 	private val TAG = "CoreConnection"

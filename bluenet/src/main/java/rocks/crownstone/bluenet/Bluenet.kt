@@ -717,8 +717,8 @@ class Bluenet(looper: Looper? = null) {
 	/**
 	 * Connect to a device.
 	 *
-	 * @param address   MAC address of the device.
-	 * @param timeoutMs Optional: timeout in ms.
+	 * @param address        MAC address of the Crownstone.
+	 * @param timeoutMs      Optional: timeout in ms.
 	 * @return Promise that resolves when connected.
 	 */
 	@Synchronized
@@ -730,7 +730,8 @@ class Bluenet(looper: Looper? = null) {
 	/**
 	 * Disconnect from a device.
 	 *
-	 * @param clearCache True to clear the services cache after disconnecting. Handy when you expect them to change.
+	 * @param address        MAC address of the Crownstone.
+	 * @param clearCache     True to clear the services cache after disconnecting. Handy when you expect them to change.
 	 * @return Promise that resolves when disconnected.
 	 */
 	@Synchronized
@@ -739,34 +740,82 @@ class Bluenet(looper: Looper? = null) {
 		return connections.getConnection(address).disconnect(clearCache)
 	}
 
+	/**
+	 * Get the control module, it provides various commands.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The control module.
+	 */
 	fun control(address: DeviceAddress): Control {
 		return Control(eventBus, connections.getConnection(address))
 	}
 
+	/**
+	 * Get the config module, it provides methods to get or set configurations of a Crownstone.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The config module.
+	 */
 	fun config(address: DeviceAddress): Config {
 		return Config(eventBus, connections.getConnection(address))
 	}
 
+	/**
+	 * Get the state module, it provides methods to get the state of a Crownstone.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The state module.
+	 */
 	fun state(address: DeviceAddress): State {
 		return State(eventBus, connections.getConnection(address))
 	}
 
+	/**
+	 * Get the mesh module, it provides methods to send a command over the mesh.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The mesh module.
+	 */
 	fun mesh(address: DeviceAddress): Mesh {
 		return Mesh(eventBus, connections.getConnection(address))
 	}
 
+	/**
+	 * Get the device information module, it provides methods to get information about a Crownstone.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The device information module.
+	 */
 	fun deviceInfo(address: DeviceAddress): DeviceInfo {
 		return DeviceInfo(eventBus, connections.getConnection(address))
 	}
 
+	/**
+	 * Get the debug module, it provides methods to get debug data from a Crownstone.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The debug module.
+	 */
 	fun debugData(address: DeviceAddress): DebugData {
 		return DebugData(eventBus, connections.getConnection(address))
 	}
 
+	/**
+	 * Get the setup module, it provides methods to perform a setup.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The setup module.
+	 */
 	fun setup(address: DeviceAddress): Setup {
 		return Setup(eventBus, connections.getConnection(address))
 	}
 
+	/**
+	 * Get the dfu module, it provides methods to update the firmware of a Crownstone.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The dfu module.
+	 */
 	fun dfu(address: DeviceAddress): Dfu {
 		return Dfu(eventBus, connections.getConnection(address), context)
 	}

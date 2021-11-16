@@ -7,22 +7,25 @@
 
 package rocks.crownstone.bluenet.encryption
 
-import nl.komponents.kovenant.Promise
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.scanparsing.ScannedDevice
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
-import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
 
+/**
+ * Class that:
+ * - Keeps up which key set to use for which device, based on the scanned iBeacon UUID.
+ * - Caches RC5 sub keys.
+ * - Performs RC5 encryption and decryption.
+ */
 class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 	private val TAG = this.javaClass.simpleName
 
 	private val eventBus = evtBus
 	private val libState = state
-//	private var keys: Keys? = null
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!
 
@@ -35,7 +38,6 @@ class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 		eventBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED, { data: Any? -> onSettingsUpdate() })
 		setKeys()
 	}
-
 
 	@Synchronized
 	private fun onSettingsUpdate() {
@@ -54,39 +56,12 @@ class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 		}
 	}
 
-//	@Synchronized
-//	fun setKeys(keys: Keys) {
-//		Log.i(TAG, "setKeys")
-//		this.keys = keys
-//		uuids.clear()
-//		addresses.clear()
-//		for (entry in keys.entries) {
-//			val sphereId = entry.key
-//			val ibeaconUuid = entry.value.ibeaconUuid
-//			Log.i(TAG, "sphereId=$sphereId ibeaconUuid=$ibeaconUuid keys=${entry.value.keySet}")
-//			uuids.put(ibeaconUuid, sphereId)
-//		}
-//	}
-//
-//	// Similar to setting an empty list of keys
-//	@Synchronized
-//	fun clearKeys() {
-//		Log.i(TAG, "clearKeys")
-//		keys = null
-//		uuids.clear()
-//		addresses.clear()
-//	}
-
 	@Synchronized
 	fun getKeySet(id: SphereId?): KeySet? {
 		if (id == null) {
 			return null
 		}
-//		if (libState.get(id)?.settings == null) {
-//			Log.w(TAG, "no settings for sphereId $id")
-//		}
 		return libState.sphereState.get(id)?.settings?.keySet
-//		return keys?.get(id)?.keySet
 	}
 
 	@Synchronized
@@ -103,9 +78,6 @@ class EncryptionManager(evtBus: EventBus, state: BluenetState) {
 
 	@Synchronized
 	fun getKeySetFromAddress(address: DeviceAddress): KeySet? {
-//		if (!addresses.containsKey(address)) {
-//			Log.v(TAG, "no sphere id for $address")
-//		}
 		return getKeySet(addresses.get(address))
 	}
 

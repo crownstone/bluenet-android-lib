@@ -8,6 +8,11 @@ import rocks.crownstone.bluenet.structs.KeyAccessLevelPair
 import rocks.crownstone.bluenet.util.Log
 import java.lang.Exception
 
+/**
+ * Class that handles encryption for a single connection.
+ * - Parses and keeps up session data.
+ * - Encrypt / decrypt data, using the session data.
+ */
 class ConnectionEncryption(encryptionManager: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
 	private val encryptionManager = encryptionManager

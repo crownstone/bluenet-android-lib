@@ -159,7 +159,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 
 	private inline fun <reified T>getStateValue(type: StateType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
 		if (getPacketProtocol() == PacketProtocol.V3) {
-			return getState(type)
+			return getStateV3(type)
 					.then {
 						val arr = it.getPayload()
 						if (arr == null) {
@@ -180,7 +180,7 @@ class State(evtBus: EventBus, connection: ExtConnection) {
 	}
 
 
-	private fun getState(type: StateType): Promise<StatePacket, Exception> {
+	private fun getStateV3(type: StateType): Promise<StatePacket, Exception> {
 		val writeCommand = fun (): Promise<Unit, Exception> {
 			return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_CONTROL_UUID, StatePacket(type).getArray())
 		}
