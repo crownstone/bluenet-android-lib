@@ -50,8 +50,8 @@ object RC5 {
 		}
 		for (i in 0 until keyLenWords) {
 			L[i] = ((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt()).toUint16()
-//			Log.i(TAG, "${(key[2*i+1].toUint8().toUInt() shl 8)} + ${key[2*i].toUint8().toUInt()}: uint=${((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt())} uint16=${((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt()).toUint16()}")
-//			Log.i(TAG, "RC5 L[i]=${L[i]}: (${Conversion.toUint8(key[2*i+1]).toInt()} << 8 = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8)}) + ${Conversion.toUint8(key[2*i])} = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8) + Conversion.toUint8(key[2*i]).toInt()}")
+			Log.v(TAG, "${(key[2*i+1].toUint8().toUInt() shl 8)} + ${key[2*i].toUint8().toUInt()}: uint=${((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt())} uint16=${((key[2*i+1].toUint8().toUInt() shl 8) + key[2*i].toUint8().toUInt()).toUint16()}")
+			Log.v(TAG, "RC5 L[i]=${L[i]}: (${Conversion.toUint8(key[2*i+1]).toInt()} << 8 = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8)}) + ${Conversion.toUint8(key[2*i])} = ${(Conversion.toUint8(key[2*i+1]).toInt() shl 8) + Conversion.toUint8(key[2*i]).toInt()}")
 		}
 
 		val subKeys = ArrayList<Uint16>(RC5_NUM_SUBKEYS)
@@ -65,18 +65,18 @@ object RC5 {
 		var a: Uint16 = 0U
 		var b: Uint16 = 0U
 		for (k in 0 until loops) {
-//			Log.i(TAG, "RC5 i=$i j=$j a=$a b=$b L[j]=${L[j]} subKeys[i]]${subKeys[i]}")
+			Log.v(TAG, "RC5 i=$i j=$j a=$a b=$b L[j]=${L[j]} subKeys[i]]${subKeys[i]}")
 			a = rotateLeft((subKeys[i] + a + b).toUint16(), 3)
 			subKeys[i] = a
 			b = rotateLeft((L[j] + a + b).toUint16(), (a+b).toInt() % 16)
 			L[j] = b
-//			Log.i(TAG, "  RC5 i=$i j=$j a=$a b=$b L[j]=${L[j]} subKeys[i]]${subKeys[i]}")
+			Log.v(TAG, "  RC5 i=$i j=$j a=$a b=$b L[j]=${L[j]} subKeys[i]]${subKeys[i]}")
 			i = (i+1) % RC5_NUM_SUBKEYS
 			j = (j+1) % keyLenWords
 		}
-//		Log.i(TAG, "RC5 16B key=${Conversion.bytesToString(key)}")
-		for (i in 0 until RC5_NUM_SUBKEYS) {
-//			Log.i(TAG, "RC5 key[$i] = ${subKeys[i]}")
+		Log.v(TAG, "RC5 16B key=${Conversion.bytesToString(key)}")
+		for (p in 0 until RC5_NUM_SUBKEYS) {
+			Log.v(TAG, "RC5 key[$p] = ${subKeys[p]}")
 		}
 		return subKeys
 	}

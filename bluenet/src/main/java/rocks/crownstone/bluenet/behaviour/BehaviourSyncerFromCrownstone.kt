@@ -101,10 +101,11 @@ class BehaviourSyncerFromCrownstone(val bluenet: Bluenet) {
 	}
 
 	private fun getBehaviours(address: DeviceAddress): Promise<Unit, Exception> {
-		if (indicesToGet.isEmpty()) {
+		val index = indicesToGet.peek()?.toUByte()
+		if (index == null) {
+			// List is empty.
 			return Promise.ofSuccess(Unit)
 		}
-		val index = indicesToGet.peek().toUByte()
 		Log.d(TAG, "get behaviour $index")
 		return bluenet.control(address).getBehaviour(index)
 				.then {

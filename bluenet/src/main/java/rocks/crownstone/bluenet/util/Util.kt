@@ -137,9 +137,6 @@ object Util {
 	}
 
 	fun getDate(timestamp: Uint32): Date {
-		val timeZoneGmt = TimeZone.getTimeZone("GMT")
-		val calendarGmt = Calendar.getInstance(timeZoneGmt)
-
 		val calendar = Calendar.getInstance()
 		val timeZone = calendar.timeZone
 		val msFromGmt = (timeZone.rawOffset + timeZone.dstSavings).toLong()

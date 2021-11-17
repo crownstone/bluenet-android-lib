@@ -26,19 +26,19 @@ object Encryption {
 	private val TAG = this.javaClass.simpleName
 
 	fun encryptCtr(payloadData: ByteArray, sessionNonce: ByteArray, validationKey: ByteArray, key: ByteArray, accessLevel: Uint8): ByteArray? {
-		if (payloadData == null || payloadData.isEmpty()) {
+		if (payloadData.isEmpty()) {
 			Log.w(TAG, "wrong data length")
 			return null
 		}
-		if (sessionNonce == null || sessionNonce.size != SESSION_NONCE_LENGTH) {
+		if (sessionNonce.size != SESSION_NONCE_LENGTH) {
 			Log.w(TAG, "wrong session nonce length")
 			return null
 		}
-		if (validationKey == null || validationKey.size != VALIDATION_KEY_LENGTH) {
+		if (validationKey.size != VALIDATION_KEY_LENGTH) {
 			Log.w(TAG, "wrong validation key length")
 			return null
 		}
-		if (key == null || key.size != AES_BLOCK_SIZE) {
+		if (key.size != AES_BLOCK_SIZE) {
 			Log.w(TAG, "wrong key length")
 			return null
 		}
@@ -68,20 +68,16 @@ object Encryption {
 	}
 
 	fun decryptCtr(encryptedData: ByteArray, sessionNonce: ByteArray, validationKey: ByteArray, keys: KeySet): ByteArray? {
-		if (encryptedData == null || encryptedData.size < PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH + AES_BLOCK_SIZE) {
+		if (encryptedData.size < PACKET_NONCE_LENGTH + ACCESS_LEVEL_LENGTH + AES_BLOCK_SIZE) {
 			Log.w(TAG, "wrong data length")
 			return null
 		}
-		if (sessionNonce == null || sessionNonce.size != SESSION_NONCE_LENGTH) {
+		if (sessionNonce.size != SESSION_NONCE_LENGTH) {
 			Log.w(TAG, "wrong session nonce length")
 			return null
 		}
-		if (validationKey == null || validationKey.size != VALIDATION_KEY_LENGTH) {
+		if (validationKey.size != VALIDATION_KEY_LENGTH) {
 			Log.w(TAG, "wrong validation key length")
-			return null
-		}
-		if (keys == null) {
-			Log.w(TAG, "no keys supplied")
 			return null
 		}
 		Log.v(TAG, "encryptedData: ${Conversion.bytesToString(encryptedData)}")
@@ -146,7 +142,7 @@ object Encryption {
 		if (inputOffset < 0) {
 			return null
 		}
-		if (payloadData == null || payloadData.size - inputOffset < AES_BLOCK_SIZE) {
+		if (payloadData.size - inputOffset < AES_BLOCK_SIZE) {
 			Log.w(TAG, "payload data too short")
 			return null
 		}
@@ -156,11 +152,7 @@ object Encryption {
 			return null
 		}
 		val decryptedData = ByteArray(length)
-		if (key == null) {
-			// If there is no key set, then simply do not decrypt.
-			System.arraycopy(payloadData, inputOffset, decryptedData, 0, length)
-			return decryptedData
-		}
+
 		if (key.size != AES_BLOCK_SIZE) {
 			Log.w(TAG, "wrong key length: ${key.size}")
 			return null

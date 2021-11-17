@@ -10,6 +10,6 @@ package rocks.crownstone.bluenet.packets.broadcast
 import rocks.crownstone.bluenet.packets.PacketInterface
 
 interface CommandBroadcastPayloadInterface : PacketInterface{
-	fun add(packet: PacketInterface): Boolean
+	fun add(item: PacketInterface): Boolean
 	fun isFull(): Boolean
 }

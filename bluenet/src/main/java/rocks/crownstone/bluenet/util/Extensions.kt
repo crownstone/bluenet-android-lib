@@ -125,7 +125,7 @@ fun UShort.toInt32() = this.toInt()
 fun UInt.toInt32() = this.toInt()
 
 fun Long.toUint32() = this.toUInt()
-fun UByte.toDouble() = this.toShort().toDouble()
-fun UShort.toDouble() = this.toInt().toDouble()
+//fun UByte.toDouble() = this.toShort().toDouble()
+//fun UShort.toDouble() = this.toInt().toDouble()
 
-fun UInt.toDouble() = this.toLong().toDouble()
+//fun UInt.toDouble() = this.toLong().toDouble()

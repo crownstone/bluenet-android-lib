@@ -733,14 +733,14 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 	}
 
 	// Commands with packet
-	private fun writeCommand(type: ControlType, type4: ControlTypeV4, packet: PacketInterface, accessLevel: AccessLevel? = null): Promise<Unit, Exception> {
+	private fun writeCommand(type: ControlType, type4: ControlTypeV4, payload: PacketInterface, accessLevel: AccessLevel? = null): Promise<Unit, Exception> {
 		if (!isValidType(type, type4)) {
 			return Promise.ofFail(Errors.TypeWrong("$type or $type4"))
 		}
 		val packet = when (getPacketProtocol()) {
-			PacketProtocol.V3 -> ControlPacketV3(type, packet)
-			PacketProtocol.V4 -> ControlPacketV4(type4, packet)
-			else -> ControlPacketV5(ConnectionProtocol.V5, type4, packet)
+			PacketProtocol.V3 -> ControlPacketV3(type, payload)
+			PacketProtocol.V4 -> ControlPacketV4(type4, payload)
+			else -> ControlPacketV5(ConnectionProtocol.V5, type4, payload)
 		}
 		return writeCommand(packet.getArray(), accessLevel)
 	}

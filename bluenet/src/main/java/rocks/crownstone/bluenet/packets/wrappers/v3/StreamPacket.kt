@@ -62,7 +62,7 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 			return payload.toBuffer(bb)
 		}
 		if (data != null) {
-			bb.put(data)
+			bb.put(data!!)
 		}
 		return true
 	}
@@ -84,7 +84,7 @@ open class StreamPacket(type: Uint8, data: ByteArray?, payload: PacketInterface?
 			return payload.fromBuffer(bb)
 		}
 		data = ByteArray(dataSize)
-		bb.get(data)
+		bb.get(data!!)
 		return true
 	}
 
