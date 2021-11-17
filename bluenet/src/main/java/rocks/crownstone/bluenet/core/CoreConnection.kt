@@ -379,6 +379,8 @@ open class CoreConnection(bleCore: BleCore) {
 	/**
 	 * Refresh the device cache when already connected.
 	 *
+	 * This takes long to resolve (1 second, see BluenetConfig.DELAY_REFRESH_CACHE).
+	 *
 	 * @return Promise
 	 */
 	@Synchronized
@@ -391,9 +393,14 @@ open class CoreConnection(bleCore: BleCore) {
 		if (state != ConnectionState.CONNECTED) {
 			return Promise.ofFail(getNotConnectedError(state))
 		}
+
+		val success = refreshGatt()
+		if (!success) {
+			return Promise.ofFail(Errors.NotImplemented())
+		}
+
 		val deferred = deferred<Unit, Exception>()
 		promises.setBusy(Action.REFRESH_CACHE, deferred, BluenetConfig.TIMEOUT_REFRESH_CACHE) // Resolve later
-		refreshGatt()
 		// Wait some time before resolving
 		handler.postDelayed({ resolveRefreshDeviceCache() }, BluenetConfig.DELAY_REFRESH_CACHE)
 		return deferred.promise
