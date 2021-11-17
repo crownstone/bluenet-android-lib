@@ -29,9 +29,9 @@ import java.util.*
  * - Reconnection attempts.
  * - Checking of Crownstone mode.
  */
-class ExtConnection(evtBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
+class ExtConnection(eventBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val bleCore = CoreConnection(bleCore)
 	private val encryptionManager = encryptionManager
 	private val connectionEncryptionManager = ConnectionEncryption(encryptionManager)

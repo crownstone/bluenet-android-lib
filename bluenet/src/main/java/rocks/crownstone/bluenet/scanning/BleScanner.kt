@@ -32,9 +32,9 @@ import java.util.*
  * - Set scan filters, via the filterManager.
  * - Set scan interval.
  */
-class BleScanner(evtBus: EventBus, bleCore: BleCore, looper: Looper) {
+class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val core = bleCore
 
 	private val handler = Handler(looper) // Own handler, as we call removeCallbacksAndMessages(null)

@@ -23,9 +23,9 @@ import rocks.crownstone.bluenet.structs.OperationMode
  *
  * Uses NearestDeviceList to keep up the nearest.
  */
-class NearestDevices(evtBus: EventBus) {
+class NearestDevices(eventBus: EventBus) {
 	val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 
 	internal val nearestStone = NearestDeviceList()
 	internal val nearestUnvalidated = NearestDeviceList()

@@ -19,9 +19,9 @@ import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import java.util.*
 
-class Result (evtBus: EventBus, connection: ExtConnection) {
+class Result (eventBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val connection = connection
 
 	@Synchronized

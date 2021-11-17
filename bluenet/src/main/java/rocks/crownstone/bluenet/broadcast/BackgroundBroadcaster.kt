@@ -20,7 +20,7 @@ import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.*
 import java.lang.Exception
 
-class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
+class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
 	enum class BroadcastingState {
 		STOPPED,
 		STOPPING,
@@ -29,7 +29,7 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	}
 
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val libState = state
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
@@ -39,18 +39,18 @@ class BackgroundBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleC
 	private var started = false
 
 	init {
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF,                { data: Any? -> onBleTurnedOff() })
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_ON,                 { data: Any? -> onBleTurnedOn() })
-		evtBus.subscribe(BluenetEvent.IBEACON_ENTER_REGION,          { data: Any? -> onRegionEnter() })
-		evtBus.subscribe(BluenetEvent.IBEACON_EXIT_REGION,           { data: Any? -> onRegionExit() })
-		evtBus.subscribe(BluenetEvent.LOCATION_CHANGE,               { data: Any? -> onLocationChange(data as SphereId) })
-		evtBus.subscribe(BluenetEvent.TAP_TO_TOGGLE_CHANGED,         { data: Any? -> onTapToToggleChange(data as SphereId?) })
-		evtBus.subscribe(BluenetEvent.SUN_TIME_CHANGED,              { data: Any? -> onSunTimeChange(data as SphereId?) })
-		evtBus.subscribe(BluenetEvent.IGNORE_FOR_BEHAVIOUR_CHANGED,  { data: Any? -> onIgnoreForBehaviourChange(data as SphereId?) })
-		evtBus.subscribe(BluenetEvent.CURRENT_SPHERE_CHANGED,        { data: Any? -> onCurrentSphereChange(data as SphereId?) })
-		evtBus.subscribe(BluenetEvent.PROFILE_ID_CHANGED,            { data: Any? -> onProfileIdChange(data as SphereId) })
-		evtBus.subscribe(BluenetEvent.DEVICE_TOKEN_CHANGED,          { data: Any? -> onDeviceTokenChange(data as SphereId) })
-		evtBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED,       { data: Any? -> onLibStateChange() })
+		eventBus.subscribe(BluenetEvent.BLE_TURNED_OFF,                { data: Any? -> onBleTurnedOff() })
+		eventBus.subscribe(BluenetEvent.BLE_TURNED_ON,                 { data: Any? -> onBleTurnedOn() })
+		eventBus.subscribe(BluenetEvent.IBEACON_ENTER_REGION,          { data: Any? -> onRegionEnter() })
+		eventBus.subscribe(BluenetEvent.IBEACON_EXIT_REGION,           { data: Any? -> onRegionExit() })
+		eventBus.subscribe(BluenetEvent.LOCATION_CHANGE,               { data: Any? -> onLocationChange(data as SphereId) })
+		eventBus.subscribe(BluenetEvent.TAP_TO_TOGGLE_CHANGED,         { data: Any? -> onTapToToggleChange(data as SphereId?) })
+		eventBus.subscribe(BluenetEvent.SUN_TIME_CHANGED,              { data: Any? -> onSunTimeChange(data as SphereId?) })
+		eventBus.subscribe(BluenetEvent.IGNORE_FOR_BEHAVIOUR_CHANGED,  { data: Any? -> onIgnoreForBehaviourChange(data as SphereId?) })
+		eventBus.subscribe(BluenetEvent.CURRENT_SPHERE_CHANGED,        { data: Any? -> onCurrentSphereChange(data as SphereId?) })
+		eventBus.subscribe(BluenetEvent.PROFILE_ID_CHANGED,            { data: Any? -> onProfileIdChange(data as SphereId) })
+		eventBus.subscribe(BluenetEvent.DEVICE_TOKEN_CHANGED,          { data: Any? -> onDeviceTokenChange(data as SphereId) })
+		eventBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED,       { data: Any? -> onLibStateChange() })
 	}
 
 	@Synchronized

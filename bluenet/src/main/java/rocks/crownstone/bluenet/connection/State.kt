@@ -22,9 +22,9 @@ import rocks.crownstone.bluenet.util.Log
  *
  * Most commands assume you are already connected to the crownstone.
  */
-class State(evtBus: EventBus, connection: ExtConnection) {
+class State(eventBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val connection = connection
 
 	/**

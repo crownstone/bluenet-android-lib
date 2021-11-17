@@ -33,9 +33,9 @@ import kotlin.Exception
  * If there are more commands in queue, they will be merged if possible.
  * If there are many commands in queue, they will be advertised interleaved.
  */
-class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
+class CommandBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: BleCore, encryptionManager: EncryptionManager, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val libState = state
 	private val bleCore = bleCore
 	private val encryptionManager = encryptionManager
@@ -46,7 +46,7 @@ class CommandBroadcaster(evtBus: EventBus, state: BluenetState, bleCore: BleCore
 	private var broadcasting = false
 
 	init {
-		evtBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
+		eventBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
 	}
 
 	/**

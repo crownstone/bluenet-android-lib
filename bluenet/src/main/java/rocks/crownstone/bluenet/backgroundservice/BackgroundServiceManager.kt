@@ -23,9 +23,9 @@ import rocks.crownstone.bluenet.util.Log
 /**
  * Service that can run in foreground.
  */
-class BackgroundServiceManager(appContext: Context, evtBus: EventBus, looper: Looper) {
+class BackgroundServiceManager(appContext: Context, eventBus: EventBus, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val context = appContext
 	private val handler = Handler(looper)
 

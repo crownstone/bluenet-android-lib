@@ -24,9 +24,9 @@ import java.util.*
 /**
  * Class to interact with DFU service.
  */
-class Dfu(evtBus: EventBus, connection: ExtConnection, context: Context) {
+class Dfu(eventBus: EventBus, connection: ExtConnection, context: Context) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val connection = connection
 	private val context = context
 	private var dfuDeferred: Deferred<Unit, Exception>? = null

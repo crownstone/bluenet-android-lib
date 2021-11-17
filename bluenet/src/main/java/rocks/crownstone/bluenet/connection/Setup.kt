@@ -29,9 +29,9 @@ import kotlin.Exception
  *
  * Assumes you are already connected to the crownstone.
  */
-class Setup(evtBus: EventBus, connection: ExtConnection) {
+class Setup(eventBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val connection = connection
 
 	companion object {

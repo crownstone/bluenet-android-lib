@@ -35,9 +35,9 @@ import java.util.*
  *
  * Most commands assume you are already connected to the crownstone.
  */
-class Control(evtBus: EventBus, connection: ExtConnection) {
+class Control(eventBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val connection = connection
 	private val resultClass = Result(eventBus, connection)
 

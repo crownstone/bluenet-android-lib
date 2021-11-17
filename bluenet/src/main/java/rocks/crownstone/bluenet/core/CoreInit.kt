@@ -32,9 +32,9 @@ import rocks.crownstone.bluenet.util.Log
 /**
  * Class that initializes the bluetooth LE core.
  */
-open class CoreInit(appContext: Context, evtBus: EventBus, looper: Looper) {
+open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 	protected val TAG = "BleCore"
-	internal val eventBus = evtBus
+	internal val eventBus = eventBus
 	internal val context = appContext
 	internal val handler = Handler(looper)
 

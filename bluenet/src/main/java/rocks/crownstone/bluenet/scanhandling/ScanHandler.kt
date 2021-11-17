@@ -28,9 +28,9 @@ import rocks.crownstone.bluenet.util.Log
  *
  * Emits SCAN_RESULT.
  */
-class ScanHandler(evtBus: EventBus, encryptionMngr: EncryptionManager) {
+class ScanHandler(eventBus: EventBus, encryptionMngr: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val encryptionManager = encryptionMngr
 	private val validators = HashMap<DeviceAddress, Validator>() // TODO: grows over time
 	private val lastServiceDataMap = HashMap<DeviceAddress, CrownstoneServiceData>() // TODO: grows over time

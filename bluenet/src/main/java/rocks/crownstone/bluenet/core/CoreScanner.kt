@@ -23,7 +23,7 @@ import rocks.crownstone.bluenet.structs.ScanStartFailure
 /**
  * Class that adds scanning to the bluetooth LE core class.
  */
-open class CoreScanner(appContext: Context, evtBus: EventBus, looper: Looper) : CoreAdvertiser(appContext, evtBus, looper) {
+open class CoreScanner(appContext: Context, eventBus: EventBus, looper: Looper) : CoreAdvertiser(appContext, eventBus, looper) {
 	private var scanFilters: List<ScanFilter> = ArrayList()
 	private var scanSettingsBuilder = ScanSettings.Builder()
 	private var scanSettings: ScanSettings

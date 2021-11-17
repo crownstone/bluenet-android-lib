@@ -21,10 +21,10 @@ import kotlin.collections.HashMap
  * - Caches RC5 sub keys.
  * - Performs RC5 encryption and decryption.
  */
-class EncryptionManager(evtBus: EventBus, state: BluenetState) {
+class EncryptionManager(eventBus: EventBus, state: BluenetState) {
 	private val TAG = this.javaClass.simpleName
 
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val libState = state
 	private val uuids = HashMap<UUID, SphereId>()
 	private val addresses = HashMap<DeviceAddress, SphereId>() // Cached results. TODO: this grows over time!

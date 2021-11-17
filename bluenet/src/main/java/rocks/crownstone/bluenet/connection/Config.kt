@@ -29,9 +29,9 @@ import java.util.*
  * Most commands assume you are already connected to the crownstone.
  * In order to apply a new config, you have to reboot the crownstone, or set it via a control command.
  */
-class Config(evtBus: EventBus, connection: ExtConnection) {
+class Config(eventBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val connection = connection
 
 	// -------------------- //

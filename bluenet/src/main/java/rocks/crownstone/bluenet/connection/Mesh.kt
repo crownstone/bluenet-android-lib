@@ -23,9 +23,9 @@ import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 
-class Mesh(evtBus: EventBus, connection: ExtConnection) {
+class Mesh(eventBus: EventBus, connection: ExtConnection) {
 	private val TAG = this.javaClass.simpleName
-	private val eventBus = evtBus
+	private val eventBus = eventBus
 	private val connection = connection
 
 	/**
