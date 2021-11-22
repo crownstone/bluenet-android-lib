@@ -4,7 +4,9 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
+        // Versions older than 24 have a bug with auto connect becoming a non-auto connect.
+        //minSdkVersion max(rootProject.ext.minSdkVersion, 24)
+        minSdkVersion 24
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"

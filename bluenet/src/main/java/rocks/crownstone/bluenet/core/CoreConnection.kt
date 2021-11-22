@@ -45,13 +45,18 @@ open class CoreConnection(bleCore: BleCore) {
 	/**
 	 * Connect to a device.
 	 *
-	 * @param address Address of the device.
-	 * @param timeout Reject promise after this time.
+	 * @param address   Address of the device.
+	 * @param auto      Automatically connect once the device is in range.
+	 *                  Note that this will only work when the device is in cache:
+	 *                  when it's bonded or when it has been scanned since last phone or bluetooth restart.
+	 *                  This may be slower than a non-auto connect when the device is already in range.
+	 *                  You can have multiple pending auto connections, but only 1 non-auto connecting at a time.
+	 * @param timeout   Reject promise after this time.
 	 * @return Promise
 	 */
 	@Synchronized
-	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
-		Log.i(TAG, "connect $address")
+	fun connect(address: DeviceAddress, auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
+		Log.i(TAG, "connect $address auto=$auto timeoutMs=$timeoutMs")
 		if (!bleCore.isBleReady()) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
@@ -108,10 +113,10 @@ open class CoreConnection(bleCore: BleCore) {
 					promises.setBusy(Action.CONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
 					Log.d(TAG, "device.connectGatt")
 					if (android.os.Build.VERSION.SDK_INT >= 23) {
-						this.currentGatt = device.connectGatt(context, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+						this.currentGatt = device.connectGatt(context, auto, gattCallback, BluetoothDevice.TRANSPORT_LE)
 					}
 					else {
-						this.currentGatt = device.connectGatt(context, false, gattCallback)
+						this.currentGatt = device.connectGatt(context, auto, gattCallback)
 					}
 					Log.d(TAG, "gatt=${this.currentGatt}")
 				}

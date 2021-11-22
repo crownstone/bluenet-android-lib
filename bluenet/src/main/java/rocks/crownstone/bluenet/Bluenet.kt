@@ -718,13 +718,18 @@ class Bluenet(looper: Looper? = null) {
 	 * Connect to a device.
 	 *
 	 * @param address        MAC address of the Crownstone.
+	 * @param auto           Automatically connect once the device is in range.
+	 *                       Note that this will only work when the device is in cache:
+	 *                       when it's bonded or when it has been scanned since last phone or bluetooth restart.
+	 *                       This may be slower than a non-auto connect when the device is already in range.
+	 *                       You can have multiple pending auto connections, but only 1 non-auto connecting at a time.
 	 * @param timeoutMs      Optional: timeout in ms.
 	 * @return Promise that resolves when connected.
 	 */
 	@Synchronized
-	fun connect(address: DeviceAddress, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
+	fun connect(address: DeviceAddress, auto: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return connections.getConnection(address).connect(address, timeoutMs)
+		return connections.getConnection(address).connect(address, auto, timeoutMs)
 	}
 
 	/**
