@@ -18,7 +18,7 @@ class ConnectionManager(eventBus: EventBus, bleCore: BleCore, encryptionManager:
 //		return connections.get(address) ?: ExtConnection(eventBus, bleCore, encryptionManager)
 		val connection = connections.get(address)
 		if (connection == null) {
-			val newConnection = ExtConnection(eventBus, bleCore, encryptionManager)
+			val newConnection = ExtConnection(address, eventBus, bleCore, encryptionManager)
 			connections.put(address, newConnection)
 			return newConnection
 		}
