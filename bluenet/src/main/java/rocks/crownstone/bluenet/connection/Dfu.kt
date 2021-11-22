@@ -139,19 +139,18 @@ class Dfu(eventBus: EventBus, connection: ExtConnection, context: Context) {
 	 * Connects, performs dfu, and disconnects.
 	 * Emits progress events.
 	 *
-	 * @param address  Address of the device.
 	 * @param fileName Filename of the zip with the firmware.
 	 * @param service  Implementation of [DfuBaseService], see https://github.com/NordicSemiconductor/Android-DFU-Library/tree/release/documentation
 	 * @return Promise that resolves when dfu was successful.
 	 */
 	@Synchronized
-	fun startDfu(address: DeviceAddress, fileName: String, service: Class<out DfuBaseService>): Promise<Unit, Exception> {
-		Log.i(TAG, "startDfu address=$address fileName=$fileName")
+	fun startDfu(fileName: String, service: Class<out DfuBaseService>): Promise<Unit, Exception> {
+		Log.i(TAG, "startDfu address=${connection.address} fileName=$fileName")
 		if (dfuDeferred != null) {
 			return Promise.ofFail(Errors.Busy("busy with dfu"))
 		}
 		val deferred = deferred<Unit, Exception>()
-		val dfuServiceInitiator = DfuServiceInitiator(address)
+		val dfuServiceInitiator = DfuServiceInitiator(connection.address)
 //				.setDeviceName(name)
 				.setKeepBond(false)
 				.setDisableNotification(true)

@@ -729,7 +729,7 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun connect(address: DeviceAddress, auto: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return connections.getConnection(address).connect(address, auto, timeoutMs)
+		return connections.getConnection(address).connect(auto, timeoutMs)
 	}
 
 	/**

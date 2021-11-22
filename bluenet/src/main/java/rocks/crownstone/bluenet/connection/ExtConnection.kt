@@ -29,8 +29,9 @@ import java.util.*
  * - Reconnection attempts.
  * - Checking of Crownstone mode.
  */
-class ExtConnection(eventBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
+class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
+	val address = address
 	private val eventBus = eventBus
 	private val bleCore = CoreConnection(bleCore)
 	private val encryptionManager = encryptionManager
@@ -45,7 +46,6 @@ class ExtConnection(eventBus: EventBus, bleCore: BleCore, encryptionManager: Enc
 	 * Connect, discover service and get session data
 	 * Will retry to connect for certain connection errors.
 	 *
-	 * @param address        MAC address of the Crownstone.
 	 * @param auto           Automatically connect once the device is in range.
 	 *                       Note that this will only work when the device is in cache:
 	 *                       when it's bonded or when it has been scanned since last phone or bluetooth restart.
@@ -56,7 +56,7 @@ class ExtConnection(eventBus: EventBus, bleCore: BleCore, encryptionManager: Enc
 	 * @return Promise that resolves when connected.
 	 */
 	@Synchronized
-	fun connect(address: DeviceAddress, auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
+	fun connect(auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address auto=$auto timeoutMs=$timeoutMs retries=$retries")
 		val deferred = deferred<Unit, Exception>()
 
@@ -69,7 +69,7 @@ class ExtConnection(eventBus: EventBus, bleCore: BleCore, encryptionManager: Enc
 		}
 
 		isReady = false
-		connectionAttempt(address, auto, timeoutMs, retries)
+		connectionAttempt(auto, timeoutMs, retries)
 				.then {
 					mode = CrownstoneMode.UNKNOWN
 					bleCore.discoverServices(false)
@@ -87,7 +87,7 @@ class ExtConnection(eventBus: EventBus, bleCore: BleCore, encryptionManager: Enc
 		return deferred.promise
 	}
 
-	private fun connectionAttempt(address: DeviceAddress, auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int): Promise<Unit, Exception> {
+	private fun connectionAttempt(auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int): Promise<Unit, Exception> {
 		// TODO: check time
 		val deferred = deferred<Unit, Exception>()
 		val startTime = SystemClock.elapsedRealtime()
@@ -101,7 +101,7 @@ class ExtConnection(eventBus: EventBus, bleCore: BleCore, encryptionManager: Enc
 					val curTime = SystemClock.elapsedRealtime()
 					Log.i(TAG, "address=$address retry=$retry retries=$retries dt=${curTime - startTime}")
 					if (retry && retries > 0 && (curTime - startTime < BluenetConfig.TIMEOUT_CONNECT_RETRY)) {
-						connectionAttempt(address, auto, timeoutMs, retries - 1)
+						connectionAttempt(auto, timeoutMs, retries - 1)
 								.success { deferred.resolve() }
 								.fail { exception: Exception ->
 									deferred.reject(exception)
