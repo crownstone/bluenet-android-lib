@@ -54,6 +54,17 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 	}
 
 	/**
+	 * Set the switch value.
+	 *
+	 * @param value Value to set the switch to.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setSwitch(value: SwitchCommandValue): Promise<Unit, Exception> {
+		return setSwitch(value.num)
+	}
+
+	/**
 	 * Turn the relay on or off.
 	 *
 	 * @param value True to turn the relay on.
@@ -162,7 +173,7 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 		else {
 			val newPacket = MultiSwitchPacket()
 			for (item in packet.list) {
-				val newItem = MultiSwitchItemPacket(item.id, BluenetProtocol.TURN_SWITCH_ON)
+				val newItem = MultiSwitchItemPacket(item.id, SwitchCommandValue.SMART_ON)
 				newPacket.add(newItem)
 			}
 			return multiSwitch(newPacket)

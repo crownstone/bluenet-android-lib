@@ -124,8 +124,6 @@ object BluenetProtocol {
 	const val SCHEDULE_WEEKDAY_BIT_POS_ALL_DAYS  = 7
 	const val SCHEDULE_WEEKDAY_MASK_ALL_DAYS = 0x7F // 01111111
 
-	const val TURN_SWITCH_ON: Uint8 = 0xFFU
-
 	const val STATE_DEFAULT_ID: Uint16 = 0U
 }
 
@@ -721,6 +719,17 @@ class SwitchState(val state: Uint8) {
 	override fun toString(): String {
 		return "$state"
 	}
+}
+
+enum class SwitchCommandValue(val num: Uint8) {
+	// 0 - 100: Percentage: 0 for OFF, 100 fully ON, dimmed in between.
+	OFF(0U),
+	FULLY_ON(100U),
+
+	// Special values
+	TOGGLE(253U),    // Switch OFF when currently on, switch to SMART_ON when currently off. Supported since firmware 5.1.
+	BEHAVIOUR(254U), // Switch to the value according to behaviour rules. Supported since firmware 5.1.
+	SMART_ON(255U);  // Switch ON, the value will be determined by behaviour rules.
 }
 
 class ErrorState() {

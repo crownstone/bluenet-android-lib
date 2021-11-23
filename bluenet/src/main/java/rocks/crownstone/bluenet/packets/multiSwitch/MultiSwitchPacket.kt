@@ -8,6 +8,7 @@
 package rocks.crownstone.bluenet.packets.multiSwitch
 
 import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.structs.SwitchCommandValue
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.put
 import java.nio.ByteBuffer
@@ -48,6 +49,8 @@ class MultiSwitchPacket: PacketInterface {
 }
 
 class MultiSwitchItemPacket(var id: Uint8, var switchValue: Uint8): PacketInterface {
+	constructor(id: Uint8, switchValue: SwitchCommandValue): this(id, switchValue.num)
+
 	companion object {
 		const val SIZE = 2
 	}

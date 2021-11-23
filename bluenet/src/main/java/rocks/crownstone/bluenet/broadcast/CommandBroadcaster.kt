@@ -76,6 +76,20 @@ class CommandBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: BleCo
 	}
 
 	/**
+	 * Broadcast a switch command.
+	 *
+	 * @param sphereId       Sphere ID of the stone.
+	 * @param stoneId        The ID of the stone.
+	 * @param switchValue    Value to set the switch to.
+	 * @param autoExecute    Whether to execute immediately.
+	 *                       Set to false if you want to broadcast more similar commands, then call execute() after the last one.
+	 * @return Promise
+	 */
+	fun switch(sphereId: SphereId, stoneId: Uint8, switchValue: SwitchCommandValue, autoExecute: Boolean = true): Promise<Unit, Exception> {
+		return switch(sphereId, stoneId, switchValue.num, autoExecute)
+	}
+
+	/**
 	 * Broadcast a turn switch on command.
 	 *
 	 * @param sphereId       Sphere ID of the stone.
@@ -86,7 +100,7 @@ class CommandBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: BleCo
 	 */
 	@Synchronized
 	fun switchOn(sphereId: SphereId, stoneId: Uint8, autoExecute: Boolean = true): Promise<Unit, Exception> {
-		return switch(sphereId, stoneId, BluenetProtocol.TURN_SWITCH_ON, autoExecute)
+		return switch(sphereId, stoneId, SwitchCommandValue.SMART_ON, autoExecute)
 	}
 
 	/**
