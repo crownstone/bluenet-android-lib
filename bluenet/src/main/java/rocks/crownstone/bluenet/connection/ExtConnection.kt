@@ -75,7 +75,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 					bleCore.discoverServices(false)
 				}.unwrap()
 				.then {
-					postConnect(address)
+					postConnect()
 				}.unwrap()
 				.success {
 					isReady = true
@@ -268,7 +268,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	}
 
 	@Synchronized
-	private fun postConnect(address: DeviceAddress): Promise<Unit, Exception> {
+	private fun postConnect(): Promise<Unit, Exception> {
 		Log.i(TAG, "postConnect $address")
 		checkMode()
 		connectionEncryptionManager.clearSessionData()
