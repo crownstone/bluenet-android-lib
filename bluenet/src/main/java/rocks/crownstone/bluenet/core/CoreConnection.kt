@@ -65,7 +65,6 @@ open class CoreConnection(bleCore: BleCore) {
 
 		if (gatt != null) {
 			Log.w(TAG, "gatt already open")
-			// TODO: disconnect and close?
 			if (gatt.device.address != address) {
 				return Promise.ofFail(Errors.BusyOtherDevice())
 			}
@@ -79,9 +78,17 @@ open class CoreConnection(bleCore: BleCore) {
 					if (promises.isBusy()) {
 						return Promise.ofFail(Errors.Busy())
 					}
-					promises.setBusy(Action.CONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
-					Log.d(TAG, "gatt.connect")
-					gatt.connect() // When doing this on a gatt that's invalid (due to bluetooth being turned off), this throws a android.os.DeadObjectException
+					if (auto) {
+						promises.setBusy(Action.CONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
+						Log.d(TAG, "gatt.connect")
+						// This method is used to re-connect to a remote device after the connection has been dropped.
+						// If the device is not in range, the re-connection will be triggered once the device is back in range.
+						gatt.connect() // When doing this on a gatt that's invalid (due to bluetooth being turned off), this throws a android.os.DeadObjectException
+					}
+					else {
+						closeFinal(false)
+						deferred.reject(Errors.ConnectionNotClosed())
+					}
 				}
 				else -> {
 					if (promises.isBusy()) {
@@ -110,6 +117,10 @@ open class CoreConnection(bleCore: BleCore) {
 					if (promises.isBusy()) {
 						return Promise.ofFail(Errors.Busy())
 					}
+					if (auto && device.type == BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
+						return Promise.ofFail(Errors.DeviceNotInCache())
+					}
+
 					promises.setBusy(Action.CONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
 					Log.d(TAG, "device.connectGatt")
 					if (android.os.Build.VERSION.SDK_INT >= 23) {
@@ -129,6 +140,34 @@ open class CoreConnection(bleCore: BleCore) {
 			}
 		}
 		return deferred.promise
+	}
+
+	/**
+	 * Abort current action and close connection.
+	 *
+	 * @return Promise
+	 */
+	@Synchronized
+	fun abort(): Promise<Unit, Exception> {
+		Log.i(TAG, "abort")
+		val action = promises.getAction()
+		when (action) {
+			Action.NONE -> {
+				Log.d(TAG, "not busy: simply close")
+			}
+			Action.CONNECT,
+			Action.DISCONNECT,
+			Action.DISCONNECT,
+			Action.DISCOVER,
+			Action.READ,
+			Action.WRITE,
+			Action.SUBSCRIBE,
+			Action.UNSUBSCRIBE,
+			Action.REFRESH_CACHE -> {
+				promises.reject(Errors.Aborted())
+			}
+		}
+		return close(false)
 	}
 
 	/**

@@ -733,6 +733,19 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
+	 * Abort current action (connect, disconnect, write, read, subscribe, unsubscribe) and disconnects.
+	 * Mostly made to abort connecting.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return Promise that resolves when disconnected.
+	 */
+	@Synchronized
+	fun abort(address: DeviceAddress): Promise<Unit, Exception> {
+		Log.i(TAG, "abort $address")
+		return connections.getConnection(address).abort()
+	}
+
+	/**
 	 * Disconnect from a device.
 	 *
 	 * @param address        MAC address of the Crownstone.

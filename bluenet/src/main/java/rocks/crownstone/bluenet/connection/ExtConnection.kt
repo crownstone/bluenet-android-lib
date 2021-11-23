@@ -114,6 +114,17 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 		return deferred.promise
 	}
 
+	/**
+	 * Abort current action (connect, disconnect, write, read, subscribe, unsubscribe) and disconnects.
+	 * Mostly made to abort connecting.
+	 *
+	 * @return Promise
+	 */
+	@Synchronized
+	fun abort(): Promise<Unit, Exception> {
+		return bleCore.abort()
+	}
+
 	@Synchronized
 	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")

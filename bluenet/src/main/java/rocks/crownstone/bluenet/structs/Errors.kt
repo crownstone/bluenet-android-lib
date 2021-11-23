@@ -59,6 +59,8 @@ object Errors {
 	class BleNotReady: Exception("BLE not ready")
 	class AddressInvalid: Exception("invalid address")
 	class GattNull: Exception("gatt is null")
+	class ConnectionNotClosed: Exception("connection is not closed, disconnect and try again")
+	class DeviceNotInCache: Exception("device is not in cache, scan in order to get it in cache")
 	class NotConnected: Exception("not connected")
 	class CharacteristicNotFound: Exception("characteristic not found")
 	class SessionDataMissing: Exception("no session data")
