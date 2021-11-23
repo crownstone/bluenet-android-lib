@@ -754,8 +754,25 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun disconnect(address: DeviceAddress, clearCache: Boolean = false): Promise<Unit, Exception> {
-		Log.i(TAG, "disconnect clearCache=$clearCache")
+		Log.i(TAG, "disconnect $address clearCache=$clearCache")
 		return connections.getConnection(address).disconnect(clearCache)
+	}
+
+	/**
+	 * Get the operation mode of a Crownstone.
+	 *
+	 * @return The operation mode when connected, always unkown when not connected.
+	 */
+	@Synchronized
+	fun getOperationMode(address: DeviceAddress): CrownstoneMode {
+		Log.i(TAG, "getOperationMode $address")
+		val connection = connections.getConnection(address)
+		if (connection.isConnected) {
+			return connections.getConnection(address).mode
+		}
+		else {
+			return CrownstoneMode.UNKNOWN
+		}
 	}
 
 	/**

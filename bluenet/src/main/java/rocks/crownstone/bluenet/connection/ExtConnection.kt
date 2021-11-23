@@ -19,7 +19,6 @@ import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.SubscriptionId
-import rocks.crownstone.bluenet.util.Util
 import java.util.*
 
 /**
@@ -31,14 +30,26 @@ import java.util.*
  */
 class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore, encryptionManager: EncryptionManager) {
 	private val TAG = this.javaClass.simpleName
-	val address = address
 	private val eventBus = eventBus
 	private val bleCore = CoreConnection(bleCore)
 	private val encryptionManager = encryptionManager
 	private val connectionEncryptionManager = ConnectionEncryption(encryptionManager)
 	private var protocolVersion: Uint8? = null
-	var isReady: Boolean = false
+
+	/**
+	 * The address of this connection.
+	 */
+	val address = address
+
+	/**
+	 * Will be set to true when connected.
+	 */
+	var isConnected: Boolean = false
 		private set
+
+	/**
+	 * Will be set to the correct Crownstone mode when connected.
+	 */
 	var mode = CrownstoneMode.UNKNOWN
 		private set
 
@@ -60,7 +71,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 		Log.i(TAG, "connect $address auto=$auto timeoutMs=$timeoutMs retries=$retries")
 		val deferred = deferred<Unit, Exception>()
 
-		if (isReady && address.equals(bleCore.getConnectedAddress())) {
+		if (isConnected && address.equals(bleCore.getConnectedAddress())) {
 			// Assume we didn't disconnect and reconnect without calling disconnect() or waitForDisconnect().
 			// TODO: maybe subscribe to disconnect event to set isReady to false?
 			Log.i(TAG, "Already connected")
@@ -68,7 +79,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 			return deferred.promise
 		}
 
-		isReady = false
+		isConnected = false
 		connectionAttempt(auto, timeoutMs, retries)
 				.then {
 					mode = CrownstoneMode.UNKNOWN
@@ -78,7 +89,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 					postConnect()
 				}.unwrap()
 				.success {
-					isReady = true
+					isConnected = true
 					deferred.resolve()
 				}
 				.fail {
@@ -128,7 +139,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	@Synchronized
 	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
 		Log.i(TAG, "disconnect clearCache=$clearCache")
-		isReady = false
+		isConnected = false
 		return bleCore.close(clearCache)
 	}
 
@@ -136,7 +147,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	fun waitForDisconnect(clearCache: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_WAIT_FOR_DISCONNECT): Promise<Unit, Exception> {
 		Log.i(TAG, "waitForDisconnect timeoutMs=$timeoutMs clearCache=$clearCache")
 		return waitForDisconnectAttempt(clearCache, timeoutMs, BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPTS)
-				.success { isReady = false }
+				.success { isConnected = false }
 	}
 
 	@Synchronized
