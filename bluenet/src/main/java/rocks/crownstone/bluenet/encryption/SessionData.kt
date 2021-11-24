@@ -11,6 +11,7 @@ import rocks.crownstone.bluenet.packets.other.SessionDataPacket
 import rocks.crownstone.bluenet.structs.BluenetProtocol
 import rocks.crownstone.bluenet.structs.BluenetProtocol.SESSION_NONCE_LENGTH
 import rocks.crownstone.bluenet.structs.BluenetProtocol.VALIDATION_KEY_LENGTH
+import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
@@ -30,7 +31,7 @@ object SessionDataParser {
 			if (!packet.fromArray(decryptedData)) {
 				return null
 			}
-			if (Conversion.byteArrayToInt(packet.validation) != BluenetProtocol.CAFEBABE) {
+			if (Conversion.byteArrayTo<Uint32>(packet.validation) != BluenetProtocol.CAFEBABE) {
 				Log.e(TAG, "validation failed: " + Conversion.bytesToString(decryptedData))
 				return null
 			}
@@ -44,7 +45,7 @@ object SessionDataParser {
 				return null
 			}
 			// Bytes 0-3 (validation key) should be CAFEBABE
-			if (Conversion.byteArrayToInt(decryptedData) != BluenetProtocol.CAFEBABE) {
+			if (Conversion.byteArrayTo<Uint32>(decryptedData) != BluenetProtocol.CAFEBABE) {
 				Log.e(TAG, "validation failed: " + Conversion.bytesToString(decryptedData))
 				return null
 			}

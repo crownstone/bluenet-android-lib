@@ -85,8 +85,11 @@ class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: Bl
 		}
 		val sphereSettings = libState.sphereState[sphereId] ?: return
 
-		val validationTimestamp = Conversion.toUint32(BluenetProtocol.CAFEBABE)
-//		val validationTimestamp = Util.getLocalTimestamp() // TODO: use time from crownstones
+		val useTimeForBroadcastValidation: Boolean = sphereSettings.useTimeForBroadcastValidation
+		val validationTimestamp = when (useTimeForBroadcastValidation) {
+			true -> Util.getLocalTimestamp() // TODO: use time from crownstones
+			false -> BluenetProtocol.CAFEBABE
+		}
 
 		val payloadType =
 				if (sphereSettings.sunRiseAfterMidnight >= 0 && sphereSettings.sunSetAfterMidnight >= 0) {

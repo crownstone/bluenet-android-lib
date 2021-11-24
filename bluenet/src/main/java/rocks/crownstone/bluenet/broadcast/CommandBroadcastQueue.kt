@@ -137,7 +137,7 @@ class CommandBroadcastQueue(state: BluenetState) {
 				val useTimeForBroadcastValidation: Boolean = libState.sphereState[firstItem.sphereId]?.useTimeForBroadcastValidation ?: false
 				when (useTimeForBroadcastValidation) {
 					true -> Util.getLocalTimestamp() // TODO: use time from crownstones
-					false -> Conversion.toUint32(BluenetProtocol.CAFEBABE)
+					false -> BluenetProtocol.CAFEBABE
 				}
 			}
 			else -> firstItem.validationTimestamp

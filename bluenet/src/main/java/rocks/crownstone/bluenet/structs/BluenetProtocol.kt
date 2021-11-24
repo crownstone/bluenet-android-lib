@@ -9,6 +9,7 @@ package rocks.crownstone.bluenet.structs
 
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Util
+import rocks.crownstone.bluenet.util.toUint32
 import java.util.UUID
 
 object BluenetProtocol {
@@ -83,7 +84,7 @@ object BluenetProtocol {
 	// Verification code for ECB encryption
 //	const val CAFEBABE = 0xCAFEBABE // Kotlin made this -0x35014542
 //	const val CAFEBABE = -0x35014542
-	const val CAFEBABE = 0xCAFEBABE.toInt()
+	const val CAFEBABE: Uint32 = 0xCAFEBABEU
 
 	const val AES_BLOCK_SIZE = 16
 	const val VALIDATION_KEY_LENGTH = 4

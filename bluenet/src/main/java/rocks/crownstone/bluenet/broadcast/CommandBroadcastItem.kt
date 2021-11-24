@@ -30,7 +30,7 @@ class CommandBroadcastItem(
 		val stoneId: Uint8?,
 		val payload: PacketInterface,
 		var timeLeftMs: Int,
-		val validationTimestamp: Uint32? = null
+		val validationTimestamp: Uint32? = null    // Set to null to use the default.
 ) {
 	private val TAG = this.javaClass.simpleName
 

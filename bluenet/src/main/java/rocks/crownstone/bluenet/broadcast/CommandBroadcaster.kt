@@ -137,19 +137,26 @@ class CommandBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: BleCo
 	 * @param sunSetAfterMidnight      Seconds after midnight at which the sun sets.
 	 * @param autoExecute              Whether to execute immediately.
 	 *                                 Set to false if you want to broadcast more similar commands, then call execute() after the last one.
+	 * @param useTimeBasedValidation   Whether to use encryption validation based on the current time.
+	 *                                 When the time on the crownstone(s) is offset too much, fall back to fixed value validation.
 	 * @return Promise
 	 */
 	@Synchronized
-	fun setTime(sphereId: SphereId, currentTime: Uint32, sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32, autoExecute: Boolean = true): Promise<Unit, Exception> {
+	fun setTime(sphereId: SphereId, currentTime: Uint32, sunRiseAfterMidnight: Uint32, sunSetAfterMidnight: Uint32, autoExecute: Boolean = true, useTimeBasedValidation: Boolean = true): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 		val commandItem = BroadcastSetTimePacket(currentTime, sunRiseAfterMidnight, sunSetAfterMidnight)
+		val validationTimestamp = when (useTimeBasedValidation) {
+			true -> null
+			false -> BluenetProtocol.CAFEBABE
+		}
 		val item = CommandBroadcastItem(
 				deferred,
 				sphereId,
 				CommandBroadcastItemType.SET_TIME,
 				null,
 				commandItem,
-				COMMAND_BROADCAST_TIME_MS
+				COMMAND_BROADCAST_TIME_MS,
+				validationTimestamp
 		)
 		add(item, autoExecute)
 		return deferred.promise
