@@ -243,9 +243,13 @@ open class CoreConnection(bleCore: BleCore) {
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
+				val address: String = gatt.device.address
 				closeFinal(clearCache)
 				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
-						.success { deferred.resolve() }
+						.success {
+							bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
+							deferred.resolve()
+						}
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
 				if (promises.isBusy()) {
@@ -286,16 +290,22 @@ open class CoreConnection(bleCore: BleCore) {
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
+				val address: String = gatt.device.address
 				closeFinal(clearCache)
 				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
-						.success { deferred.resolve() }
+						.success {
+							bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
+							deferred.resolve()
+						}
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
 				disconnect()
 						.always {
 							wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
 									. success {
+										val address: String = gatt.device.address
 										closeFinal(clearCache)
+										bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
 										deferred.resolve()
 									}
 						}
@@ -401,10 +411,14 @@ open class CoreConnection(bleCore: BleCore) {
 
 		if (status != BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED) {
 			closeFinal(true) // TODO: refresh?
+			if (promises.getAction() != Action.CONNECT) {
+				bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
+			}
 		}
 		when (newState) {
 			BluetoothProfile.STATE_CONNECTED -> {
 				notificationEventBus.reset()
+				bleCore.eventBus.emit(BluenetEvent.CORE_CONNECTED, gatt.device.address)
 				promises.resolve(Action.CONNECT)
 			}
 			BluetoothProfile.STATE_DISCONNECTED -> {

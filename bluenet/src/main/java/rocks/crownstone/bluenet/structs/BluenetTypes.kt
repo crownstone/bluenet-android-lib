@@ -55,6 +55,9 @@ enum class BluenetEvent {
 	CURRENT_SPHERE_CHANGED,            // Current sphere changed. Current SphereId as data, or null for none. Current state can be found in BluenetState.
 	PROFILE_ID_CHANGED,                // Profile id changed. SphereId that changed as data. Current state can be found in BluenetState.
 	DEVICE_TOKEN_CHANGED,              // Device token changed. SphereId that changed as data. Current state can be found in BluenetState.
+
+	CORE_CONNECTED,                    // Sent immediately after connect, before connect promise is resolved.    DeviceAddress as data.
+	CORE_DISCONNECTED,                 // Sent after a connection has been closed.                               DeviceAddress as data.
 }
 
 typealias Int8 = Byte
