@@ -19,12 +19,15 @@ class UicrPacket: PacketInterface {
 	var productType:    Uint8 = 0xFFU; private set
 	var region:         Uint8 = 0xFFU; private set
 	var productFamily:  Uint8 = 0xFFU; private set
+	var reserved1:      Uint8 = 0xFFU; private set
 	var hardwarePatch:  Uint8 = 0xFFU; private set
 	var hardwareMinor:  Uint8 = 0xFFU; private set
 	var hardwareMajor:  Uint8 = 0xFFU; private set
+	var reserved2:      Uint8 = 0xFFU; private set
 	var housing:        Uint8 = 0xFFU; private set
 	var productionWeek: Uint8 = 0xFFU; private set
 	var productionYear: Uint8 = 0xFFU; private set
+	var reserved3:      Uint8 = 0xFFU; private set
 
 	companion object {
 		const val SIZE = 4 * Uint32.SIZE_BYTES
@@ -46,15 +49,15 @@ class UicrPacket: PacketInterface {
 		productType = bb.getUint8()
 		region = bb.getUint8()
 		productFamily = bb.getUint8()
-		bb.getUint8() // Reserved
+		reserved1 = bb.getUint8() // Reserved
 		hardwarePatch = bb.getUint8()
 		hardwareMinor = bb.getUint8()
 		hardwareMajor = bb.getUint8()
-		bb.getUint8() // Reserved
+		reserved2 = bb.getUint8() // Reserved
 		housing = bb.getUint8()
 		productionWeek = bb.getUint8()
 		productionYear = bb.getUint8()
-		bb.getUint8() // Reserved
+		reserved3 = bb.getUint8() // Reserved
 		return true
 	}
 
