@@ -724,12 +724,13 @@ class Bluenet(looper: Looper? = null) {
 	 *                       This may be slower than a non-auto connect when the device is already in range.
 	 *                       You can have multiple pending auto connections, but only 1 non-auto connecting at a time.
 	 * @param timeoutMs      Optional: timeout in ms.
+	 * @param retries        Optional: number of times to retry.
 	 * @return Promise that resolves when connected.
 	 */
 	@Synchronized
-	fun connect(address: DeviceAddress, auto: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT): Promise<Unit, Exception> {
+	fun connect(address: DeviceAddress, auto: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return connections.getConnection(address).connect(auto, timeoutMs)
+		return connections.getConnection(address).connect(auto, timeoutMs, retries)
 	}
 
 	/**
