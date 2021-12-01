@@ -87,11 +87,12 @@ class ConnectionManager(eventBus: EventBus, bleCore: BleCore, encryptionManager:
 	}
 
 	private fun connectNext() {
+		Log.d(TAG, "connectNext")
 		if (connectInProgress != null) {
+			Log.d(TAG, "connect in progress: $connectInProgress")
 			return
 		}
 		if (connectQueue.isEmpty()) {
-			connectInProgress = null
 			return
 		}
 		printQueue()
@@ -105,11 +106,14 @@ class ConnectionManager(eventBus: EventBus, bleCore: BleCore, encryptionManager:
 					Log.i(TAG, "connected to $address dt=${timestamp - item.startTimestamp} ms")
 					deferred.resolve(Unit)
 					// TODO: also resolve all other connects in queue to this address?
+					connectInProgress = null
 					connectNext()
 				}
 				.fail {
-					Log.w(TAG, "failed to connect to $address: ${it.message}")
+					val timestamp = SystemClock.elapsedRealtime()
+					Log.w(TAG, "failed to connect to $address: ${it.message} dt=${timestamp - item.startTimestamp} ms")
 					deferred.reject(it)
+					connectInProgress = null
 					connectNext()
 				}
 	}

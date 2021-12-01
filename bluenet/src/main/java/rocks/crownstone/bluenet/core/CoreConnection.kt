@@ -282,7 +282,7 @@ open class CoreConnection(bleCore: BleCore) {
 			return Promise.ofSuccess(Unit)
 		}
 		if (promises.isBusy()) {
-			Log.w(TAG, "busy")
+			Log.w(TAG, "busy: ${promises.getAction()}")
 			return Promise.ofFail(Errors.Busy())
 		}
 		val deferred = deferred<Unit, Exception>()
