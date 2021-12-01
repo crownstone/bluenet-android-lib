@@ -99,18 +99,21 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	}
 
 	private fun connectionAttempt(auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int): Promise<Unit, Exception> {
-		// TODO: check time
 		val deferred = deferred<Unit, Exception>()
 		val startTime = SystemClock.elapsedRealtime()
 		bleCore.connect(address, auto, timeoutMs)
-				.success { deferred.resolve() }
+				.success {
+					deferred.resolve()
+					val curTime = SystemClock.elapsedRealtime()
+					Log.i(TAG, "connect success address=$address dt=${curTime - startTime} ms")
+				}
 				.fail {
 					val retry = when (it) {
 						is Errors.GattError133 -> true
 						else -> false
 					}
 					val curTime = SystemClock.elapsedRealtime()
-					Log.i(TAG, "address=$address retry=$retry retries=$retries dt=${curTime - startTime}")
+					Log.i(TAG, "connect failed address=$address retry=$retry retries=$retries dt=${curTime - startTime} ms")
 					if (retry && retries > 0 && (curTime - startTime < BluenetConfig.TIMEOUT_CONNECT_RETRY)) {
 						connectionAttempt(auto, timeoutMs, retries - 1)
 								.success { deferred.resolve() }
@@ -138,14 +141,14 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 
 	@Synchronized
 	fun disconnect(clearCache: Boolean = false): Promise<Unit, Exception> {
-		Log.i(TAG, "disconnect clearCache=$clearCache")
+		Log.i(TAG, "disconnect $address clearCache=$clearCache")
 		isConnected = false
 		return bleCore.close(clearCache)
 	}
 
 	@Synchronized
 	fun waitForDisconnect(clearCache: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_WAIT_FOR_DISCONNECT): Promise<Unit, Exception> {
-		Log.i(TAG, "waitForDisconnect timeoutMs=$timeoutMs clearCache=$clearCache")
+		Log.i(TAG, "waitForDisconnect $address timeoutMs=$timeoutMs clearCache=$clearCache")
 		return waitForDisconnectAttempt(clearCache, timeoutMs, BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPTS)
 				.success { isConnected = false }
 	}

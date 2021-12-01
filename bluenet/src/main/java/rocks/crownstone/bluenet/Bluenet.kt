@@ -723,6 +723,7 @@ class Bluenet(looper: Looper? = null) {
 	 *                       when it's bonded or when it has been scanned since last phone or bluetooth restart.
 	 *                       This may be slower than a non-auto connect when the device is already in range.
 	 *                       You can have multiple pending auto connections, but only 1 non-auto connecting at a time.
+	 *                       Non-auto connects will be queued.
 	 * @param timeoutMs      Optional: timeout in ms.
 	 * @param retries        Optional: number of times to retry.
 	 * @return Promise that resolves when connected.
@@ -730,12 +731,13 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun connect(address: DeviceAddress, auto: Boolean = false, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address")
-		return connections.getConnection(address).connect(auto, timeoutMs, retries)
+		return connections.connect(address, auto, timeoutMs, retries)
 	}
 
 	/**
 	 * Abort current action (connect, disconnect, write, read, subscribe, unsubscribe) and disconnects.
 	 * Mostly made to abort connecting.
+	 * Also removes queued connects.
 	 *
 	 * @param address        MAC address of the Crownstone.
 	 * @return Promise that resolves when disconnected.
@@ -743,7 +745,7 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun abort(address: DeviceAddress): Promise<Unit, Exception> {
 		Log.i(TAG, "abort $address")
-		return connections.getConnection(address).abort()
+		return connections.abort(address)
 	}
 
 	/**
