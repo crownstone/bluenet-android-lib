@@ -9,12 +9,13 @@ package rocks.crownstone.bluenet.packets.wrappers.v5
 
 import rocks.crownstone.bluenet.packets.PacketInterface
 import rocks.crownstone.bluenet.packets.wrappers.PayloadWrapperPacket
+import rocks.crownstone.bluenet.packets.wrappers.ResultPacket
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-open class ResultPacketV5(protocol: ConnectionProtocol, type: ControlTypeV4, resultCode: ResultType, payload: PacketInterface?): PayloadWrapperPacket(payload) {
+open class ResultPacketV5(protocol: ConnectionProtocol, type: ControlTypeV4, resultCode: ResultType, payload: PacketInterface?): PayloadWrapperPacket(payload), ResultPacket {
 	constructor(): this(ConnectionProtocol.UNKNOWN, ControlTypeV4.UNKNOWN, ResultType.UNKNOWN, null)
 
 	override val TAG = this.javaClass.simpleName
@@ -27,6 +28,11 @@ open class ResultPacketV5(protocol: ConnectionProtocol, type: ControlTypeV4, res
 		protected set
 	var resultCode = resultCode
 		protected set
+
+	override fun getCode(): ResultType {
+		return resultCode
+	}
+
 	protected var dataSize: Uint16 = 0U
 	init {
 		dataSize = payload?.getPacketSize()?.toUint16() ?: 0U

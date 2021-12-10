@@ -10,6 +10,7 @@ package rocks.crownstone.bluenet.structs
 import rocks.crownstone.bluenet.encryption.AccessLevel
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.encryption.MeshKeySet
+import rocks.crownstone.bluenet.packets.wrappers.v3.ResultPacketV3
 import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
 import rocks.crownstone.bluenet.packets.wrappers.v5.ResultPacketV5
 import rocks.crownstone.bluenet.util.Conversion
@@ -133,10 +134,19 @@ enum class CrownstoneMode {
 	UNKNOWN
 }
 
-enum class ProcessResult {
+enum class ProcessResultType {
 	NOT_DONE,
 	DONE,
 	ERROR,
+}
+
+class ProcessResult(val type: ProcessResultType, val error: Exception? = null) {
+//	lateinit var exception: Exception
+//	init {
+//	    if (type == ProcessResultType.ERROR && error == null) {
+//			exception = Errors.Unknown()
+//		}
+//	}
 }
 
 enum class ScanMode(val num: Int) {
@@ -147,6 +157,8 @@ enum class ScanMode(val num: Int) {
 
 typealias ProcessCallback = (ByteArray) -> ProcessResult
 
+typealias ResultProcessCallbackV1 = (ResultType) -> ProcessResult
+typealias ResultProcessCallbackV3 = (ResultPacketV3) -> ProcessResult
 typealias ResultProcessCallbackV4 = (ResultPacketV4) -> ProcessResult
 typealias ResultProcessCallbackV5 = (ResultPacketV5) -> ProcessResult
 

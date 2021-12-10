@@ -94,9 +94,11 @@ class Mesh(eventBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "writeMeshCommand type=$type type4=$type4")
 		val controlClass = Control(eventBus, connection)
 		val meshControlPacket = when(getPacketProtocol()) {
+			PacketProtocol.V1,
+			PacketProtocol.V2,
 			PacketProtocol.V3 -> MeshControlPacketV3(ControlPacketV3(type), ids)
 			PacketProtocol.V4 -> MeshControlPacketV3(ControlPacketV4(type4), ids)
-			else ->              MeshControlPacketV5(ControlPacketV5(ConnectionProtocol.V5, type4), flags, transmissions, timeout, ids)
+			PacketProtocol.V5 -> MeshControlPacketV5(ControlPacketV5(ConnectionProtocol.V5, type4), flags, transmissions, timeout, ids)
 		}
 //		return controlClass.writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, meshControlPacket)
 		return controlClass.meshCommand(meshControlPacket)
@@ -126,9 +128,11 @@ class Mesh(eventBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "writeMeshCommand type=$type type4=$type4")
 		val controlClass = Control(eventBus, connection)
 		val meshControlPacket = when(getPacketProtocol()) {
+			PacketProtocol.V1,
+			PacketProtocol.V2,
 			PacketProtocol.V3 -> MeshControlPacketV3(ControlPacketV3(type, payload), ids)
 			PacketProtocol.V4 -> MeshControlPacketV3(ControlPacketV4(type4, payload), ids)
-			else ->              MeshControlPacketV5(ControlPacketV5(ConnectionProtocol.V5, type4, payload), flags, transmissions, timeout, ids)
+			PacketProtocol.V5 -> MeshControlPacketV5(ControlPacketV5(ConnectionProtocol.V5, type4, payload), flags, transmissions, timeout, ids)
 		}
 //		return controlClass.writeCommand(ControlType.MESH_COMMAND, ControlTypeV4.MESH_COMMAND, meshControlPacket)
 		return controlClass.meshCommand(meshControlPacket)

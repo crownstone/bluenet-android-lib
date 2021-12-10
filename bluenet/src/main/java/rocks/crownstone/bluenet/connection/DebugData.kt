@@ -44,7 +44,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 	fun getUptime(): Promise<Uint32, Exception> {
 		Log.i(TAG, "getUptime")
 		val controlClass = Control(eventBus, connection)
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_UPTIME, EmptyPacket())
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_UPTIME, EmptyPacket())
 	}
 
 	/**
@@ -57,7 +57,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "getAdcRestarts")
 		val controlClass = Control(eventBus, connection)
 		val resultPacket = AdcRestartsPacket()
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_ADC_RESTARTS, EmptyPacket(), resultPacket)
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_ADC_RESTARTS, EmptyPacket(), resultPacket)
 	}
 
 	/**
@@ -70,7 +70,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "getAdcChannelSwaps")
 		val controlClass = Control(eventBus, connection)
 		val resultPacket = AdcChannelSwapsPacket()
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_ADC_CHANNEL_SWAPS, EmptyPacket(), resultPacket)
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_ADC_CHANNEL_SWAPS, EmptyPacket(), resultPacket)
 	}
 
 	/**
@@ -146,7 +146,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 		val controlClass = Control(eventBus, connection)
 		val writePacket = PowerSamplesRequestPacket(type, index)
 		val resultPacket = PowerSamplesPacket()
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_POWER_SAMPLES, writePacket, resultPacket)
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_POWER_SAMPLES, writePacket, resultPacket)
 	}
 
 	/**
@@ -159,7 +159,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "getSwitchHistory")
 		val controlClass = Control(eventBus, connection)
 		val resultPacket = SwitchHistoryListPacket()
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_SWITCH_HISTORY, EmptyPacket(), resultPacket)
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_SWITCH_HISTORY, EmptyPacket(), resultPacket)
 	}
 
 	/**
@@ -171,7 +171,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 	fun getSchedulerMinFree(): Promise<Uint16, Exception> {
 		Log.i(TAG, "getSchedulerMinFree")
 		val controlClass = Control(eventBus, connection)
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_SCHEDULER_MIN_FREE, EmptyPacket())
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_SCHEDULER_MIN_FREE, EmptyPacket())
 	}
 
 	/**
@@ -183,7 +183,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 	fun getResetReason(): Promise<Uint32, Exception> {
 		Log.i(TAG, "getResetReason")
 		val controlClass = Control(eventBus, connection)
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_RESET_REASON, EmptyPacket())
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_RESET_REASON, EmptyPacket())
 	}
 
 	/**
@@ -224,7 +224,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 		val controlClass = Control(eventBus, connection)
 		val writePacket = ByteArrayPacket(Conversion.toByteArray(index))
 		val resultPacket = GpregretPacket()
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_GPREGRET, writePacket, resultPacket)
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_GPREGRET, writePacket, resultPacket)
 	}
 
 	/**
@@ -237,7 +237,7 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "getRamStats")
 		val controlClass = Control(eventBus, connection)
 		val resultPacket = RamStatsPacket()
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_RAM_STATS, EmptyPacket(), resultPacket)
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_RAM_STATS, EmptyPacket(), resultPacket)
 	}
 
 	/**
@@ -247,6 +247,6 @@ class DebugData(eventBus: EventBus, connection: ExtConnection) {
 	fun cleanFlash(): Promise<Unit, Exception> {
 		Log.i(TAG, "cleanFlash")
 		val controlClass = Control(eventBus, connection)
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.CLEAN_FLASH, EmptyPacket())
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.CLEAN_FLASH, EmptyPacket())
 	}
 }

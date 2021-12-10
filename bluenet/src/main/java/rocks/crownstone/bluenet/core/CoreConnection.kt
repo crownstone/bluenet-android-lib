@@ -881,7 +881,12 @@ open class CoreConnection(bleCore: BleCore) {
 	 * @return Promise that resolves when the caller is done receiving merged notifications.
 	 */
 	@Synchronized
-	fun getMultipleMergedNotifications(serviceUuid: UUID, characteristicUuid: UUID, writeCommand: () -> Promise<Unit, Exception>, callback: ProcessCallback, timeoutMs: Long): Promise<Unit, Exception> {
+	fun getMultipleMergedNotifications(
+			serviceUuid: UUID,
+			characteristicUuid: UUID,
+			writeCommand: () -> Promise<Unit, Exception>,
+			callback: ProcessCallback, timeoutMs: Long
+	): Promise<Unit, Exception> {
 		Log.i(TAG, "getMultipleMergedNotifications serviceUuid=$serviceUuid characteristicUuid=$characteristicUuid")
 		val deferred = deferred<Unit, Exception>()
 		var unsubId = UUID(0,0)
@@ -920,21 +925,19 @@ open class CoreConnection(bleCore: BleCore) {
 		}
 
 		val notificationCallback = fun (mergedNotification: ByteArray) {
-			// Don't reset timeout.
-//			handler.removeCallbacks(timeoutRunnable)
-//			handler.postDelayed(timeoutRunnable, timeoutMs)
-			when (callback(mergedNotification)) {
-				ProcessResult.NOT_DONE -> {
+			val processResult = callback(mergedNotification)
+			when (processResult.type) {
+				ProcessResultType.NOT_DONE -> {
 					// Continue waiting for notifications
 				}
-				ProcessResult.DONE -> {
+				ProcessResultType.DONE -> {
 					unsubscribe(serviceUuid, characteristicUuid, unsubId)
 							.success { onDone() }
 							.fail { onError(it) }
 				}
-				ProcessResult.ERROR -> {
+				ProcessResultType.ERROR -> {
 					unsubscribe(serviceUuid, characteristicUuid, unsubId)
-							.always { onError(Errors.ProcessCallback()) }
+							.always { onError(processResult.error ?: Errors.ProcessCallback()) }
 				}
 			}
 		}

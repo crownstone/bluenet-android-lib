@@ -11,7 +11,7 @@ import nl.komponents.kovenant.*
 import rocks.crownstone.bluenet.BluenetConfig
 import rocks.crownstone.bluenet.encryption.KeySet
 import rocks.crownstone.bluenet.encryption.MeshKeySet
-import rocks.crownstone.bluenet.packets.wrappers.v3.CommandResultPacket
+import rocks.crownstone.bluenet.packets.wrappers.v3.ResultPacketV3
 import rocks.crownstone.bluenet.packets.SetupPacket
 import rocks.crownstone.bluenet.packets.SetupPacketV2
 import rocks.crownstone.bluenet.packets.wrappers.v4.ResultPacketV4
@@ -105,26 +105,26 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 		}
 
 		if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL5_UUID)) {
-			return fastSetupV5(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
+			return setupV5(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL4_UUID)) {
-			return fastSetupV4(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
+			return setupV4(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
-			return fastSetupV2(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
+			return setupV3(stoneId, sphereShortId, keys, meshKeys, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-			return fastSetup(stoneId, keys, meshAccessAddress, ibeaconData)
+			return setupV2(stoneId, keys, meshAccessAddress, ibeaconData)
 		}
 		else if (connection.hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
-			return oldSetup(stoneId, keys.adminKeyBytes, keys.memberKeyBytes, keys.guestKeyBytes, meshAccessAddress, ibeaconData)
+			return setupV1(stoneId, keys.adminKeyBytes, keys.memberKeyBytes, keys.guestKeyBytes, meshAccessAddress, ibeaconData)
 		}
 		else {
 			return Promise.ofFail(Errors.CharacteristicNotFound())
 		}
 	}
 
-	private fun oldSetup(id: Uint8, adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+	private fun setupV1(id: Uint8, adminKey: ByteArray?, memberKey: ByteArray?, guestKey: ByteArray?, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val config = Config(eventBus, connection)
 		val control = Control(eventBus, connection)
 
@@ -141,9 +141,6 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 		sendProgress(OldSetupStep.START)
 		// TODO: increase TX?
 		return control.increaseTx()
-				.then {
-					connection.wait(OLD_SETUP_WAIT_MS)
-				}.unwrap()
 				.then {
 					config.setCrownstoneId(id)
 				}.unwrap()
@@ -215,42 +212,42 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 				}
 	}
 
-	private fun fastSetup(stoneId: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+	private fun setupV2(stoneId: Uint8, keySet: KeySet, meshAccessAddress: Uint32, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val packet = SetupPacket(0U, stoneId, keySet, meshAccessAddress, ibeaconData)
 		val control = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
-		return performFastSetupV2(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)
+		return performSetupV3(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)
 	}
 
-	private fun fastSetupV2(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+	private fun setupV3(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshKeys, ibeaconData)
 		val control = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
-		return performFastSetupV2(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)
+		return performSetupV3(writeCommand, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)
 	}
 
-	private fun fastSetupV4(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+	private fun setupV4(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshKeys, ibeaconData)
 		val control = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
-		return performFastSetupV4(writeCommand)
+		return performSetupV4(writeCommand)
 	}
 
-	private fun fastSetupV5(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
+	private fun setupV5(stoneId: Uint8, sphereId: Uint8, keySet: KeySet, meshKeys: MeshKeySet, ibeaconData: IbeaconData): Promise<Unit, Exception> {
 		val packet = SetupPacketV2(stoneId, sphereId, keySet, meshKeys, ibeaconData)
 		val control = Control(eventBus, connection)
 		val writeCommand = fun (): Promise<Unit, Exception> { return control.writeSetup(packet) }
-		return performFastSetupV5(writeCommand)
+		return performSetupV5(writeCommand)
 	}
 
-	private fun performFastSetupV2(writeCommand: () -> Promise<Unit, Exception>, characteristicUuid: UUID): Promise<Unit, Exception> {
+	private fun performSetupV3(writeCommand: () -> Promise<Unit, Exception>, characteristicUuid: UUID): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 
 		// Process notifications
 		val processCallback = fun (data: ByteArray): ProcessResult {
-			val resultPacket = CommandResultPacket()
+			val resultPacket = ResultPacketV3()
 			if (!resultPacket.fromArray(data)) {
-				return ProcessResult.ERROR
+				return ProcessResult(ProcessResultType.ERROR, Errors.Result(resultPacket.resultCode))
 			}
 			val result = resultPacket.resultCode
 			return handleResult(result, deferred)
@@ -265,7 +262,7 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 		return deferred.promise
 	}
 
-	private fun performFastSetupV4(writeCommand: () -> Promise<Unit, Exception>): Promise<Unit, Exception> {
+	private fun performSetupV4(writeCommand: () -> Promise<Unit, Exception>): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 
 		// Process notifications
@@ -277,14 +274,14 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 		// Subscribe and write command
 		val resultClass = Result(eventBus, connection)
 		performFastSetup(
-				resultClass.getMultipleResultsV4(writeCommand, processCallback, BluenetConfig.SETUP_WAIT_FOR_SUCCESS_TIME, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
+				resultClass.getMultipleResultsV4(writeCommand, processCallback, BluenetConfig.SETUP_WAIT_FOR_SUCCESS_TIME, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS, ResultType.SUCCESS_NO_CHANGE)),
 				deferred
 		)
 
 		return deferred.promise
 	}
 
-	private fun performFastSetupV5(writeCommand: () -> Promise<Unit, Exception>): Promise<Unit, Exception> {
+	private fun performSetupV5(writeCommand: () -> Promise<Unit, Exception>): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
 
 		// Process notifications
@@ -296,7 +293,7 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 		// Subscribe and write command
 		val resultClass = Result(eventBus, connection)
 		performFastSetup(
-				resultClass.getMultipleResultsV5(writeCommand, processCallback, BluenetConfig.SETUP_WAIT_FOR_SUCCESS_TIME, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)),
+				resultClass.getMultipleResultsV5(writeCommand, processCallback, BluenetConfig.SETUP_WAIT_FOR_SUCCESS_TIME, listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS, ResultType.SUCCESS_NO_CHANGE)),
 				deferred
 		)
 
@@ -324,17 +321,17 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 		when (resultCode) {
 			ResultType.WAIT_FOR_SUCCESS -> {
 				sendProgress(FastSetupStep.WAIT_FOR_SUCCESS, deferred.promise.isDone())
-				return ProcessResult.NOT_DONE
+				return ProcessResult(ProcessResultType.NOT_DONE)
 			}
 			ResultType.SUCCESS -> {
 				sendProgress(FastSetupStep.SUCCESS, deferred.promise.isDone())
-				return ProcessResult.DONE
+				return ProcessResult(ProcessResultType.DONE)
 			}
 			else -> {
 				if (!deferred.promise.isDone()) {
 					deferred.reject(Errors.Result(resultCode))
 				}
-				return ProcessResult.ERROR
+				return ProcessResult(ProcessResultType.ERROR, Errors.Result(resultCode))
 			}
 		}
 	}

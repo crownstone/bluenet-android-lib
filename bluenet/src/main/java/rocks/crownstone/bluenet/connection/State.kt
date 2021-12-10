@@ -46,13 +46,8 @@ class State(eventBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getSwitchState(): Promise<SwitchState, Exception> {
 		Log.i(TAG, "getSwitchState")
-//		val deferred = deferred<SwitchState, Exception>()
-//		getStateValue<Uint8>(StateType.SWITCH_STATE)
-//				.success { deferred.resolve(SwitchState(it)) }
-//				.fail { deferred.reject(it) }
-//		return deferred.promise
 		return getStateValue<Uint8>(StateType.SWITCH_STATE, StateTypeV4.SWITCH_STATE)
-				.then { SwitchState(it) }
+				.then { return@then SwitchState(it) }
 	}
 
 	/**
@@ -60,28 +55,19 @@ class State(eventBus: EventBus, connection: ExtConnection) {
 	 *
 	 * @return Promise with ScheduleListPacket as value.
 	 */
+	@Deprecated("Schedules have been replaced by behaviours.")
 	@Synchronized
 	fun getScheduleList(): Promise<ScheduleListPacket, Exception> {
 		Log.i(TAG, "getScheduleList")
-		val type = StateType.SCHEDULE
-		val writeCommand = fun (): Promise<Unit, Exception> {
-			return connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_CONTROL_UUID, StatePacket(type).getArray())
-		}
-		val deferred = deferred<ScheduleListPacket, Exception>()
-		connection.getSingleMergedNotification(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_STATE_READ_UUID, writeCommand, BluenetConfig.TIMEOUT_GET_STATE)
-				.success {
+		return getStateV3(StateType.SCHEDULE)
+				.then {
+					val arr = it.getArray()
 					val scheduleList = ScheduleListPacket()
-					val statePacket = StatePacket(type, scheduleList)
-
-					if (!statePacket.fromArray(it) || statePacket.type != type.num) {
-						deferred.reject(Errors.Parse("can't make a ScheduleListPacket from ${Conversion.bytesToString(it)}"))
+					if (arr == null || !scheduleList.fromArray(arr)) {
+						return@then Promise.ofFail<ScheduleListPacket, Exception>(Errors.Parse("can't make a ScheduleListPacket from ${Conversion.bytesToString(arr)}"))
 					}
-					deferred.resolve(scheduleList)
-				}
-				.fail {
-					deferred.reject(it)
-				}
-		return deferred.promise
+					return@then Promise.ofSuccess(scheduleList)
+				}.unwrap()
 	}
 
 	/**
@@ -89,6 +75,7 @@ class State(eventBus: EventBus, connection: ExtConnection) {
 	 *
 	 * @return Promise with an empty index as value.
 	 */
+	@Deprecated("Schedules have been replaced by behaviours.")
 	@Synchronized
 	fun getAvailableScheduleEntryIndex(): Promise<Int, Exception> {
 		Log.i(TAG, "getAvailableScheduleEntryIndex")
@@ -131,7 +118,7 @@ class State(eventBus: EventBus, connection: ExtConnection) {
 				.fail() {
 					Log.i(TAG, "Failed to get state time, trying via control command. Error: $it")
 					val control = Control(eventBus, connection)
-					control.writeCommandAndGetResult<Uint32>(ControlTypeV4.GET_TIME, EmptyPacket())
+					control.writeCommandAndGetResult<Uint32>(ControlType.UNKNOWN, ControlTypeV4.GET_TIME, EmptyPacket())
 							.success() {
 								deferred.resolve(it)
 							}
@@ -150,32 +137,36 @@ class State(eventBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun getErrors(): Promise<ErrorState, Exception> {
 		Log.i(TAG, "getErrors")
-		val promise: Promise<Uint32, Exception> = getStateValue(StateType.ERRORS, StateTypeV4.ERRORS)
-		return promise.then {
+		return getStateValue<Uint32>(StateType.ERRORS, StateTypeV4.ERRORS).then {
 			ErrorState(it)
 		}
 	}
 
 
 	private inline fun <reified T>getStateValue(type: StateType, type4: StateTypeV4, id: Uint16 = BluenetProtocol.STATE_DEFAULT_ID): Promise<T, Exception> {
-		if (getPacketProtocol() == PacketProtocol.V3) {
-			return getStateV3(type)
-					.then {
-						val arr = it.getPayload()
-						if (arr == null) {
-							return@then Promise.ofFail<T, Exception>(Errors.Parse("state payload expected"))
-						}
-						try {
-							val value = Conversion.byteArrayTo<T>(arr)
-							return@then Promise.ofSuccess<T, Exception>(value)
-						} catch (ex: Exception) {
-							return@then Promise.ofFail<T, Exception>(ex)
-						}
-					}.unwrap()
-		}
-		else {
-			val configClass = Config(eventBus, connection)
-			return configClass.getStateValue(type4, id)
+		when (getPacketProtocol()) {
+			PacketProtocol.V1,
+			PacketProtocol.V2,
+			PacketProtocol.V3 -> {
+				return getStateV3(type)
+						.then {
+							val arr = it.getPayload()
+							if (arr == null) {
+								return@then Promise.ofFail<T, Exception>(Errors.Parse("state payload expected"))
+							}
+							try {
+								val value = Conversion.byteArrayTo<T>(arr)
+								return@then Promise.ofSuccess<T, Exception>(value)
+							} catch (ex: Exception) {
+								return@then Promise.ofFail<T, Exception>(ex)
+							}
+						}.unwrap()
+			}
+			PacketProtocol.V4,
+			PacketProtocol.V5 -> {
+				val configClass = Config(eventBus, connection)
+				return configClass.getStateValue(type4, id)
+			}
 		}
 	}
 

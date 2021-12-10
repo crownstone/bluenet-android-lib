@@ -129,6 +129,8 @@ object BluenetProtocol {
 }
 
 enum class PacketProtocol(val major: Int, val minor: Int) {
+	V1(1, 0),
+	V2(2, 0),
 	V3(3, 0),
 	V4(4, 0),
 	V5(5, 0)
@@ -151,9 +153,11 @@ enum class OpcodeType(val num: Uint8) {
 enum class ResultType(val num: Uint16) {
 	SUCCESS(                 0x00U),
 	WAIT_FOR_SUCCESS(        0x01U),
+	SUCCESS_NO_CHANGE(       0x02U),
 	BUFFER_UNASSIGNED(       0x10U),
 	BUFFER_LOCKED(           0x11U),
 	BUFFER_TOO_SMALL(        0x12U),
+	NOT_ALIGNED(             0x13U),
 	WRONG_PAYLOAD_LENGTH(    0x20U),
 	WRONG_PARAMETER(         0x21U),
 	INVALID_MESSAGE(         0x22U),
@@ -163,14 +167,25 @@ enum class ResultType(val num: Uint16) {
 	NO_SPACE(                0x26U),
 	BUSY(                    0x27U),
 	WRONG_STATE(             0x28U),
+	ALREADY_EXISTS(          0x29U),
+	TIMEOUT(                 0x2AU),
+	CANCELED(                0x2BU),
+	PROTOCOL_UNSUPPORTED(    0x2CU),
+	MISMATCH(                0x2DU),
+	WRONG_OPERATION(         0x2EU),
 	NO_ACCESS(               0x30U),
+	UNSAFE(                  0x31U),
 	NOT_AVAILABLE(           0x40U),
 	NOT_IMPLEMENTED(         0x41U),
 	NOT_INITIALIZED(         0x43U),
+	NOT_STARTED(             0x44U),
+	NOT_POWERED(             0x45U),
+	WRONG_MODE(              0x46U),
 	WRITE_DISABLED(          0x50U),
 	ERR_WRITE_NOT_ALLOWED(   0x51U),
 	ADC_INVALID_CHANNEL(     0x60U),
 	EVENT_UNHANDLED(         0x70U),
+	GATT_ERROR(              0x80U),
 	UNKNOWN(                 0xFFFFU);
 	companion object {
 		private val map = ResultType.values().associateBy(ResultType::num)

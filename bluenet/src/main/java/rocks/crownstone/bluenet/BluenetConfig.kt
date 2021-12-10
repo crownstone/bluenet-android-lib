@@ -21,6 +21,9 @@ object BluenetConfig {
 	val TIMEOUT_CONNECT_RETRY: Long =       3000 // Only retry when connect failed in less than this time.
 	val DELAY_AFTER_DISCONNECT: Long =      200 // Time to wait after disconnect. The lenovo P2 seemed to need this.
 
+	val DELAY_READ_AFTER_COMMAND: Long =    500 // Time to wait before reading the result of a control command for old versions.
+
+	val TIMEOUT_SET_CONFIG: Long = 5000
 	val TIMEOUT_GET_CONFIG: Long = 5000
 	val TIMEOUT_GET_STATE: Long = 5000
 

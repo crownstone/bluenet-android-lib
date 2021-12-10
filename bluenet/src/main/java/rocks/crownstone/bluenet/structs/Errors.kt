@@ -95,6 +95,8 @@ object Errors {
 
 	class Aborted: Exception("aborted")
 
+	class Unknown: Exception("unknown")
+
 	// encryption errors
 	open class Encryption(msg: String="encryption failed"): Exception(msg)
 	class EncryptionKeyMissing: Encryption("missing key")

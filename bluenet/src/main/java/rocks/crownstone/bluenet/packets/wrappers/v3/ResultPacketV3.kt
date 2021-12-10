@@ -7,17 +7,23 @@
 
 package rocks.crownstone.bluenet.packets.wrappers.v3
 
+import rocks.crownstone.bluenet.packets.PacketInterface
+import rocks.crownstone.bluenet.packets.wrappers.ResultPacket
 import rocks.crownstone.bluenet.structs.ControlType
 import rocks.crownstone.bluenet.structs.OpcodeType
 import rocks.crownstone.bluenet.structs.ResultType
 import rocks.crownstone.bluenet.util.getUint16
 import java.nio.ByteBuffer
 
-open class CommandResultPacket(type: ControlType, resultCode: ResultType): StreamPacket(type.num, null, null, OpcodeType.RESULT) {
+open class ResultPacketV3(type: ControlType, resultCode: ResultType): StreamPacket(type.num, null, null, OpcodeType.RESULT), ResultPacket {
 	constructor(): this(ControlType.UNKNOWN, ResultType.UNKNOWN)
 
 	var resultCode = resultCode
-		private set
+		protected set
+
+	override fun getCode(): ResultType {
+		return resultCode
+	}
 
 	override fun getPacketSize(): Int {
 		return super.getPacketSize() + 2

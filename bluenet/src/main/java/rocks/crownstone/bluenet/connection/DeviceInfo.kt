@@ -16,10 +16,7 @@ import rocks.crownstone.bluenet.packets.EmptyPacket
 import rocks.crownstone.bluenet.packets.StringPacket
 import rocks.crownstone.bluenet.packets.other.BootloaderInfoPacket
 import rocks.crownstone.bluenet.packets.other.UicrPacket
-import rocks.crownstone.bluenet.structs.BluenetProtocol
-import rocks.crownstone.bluenet.structs.ControlTypeV4
-import rocks.crownstone.bluenet.structs.CrownstoneMode
-import rocks.crownstone.bluenet.structs.Errors
+import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.EventBus
 import rocks.crownstone.bluenet.util.Log
 
@@ -47,7 +44,7 @@ class DeviceInfo(eventBus: EventBus, connection: ExtConnection) {
 		}
 		val deferred = deferred<String, Exception>()
 		val control = Control(eventBus, connection)
-		control.writeCommandAndGetResult<String>(ControlTypeV4.GET_FIRMWARE_VERSION, EmptyPacket())
+		control.writeCommandAndGetResult<String>(ControlType.UNKNOWN, ControlTypeV4.GET_FIRMWARE_VERSION, EmptyPacket())
 				.success {
 					deferred.resolve(it)
 				}
@@ -99,7 +96,7 @@ class DeviceInfo(eventBus: EventBus, connection: ExtConnection) {
 				// When not in DFU, we can try to read the bootloader version via control command.
 				val controlClass = Control(eventBus, connection)
 				val resultPacket = BootloaderInfoPacket()
-				return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
+				return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_BOOTLOADER_VERSION, EmptyPacket(), resultPacket)
 						.then {
 							Log.d(TAG, it.toString())
 							return@then it.getVersionString()
@@ -127,6 +124,6 @@ class DeviceInfo(eventBus: EventBus, connection: ExtConnection) {
 		Log.i(TAG, "getUicrData")
 		val controlClass = Control(eventBus, connection)
 		val resultPacket = UicrPacket()
-		return controlClass.writeCommandAndGetResult(ControlTypeV4.GET_UICR_DATA, EmptyPacket(), resultPacket)
+		return controlClass.writeCommandAndGetResult(ControlType.UNKNOWN, ControlTypeV4.GET_UICR_DATA, EmptyPacket(), resultPacket)
 	}
 }

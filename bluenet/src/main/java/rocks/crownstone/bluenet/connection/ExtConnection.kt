@@ -153,9 +153,13 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 				.success { isConnected = false }
 	}
 
+	/**
+	 * Waits for disconnect and retries when core is busy.
+	 */
 	@Synchronized
 	private fun waitForDisconnectAttempt(clearCache: Boolean, timeoutMs: Long, attemptsLeft: Int): Promise<Unit, Exception> {
 		val deferred = deferred<Unit, Exception>()
+		val startTime = SystemClock.elapsedRealtime()
 		bleCore.waitForDisconnect(clearCache, timeoutMs)
 				.success {
 					deferred.resolve()
@@ -169,9 +173,16 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 						deferred.reject(coreException)
 						return@fail
 					}
-					// Retry after waiting.
+					// Decrease timeout.
+					val elapsedTime = SystemClock.elapsedRealtime() - startTime
+					val newTimeoutMs = timeoutMs - elapsedTime - BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPT_WAIT
+					if (newTimeoutMs < 1) {
+						deferred.reject(Errors.Timeout())
+						return@fail
+					}
+					Log.i(TAG, "waitForDisconnect failed: $coreException. Retrying in ${BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPT_WAIT} ms.")
 					bleCore.wait(BluenetConfig.WAIT_FOR_DISCONNECT_ATTEMPT_WAIT).always {
-						waitForDisconnectAttempt(clearCache, timeoutMs, attemptsLeft - 1)
+						waitForDisconnectAttempt(clearCache, newTimeoutMs, attemptsLeft - 1)
 								.success { deferred.resolve() }
 								.fail { recursiveException ->
 									deferred.reject(recursiveException)
@@ -262,7 +273,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 		val processCallBack = fun (mergedNotification: ByteArray): ProcessResult {
 			val decryptedData = connectionEncryptionManager.decrypt(address, mergedNotification, accessLevel)
 			if (decryptedData == null) {
-				return ProcessResult.ERROR
+				return ProcessResult(ProcessResultType.ERROR, Errors.Encryption())
 			}
 			Log.i(TAG, "received merged notification on $characteristicUuid ${Conversion.bytesToString(mergedNotification)}")
 			return callback(decryptedData)
@@ -376,10 +387,10 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	fun getPacketProtocol(): PacketProtocol {
 			if (mode == CrownstoneMode.SETUP) {
 				if (hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL_UUID)) {
-					return PacketProtocol.V3
+					return PacketProtocol.V1
 				}
 				else if (hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL2_UUID)) {
-					return PacketProtocol.V3
+					return PacketProtocol.V2
 				}
 				else if (hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_CONTROL3_UUID)) {
 					return PacketProtocol.V3
