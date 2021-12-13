@@ -19,6 +19,7 @@ import rocks.crownstone.bluenet.packets.wrappers.v5.ResultPacketV5
 import rocks.crownstone.bluenet.structs.*
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.EventBus
+import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.toUint16
 import java.util.*
 
@@ -110,10 +111,13 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 		}
 
 		when (connection.getPacketProtocol()) {
-			PacketProtocol.V1,
+			PacketProtocol.V1 -> {
+				return checkResultCodeV1(writeCommand, type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)
+						.then { return@then Promise.ofSuccess<ByteArray, Exception>(ByteArray(0)) }.unwrap()
+			}
 			PacketProtocol.V2,
 			PacketProtocol.V3 -> {
-				return checkResultCodeV1V2V3(writeCommand, type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)
+				return checkResultCodeV2V3(writeCommand, type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)
 						.then { return@then Promise.ofSuccess<ByteArray, Exception>(ByteArray(0)) }.unwrap()
 			}
 			PacketProtocol.V4 -> {
@@ -203,6 +207,39 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 		return connection.getMultipleMergedNotifications(getServiceUuid(), getResultCharacteristic(), writeCommand, processCallback, timeoutMs, accessLevel)
 	}
 
+
+
+	/**
+	 * Executes write command, then checks result.
+	 *
+	 * TODO: This function assumes success, because of decryption errors (validation mismatch, most likely because the read access level is 2 (member) instead of 100 (setup).
+	 *
+	 * @param writeCommand        Function to write the command. Example:
+	 *                                 fun (): Promise<Unit, Exception> { return writeCommand(ControlType.UNKNOWN, ControlTypeV4.HUB_DATA, hubDataPacket) }
+	 * @param type                Control / config / state type that was used in the write command.
+	 * @param timeoutMs           Timeout in ms.
+	 * @param serviceUuid         The service UUID to get the result from.
+	 * @param characteristicUuid  The characteristic UUID to get the result from.
+	 * @param acceptedResults     List of result codes that are ok to be processed. Example:
+	 *                                 listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)
+	 */
+	@Synchronized
+	fun checkResultCodeV1(
+			writeCommand: () -> Promise<Unit, Exception>,
+			type: Uint8,
+			timeoutMs: Long,
+			serviceUuid: UUID,
+			characteristicUuid: UUID,
+			acceptedResults: List<ResultType>? = null,
+	): Promise<Unit, Exception> {
+
+		val acceptedResults = acceptedResults ?: listOf(ResultType.SUCCESS, ResultType.SUCCESS_NO_CHANGE)
+		return writeCommand()
+				.then {
+					connection.wait(BluenetConfig.DELAY_READ_AFTER_COMMAND)
+				}.unwrap()
+	}
+
 	/**
 	 * Executes write command, then checks result.
 	 *
@@ -216,7 +253,7 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 	 *                                 listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)
 	 */
 	@Synchronized
-	fun checkResultCodeV1V2V3(
+	fun checkResultCodeV2V3(
 			writeCommand: () -> Promise<Unit, Exception>,
 			type: Uint8,
 			timeoutMs: Long,
@@ -242,26 +279,27 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 			acceptedResults: List<ResultType>
 	): Promise<Unit, Exception> {
 		val startTime = SystemClock.elapsedRealtime()
+		Log.d(TAG, "checkResultCodeAttempt timeoutMs=$timeoutMs")
 		// TODO: can we get notifications instead?
 		return connection.wait(BluenetConfig.DELAY_READ_AFTER_COMMAND)
 				.then {
-					connection.read(serviceUuid, characteristicUuid, false)
+					connection.read(serviceUuid, characteristicUuid, true)
 				}.unwrap()
 				.then {
+					// We cannot distinguish between V1, V2, or V3.
+					// So just try the V2/V3 packet first, otherwise try the V1 result code only.
 					val resultPacket3 = ResultPacketV3()
-
-					val resultCode: ResultType = when (it.size) {
-						2 -> ResultType.fromNum(Conversion.byteArrayToShort(it).toUint16())
-						resultPacket3.getPacketSize() -> {
+					val resultCode: ResultType =
 							if (resultPacket3.fromArray(it)) {
+								Log.d(TAG, "Result packet: $resultPacket3")
 								resultPacket3.resultCode
-								// TODO: check type.
-							} else {
-								ResultType.UNKNOWN
+								// TODO: check type?
 							}
-						}
-						else -> ResultType.UNKNOWN
-					}
+							else {
+								Log.d(TAG, "Result uint16: ${Conversion.byteArrayToShort(it).toUint16()}")
+								ResultType.fromNum(Conversion.byteArrayToShort(it).toUint16())
+							}
+					Log.d(TAG, "Result code: $resultCode")
 					when (resultCode) {
 						ResultType.WAIT_FOR_SUCCESS -> {
 							val elapsedTime = SystemClock.elapsedRealtime() - startTime

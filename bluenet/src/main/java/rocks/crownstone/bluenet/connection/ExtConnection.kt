@@ -233,6 +233,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 				.then {
 					connectionEncryptionManager.decryptPromise(address, it)
 				}.unwrap()
+				.success { Log.i(TAG, "read decrypted: ${Conversion.bytesToString(it)}") }
 	}
 
 	@Synchronized
@@ -310,12 +311,12 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 		connectionEncryptionManager.clearSessionData()
 		when (mode) {
 			CrownstoneMode.SETUP -> {
-				Log.i(TAG, "get session data and key")
 				val v5 = hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID)
 				val sessionDataChar = when (v5) {
 					true -> BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID
 					false -> BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID
 				}
+				Log.i(TAG, "get session data and key v5=$v5 sessionDataChar=$sessionDataChar")
 				return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
 						.then {
 							connectionEncryptionManager.parseSessionKey(address, it)
@@ -336,12 +337,12 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 					Log.w(TAG, "No keys, don't read session data")
 					return Promise.ofSuccess(Unit)
 				}
-				Log.i(TAG, "get session data")
 				val v5 = hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_DATA_UUID)
 				val sessionDataChar = when (v5) {
 					true -> BluenetProtocol.CHAR_SESSION_DATA_UUID
 					false -> BluenetProtocol.CHAR_SESSION_NONCE_UUID
 				}
+				Log.i(TAG, "get session data v5=$v5 sessionDataChar=$sessionDataChar")
 				return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, sessionDataChar)
 						.then {
 //							// TODO: is it ok to ignore any error in the session data parsing?

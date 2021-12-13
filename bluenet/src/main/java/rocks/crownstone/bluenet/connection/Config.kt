@@ -262,7 +262,7 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 			PacketProtocol.V4,
 			PacketProtocol.V5 -> {
 				val controlClass = Control(eventBus, connection)
-				return controlClass.writeCommand(ControlType.UART_ENABLE, ControlTypeV4.UNKNOWN, mode.num)
+				return controlClass.writeCommandAndCheckResult(ControlType.UART_ENABLE, ControlTypeV4.UNKNOWN, mode.num)
 			}
 			else -> {
 				return setConfigValue(ConfigType.UART_ENABLED, StateTypeV4.UART_ENABLED, mode.num)
@@ -599,7 +599,7 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 			PacketProtocol.V2,
 			PacketProtocol.V3 -> {
 				val controlClass = Control(eventBus, connection)
-				return controlClass.writeCommand(ControlType.ENABLE_SWITCHCRAFT, ControlTypeV4.UNKNOWN, enable)
+				return controlClass.writeCommandAndCheckResult(ControlType.ENABLE_SWITCHCRAFT, ControlTypeV4.UNKNOWN, enable)
 			}
 			PacketProtocol.V4,
 			PacketProtocol.V5 -> {
@@ -927,14 +927,20 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 						  persistenceMode: PersistenceModeSet = PersistenceModeSet.STORED
 	): Promise<Unit, Exception> {
 		when (getPacketProtocol()) {
-			PacketProtocol.V1,
+			PacketProtocol.V1 -> {
+				val configPacket = ConfigPacket(type, packet)
+				Log.i(TAG, "setConfig $configPacket")
+				val writeCommand = fun (): Promise<Unit, Exception> { return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), configPacket.getArray()) }
+				val resultClass = Result(eventBus, connection)
+				return resultClass.checkResultCodeV1(writeCommand, type.num, BluenetConfig.TIMEOUT_SET_CONFIG, getServiceUuid(), getCharacteristicWriteUuid())
+			}
 			PacketProtocol.V2,
 			PacketProtocol.V3 -> {
 				val configPacket = ConfigPacket(type, packet)
 				Log.i(TAG, "setConfig $configPacket")
 				val writeCommand = fun (): Promise<Unit, Exception> { return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), configPacket.getArray()) }
 				val resultClass = Result(eventBus, connection)
-				return resultClass.checkResultCodeV1V2V3(writeCommand, type.num, BluenetConfig.TIMEOUT_SET_CONFIG, getServiceUuid(), getCharacteristicWriteUuid())
+				return resultClass.checkResultCodeV2V3(writeCommand, type.num, BluenetConfig.TIMEOUT_SET_CONFIG, getServiceUuid(), getCharacteristicWriteUuid())
 			}
 			PacketProtocol.V4,
 			PacketProtocol.V5 -> {

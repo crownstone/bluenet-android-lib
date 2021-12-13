@@ -15,6 +15,7 @@ import rocks.crownstone.bluenet.structs.Uint32
 import rocks.crownstone.bluenet.structs.Uint8
 import rocks.crownstone.bluenet.util.Conversion
 import rocks.crownstone.bluenet.util.Log
+import rocks.crownstone.bluenet.util.toUint32
 
 data class SessionData(
 		val sessionNonce: ByteArray,
@@ -45,7 +46,7 @@ object SessionDataParser {
 				return null
 			}
 			// Bytes 0-3 (validation key) should be CAFEBABE
-			if (Conversion.byteArrayTo<Uint32>(decryptedData) != BluenetProtocol.CAFEBABE) {
+			if (Conversion.byteArrayToInt(decryptedData).toUint32() != BluenetProtocol.CAFEBABE) {
 				Log.e(TAG, "validation failed: " + Conversion.bytesToString(decryptedData))
 				return null
 			}
