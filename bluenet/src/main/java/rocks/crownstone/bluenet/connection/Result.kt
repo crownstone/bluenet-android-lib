@@ -117,7 +117,9 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 			}
 			PacketProtocol.V2,
 			PacketProtocol.V3 -> {
-				return checkResultCodeV2V3(writeCommand, type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)
+				// It seems like v3 control does not actually set the result, so we can't use it.
+				val assumeSuccess = true
+				return checkResultCodeV2V3(writeCommand, type, timeoutMs, serviceUuid, characteristicUuid, assumeSuccess, acceptedResults)
 						.then { return@then Promise.ofSuccess<ByteArray, Exception>(ByteArray(0)) }.unwrap()
 			}
 			PacketProtocol.V4 -> {
@@ -232,8 +234,6 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 			characteristicUuid: UUID,
 			acceptedResults: List<ResultType>? = null,
 	): Promise<Unit, Exception> {
-
-		val acceptedResults = acceptedResults ?: listOf(ResultType.SUCCESS, ResultType.SUCCESS_NO_CHANGE)
 		return writeCommand()
 				.then {
 					connection.wait(BluenetConfig.DELAY_READ_AFTER_COMMAND)
@@ -249,6 +249,7 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 	 * @param timeoutMs           Timeout in ms.
 	 * @param serviceUuid         The service UUID to get the result from.
 	 * @param characteristicUuid  The characteristic UUID to get the result from.
+	 * @param assumeSuccess       Instead of checking the result, simply assume success.
 	 * @param acceptedResults     List of result codes that are ok to be processed. Example:
 	 *                                 listOf(ResultType.SUCCESS, ResultType.WAIT_FOR_SUCCESS)
 	 */
@@ -259,9 +260,13 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 			timeoutMs: Long,
 			serviceUuid: UUID,
 			characteristicUuid: UUID,
+			assumeSuccess: Boolean,
 			acceptedResults: List<ResultType>? = null,
 	): Promise<Unit, Exception> {
 		val acceptedResults = acceptedResults ?: listOf(ResultType.SUCCESS, ResultType.SUCCESS_NO_CHANGE)
+		if (assumeSuccess) {
+			return connection.wait(BluenetConfig.DELAY_READ_AFTER_COMMAND)
+		}
 		return writeCommand()
 				.then {
 					checkResultCodeAttempt(type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)

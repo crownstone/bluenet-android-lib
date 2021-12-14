@@ -940,7 +940,8 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 				Log.i(TAG, "setConfig $configPacket")
 				val writeCommand = fun (): Promise<Unit, Exception> { return connection.write(getServiceUuid(), getCharacteristicWriteUuid(), configPacket.getArray()) }
 				val resultClass = Result(eventBus, connection)
-				return resultClass.checkResultCodeV2V3(writeCommand, type.num, BluenetConfig.TIMEOUT_SET_CONFIG, getServiceUuid(), getCharacteristicWriteUuid())
+				val assumeSuccess = false
+				return resultClass.checkResultCodeV2V3(writeCommand, type.num, BluenetConfig.TIMEOUT_SET_CONFIG, getServiceUuid(), getCharacteristicWriteUuid(), assumeSuccess)
 			}
 			PacketProtocol.V4,
 			PacketProtocol.V5 -> {
