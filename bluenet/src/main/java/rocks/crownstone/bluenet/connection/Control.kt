@@ -497,7 +497,7 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 	fun factoryReset(): Promise<Unit, Exception> {
 		Log.i(TAG, "factoryReset")
 		return writeCommandAndCheckResult(ControlType.FACTORY_RESET, ControlTypeV4.FACTORY_RESET, BluenetProtocol.FACTORY_RESET_CODE)
-				.then { connection.disconnect(true) }.unwrap()
+				.then { connection.waitForDisconnect(true) }.unwrap()
 	}
 
 	/**

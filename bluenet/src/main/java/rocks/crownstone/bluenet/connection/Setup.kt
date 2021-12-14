@@ -120,7 +120,7 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 			return setupV1(stoneId, keys.adminKeyBytes, keys.memberKeyBytes, keys.guestKeyBytes, meshAccessAddress, ibeaconData)
 		}
 		else {
-			return Promise.ofFail(Errors.CharacteristicNotFound())
+			return Promise.ofFail(Errors.CharacteristicNotFound(BluenetProtocol.CHAR_SETUP_CONTROL5_UUID))
 		}
 	}
 
@@ -139,75 +139,47 @@ class Setup(eventBus: EventBus, connection: ExtConnection) {
 		}
 
 		sendProgress(OldSetupStep.START)
-		// TODO: increase TX?
 		return control.increaseTx()
 				.then {
 					config.setCrownstoneId(id)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.ID_WRITTEN)
 					config.setAdminKey(adminKey)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.ADMIN_KEY_WRITTEN)
 					config.setMemberKey(memberKey)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.MEMBER_KEY_WRITTEN)
 					config.setGuestKey(guestKey)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.GUEST_KEY_WRITTEN)
 					config.setMeshAccessAddress(meshAccessAddress)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.MESH_ADDRESS_WRITTEN)
 					config.setIbeaconUuid(ibeaconData.uuid)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.IBEACON_UUID_WRITTEN)
 					config.setIbeaconMajor(ibeaconData.major)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.IBEACON_MAJOR_WRITTEN)
 					config.setIbeaconMinor(ibeaconData.minor)
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.IBEACON_MINOR_WRITTEN)
 					control.validateSetup()
 				}.unwrap()
-//				.then {
-//					connection.wait(OLD_SETUP_WAIT_MS)
-//				}.unwrap()
 				.then {
 					sendProgress(OldSetupStep.FINALIZE_WRITTEN)
-					connection.disconnect()
+					connection.waitForDisconnect(true)
 				}.unwrap()
-				.success {
+				.then {
 					sendProgress(OldSetupStep.DISCONNECTED)
 				}
 	}

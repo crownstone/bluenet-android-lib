@@ -307,6 +307,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	@Synchronized
 	private fun postConnect(): Promise<Unit, Exception> {
 		Log.i(TAG, "postConnect $address")
+		bleCore.logCharacteristics()
 		checkMode()
 		connectionEncryptionManager.clearSessionData()
 		when (mode) {
@@ -369,7 +370,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 
 	@Synchronized
 	private fun checkMode() {
-		Log.i(TAG, "checkMode")
+		Log.d(TAG, "checkMode")
 		if (hasService(BluenetProtocol.SETUP_SERVICE_UUID)) {
 			mode = CrownstoneMode.SETUP
 		}
@@ -382,6 +383,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 		else {
 			mode = CrownstoneMode.UNKNOWN
 		}
+		Log.i(TAG, "mode=$mode protocol=${getPacketProtocol()}")
 	}
 
 	@Synchronized

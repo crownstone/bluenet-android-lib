@@ -7,6 +7,7 @@
 
 package rocks.crownstone.bluenet.structs
 
+import java.util.*
 import kotlin.Exception
 
 object Errors {
@@ -62,7 +63,7 @@ object Errors {
 	class ConnectionNotClosed: Exception("connection is not closed, disconnect and try again")
 	class DeviceNotInCache: Exception("device is not in cache, scan in order to get it in cache")
 	class NotConnected: Exception("not connected")
-	class CharacteristicNotFound: Exception("characteristic not found")
+	class CharacteristicNotFound(uuid: UUID): Exception("characteristic not found: $uuid")
 	class SessionDataMissing: Exception("no session data")
 	class NotInitialized: Exception("Not initialized")
 
@@ -79,8 +80,8 @@ object Errors {
 	class ProcessCallback: Exception("process callback error")
 	class Parse(msg: String): Exception("parse failed: $msg")
 	class OpcodeWrong: Exception("wrong opcode")
-	class SizeWrong: Exception("wrong size")
-	class ValueWrong: Exception("wrong value")
+	class SizeWrong(msg: String = "wrong size"): Exception(msg)
+	class ValueWrong(msg: String = "wrong value"): Exception(msg)
 	class TypeWrong(type: String): Exception("wrong type: $type")
 
 	class Full: Exception("full")

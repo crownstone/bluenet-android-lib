@@ -345,8 +345,9 @@ open class CoreConnection(bleCore: BleCore) {
 	 */
 	@Synchronized
 	fun hasService(serviceUuid: UUID): Boolean {
-		Log.d(TAG, "hasService $serviceUuid")
-		return currentGatt?.getService(serviceUuid) != null
+		val result = (currentGatt?.getService(serviceUuid) != null)
+		Log.d(TAG, "hasService $serviceUuid result=$result")
+		return result
 	}
 
 	/**
@@ -354,8 +355,9 @@ open class CoreConnection(bleCore: BleCore) {
 	 */
 	@Synchronized
 	fun hasCharacteristic(serviceUuid: UUID, characteristicUuid: UUID): Boolean {
-		Log.d(TAG, "hasCharacteristic $characteristicUuid $currentGatt ${currentGatt?.getService(serviceUuid)} ${currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid)}")
-		return currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid) != null
+		val result = (currentGatt?.getService(serviceUuid)?.getCharacteristic(characteristicUuid) != null)
+		Log.d(TAG, "hasCharacteristic $characteristicUuid result=$result currentGatt=$currentGatt service=${currentGatt?.getService(serviceUuid)}")
+		return result
 	}
 
 	@Synchronized
@@ -564,7 +566,7 @@ open class CoreConnection(bleCore: BleCore) {
 		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
 		if (char == null) {
 			Log.e(TAG, "characteristic not found: $characteristicUuid")
-			return Promise.ofFail(Errors.CharacteristicNotFound())
+			return Promise.ofFail(Errors.CharacteristicNotFound(characteristicUuid))
 		}
 		promises.setBusy(Action.WRITE, deferred, BluenetConfig.TIMEOUT_WRITE) // Resolve later in onGattCharacteristicWrite
 		char.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
@@ -614,7 +616,7 @@ open class CoreConnection(bleCore: BleCore) {
 		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
 		if (char == null) {
 			Log.e(TAG, "characteristic not found: $characteristicUuid")
-			return Promise.ofFail(Errors.CharacteristicNotFound())
+			return Promise.ofFail(Errors.CharacteristicNotFound(characteristicUuid))
 		}
 		promises.setBusy(Action.READ, deferred, BluenetConfig.TIMEOUT_READ) // Resolve later in onGattCharacteristicRead
 		Log.d(TAG, "gatt.readCharacteristic")
@@ -667,7 +669,7 @@ open class CoreConnection(bleCore: BleCore) {
 		val gatt = this.currentGatt!! // Already checked in getConnectionState()
 		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
 		if (char == null) {
-			return Promise.ofFail(Errors.CharacteristicNotFound())
+			return Promise.ofFail(Errors.CharacteristicNotFound(characteristicUuid))
 		}
 		if (notificationEventBus.hasListeners("$characteristicUuid")) {
 			// TODO: support multiple subscriptions to same characteristic
@@ -719,7 +721,7 @@ open class CoreConnection(bleCore: BleCore) {
 		val gatt = this.currentGatt!! // Already checked in getConnectionState()
 		val char = gatt.getService(serviceUuid)?.getCharacteristic(characteristicUuid)
 		if (char == null) {
-			return Promise.ofFail(Errors.CharacteristicNotFound())
+			return Promise.ofFail(Errors.CharacteristicNotFound(characteristicUuid))
 		}
 		notificationEventBus.unsubscribe(subscriptionId)
 		promises.setBusy(Action.UNSUBSCRIBE, deferred, BluenetConfig.TIMEOUT_UNSUBSCRIBE) // Resolve later in onGattDescriptorWrite

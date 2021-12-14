@@ -130,7 +130,7 @@ class Dfu(eventBus: EventBus, connection: ExtConnection, context: Context) {
 						connection.disconnect(true)
 					}.unwrap()
 		}
-		return Promise.ofFail(Errors.CharacteristicNotFound())
+		return Promise.ofFail(Errors.CharacteristicNotFound(BluenetProtocol.DFU2_SERVICE_UUID))
 	}
 
 	/**
