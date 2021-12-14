@@ -211,7 +211,16 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 	@Synchronized
 	fun setTime(timestamp: Uint32): Promise<Unit, Exception> {
 		Log.i(TAG, "setTime $timestamp")
-		return writeCommandAndCheckResult(ControlType.SET_TIME, ControlTypeV4.SET_TIME, timestamp)
+		when (getPacketProtocol()) {
+			PacketProtocol.V1,
+			PacketProtocol.V2,
+			PacketProtocol.V3,
+			PacketProtocol.V4 -> return writeCommandAndCheckResult(ControlType.SET_TIME, ControlTypeV4.SET_TIME, timestamp)
+			PacketProtocol.V5 -> {
+				// There is a bug introduced in firmware 5.4.0 that makes set time return ResultType.EVENT_UNHANDLED.
+				return writeCommandAndCheckResult(ControlType.SET_TIME, ControlTypeV4.SET_TIME, timestamp, BluenetConfig.TIMEOUT_CONTROL_RESULT, listOf(ResultType.SUCCESS, ResultType.EVENT_UNHANDLED))
+			}
+		}
 	}
 
 	/**
@@ -768,9 +777,10 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 			type: ControlType,
 			type4: ControlTypeV4,
 			timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT,
+			acceptedResults: List<ResultType>? = null,
 			accessLevel: AccessLevel? = null
 	): Promise<Unit, Exception> {
-		return writeCommandAndCheckResult(type, type4, EmptyPacket(), timeoutMs, accessLevel)
+		return writeCommandAndCheckResult(type, type4, EmptyPacket(), timeoutMs, acceptedResults, accessLevel)
 	}
 
 	/**
@@ -783,10 +793,11 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 			type4: ControlTypeV4,
 			writeValue: V,
 			timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT,
+			acceptedResults: List<ResultType>? = null,
 			accessLevel: AccessLevel? = null
 	): Promise<Unit, Exception> {
 		val writePacket = ByteArrayPacket(Conversion.toByteArray(writeValue))
-		return writeCommandAndCheckResult(type, type4, writePacket, timeoutMs, accessLevel)
+		return writeCommandAndCheckResult(type, type4, writePacket, timeoutMs, acceptedResults, accessLevel)
 	}
 
 	/**
@@ -797,6 +808,7 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 			type4: ControlTypeV4,
 			writePacket: PacketInterface,
 			timeoutMs: Long = BluenetConfig.TIMEOUT_CONTROL_RESULT,
+			acceptedResults: List<ResultType>? = null,
 			accessLevel: AccessLevel? = null
 	): Promise<Unit, Exception> {
 		val writeCommand = fun (): Promise<Unit, Exception> { return writeCommand(type, type4, writePacket, accessLevel) }
@@ -804,7 +816,7 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 			PacketProtocol.V5 -> ConnectionProtocol.V5
 			else -> ConnectionProtocol.UNKNOWN
 		}
-		return resultClass.getSingleResult(writeCommand, protocol, type.num, type4, timeoutMs, getControlService(), getControlCharacteristic(), null, accessLevel)
+		return resultClass.getSingleResult(writeCommand, protocol, type.num, type4, timeoutMs, getControlService(), getControlCharacteristic(), acceptedResults, accessLevel)
 				.toSuccessVoid()
 	}
 
