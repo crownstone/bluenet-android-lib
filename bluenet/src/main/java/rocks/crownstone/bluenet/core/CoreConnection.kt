@@ -157,7 +157,6 @@ open class CoreConnection(bleCore: BleCore) {
 			}
 			Action.CONNECT,
 			Action.DISCONNECT,
-			Action.DISCONNECT,
 			Action.DISCOVER,
 			Action.READ,
 			Action.WRITE,
