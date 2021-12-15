@@ -45,8 +45,8 @@ internal object Shared {
 		servicedata.switchState = SwitchState(bb.getUint8())
 		parseFlags(bb.getUint8(), servicedata)
 		servicedata.behaviourHash = bb.getUint16()
-		bb.getUint16() // Reserved
-		bb.getUint32() // Reserved
+		servicedata.assetFiltersVersion = bb.getUint16()
+		servicedata.assetFiltersCrc = bb.getUint32()
 		parsePartialTimestamp(bb, servicedata)
 		bb.getUint8() // Reserved
 		servicedata.validation = bb.get() == VALIDATION

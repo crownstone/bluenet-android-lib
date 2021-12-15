@@ -53,6 +53,8 @@ class CrownstoneServiceData {
 	var count: Uint16 = 0U; internal set                 // Sequence number of the service data. Only valid when flagTimeSet is false. Will overflow.
 	var changingData = 0; internal set                   // Data that always changes for each new service data. Is a partial timestamp when time is set, counter when time is not set, or random value for old firmware.
 	var behaviourHash: Uint16 = 0U; internal set         // Part of behaviour master hash.
+	var assetFiltersVersion: Uint16 = 0U; internal set   // The current asset filters version.
+	var assetFiltersCrc: Uint32 = 0U; internal set       // The CRC of the current asset filters.
 	internal var validation = false
 
 	// Flags
