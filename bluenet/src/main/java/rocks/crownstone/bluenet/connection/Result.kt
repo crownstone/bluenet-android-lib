@@ -110,6 +110,7 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 			}
 		}
 
+		Log.d(TAG, "getSingleResult protocol=$protocol protocol=${connection.getPacketProtocol()} type=$type type4=$type4 timeoutMs=$timeoutMs")
 		when (connection.getPacketProtocol()) {
 			PacketProtocol.V1 -> {
 				return checkResultCodeV1(writeCommand, type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)
@@ -264,12 +265,14 @@ class Result (eventBus: EventBus, connection: ExtConnection) {
 			acceptedResults: List<ResultType>? = null,
 	): Promise<Unit, Exception> {
 		val acceptedResults = acceptedResults ?: listOf(ResultType.SUCCESS, ResultType.SUCCESS_NO_CHANGE)
-		if (assumeSuccess) {
-			return connection.wait(BluenetConfig.DELAY_READ_AFTER_COMMAND)
-		}
 		return writeCommand()
 				.then {
-					checkResultCodeAttempt(type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)
+					if (assumeSuccess) {
+						return@then connection.wait(BluenetConfig.DELAY_READ_AFTER_COMMAND)
+					}
+					else {
+						return@then checkResultCodeAttempt(type, timeoutMs, serviceUuid, characteristicUuid, acceptedResults)
+					}
 				}.unwrap()
 	}
 
