@@ -179,7 +179,7 @@ data class KeyAccessLevelPair(val key: ByteArray, val accessLevel: AccessLevel) 
 data class ScannedIbeacon(val address: DeviceAddress, val ibeaconData: IbeaconData, val rssi: Int, val referenceId: String)
 typealias ScannedIbeaconList = ArrayList<ScannedIbeacon>
 typealias IbeaconRegionList = HashMap<UUID, String> // Map with list of entered region UUIDs with reference ID as value.
-data class IbeaconRegionEventData(val changedRegion: UUID, val changedRegionReferenceId: String, val list: IbeaconRegionList) // Changed region is the UUID that was entered or exited.
+data class IbeaconRegionEventData(val changedRegion: UUID, val changedRegionReferenceId: String, val list: IbeaconRegionList) // Changed region is the UUID that was entered or exited. List contains all currently entered regions, after the event.
 
 data class DfuProgress(val percentage: Int, val currentSpeed: Float, val avgSpeed: Float, val currentPart: Int, val totalParts: Int)
 

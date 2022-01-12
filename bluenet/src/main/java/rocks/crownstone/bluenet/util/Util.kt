@@ -134,7 +134,7 @@ object Util {
 //		val secondsFromGmt = ((timeZone.rawOffset + timeZone.dstSavings) / 1000).toLong()
 		val secondsFromGmt = ((calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET)) / 1000).toLong()
 		val correctedTimestamp = gmtTimestamp + secondsFromGmt
-		Log.d(TAG, "calendar=$calendar timeZone.rawOffset=${timeZone.rawOffset} timeZone.dstSavings=${timeZone.dstSavings} timeZone.observesDaylightTime=${timeZone.observesDaylightTime()} ZONE_OFFSET=${calendar.get(Calendar.ZONE_OFFSET)} DST_OFFSET=${calendar.get(Calendar.DST_OFFSET)} dt=$secondsFromGmt")
+		Log.v(TAG, "calendar=$calendar timeZone.rawOffset=${timeZone.rawOffset} timeZone.dstSavings=${timeZone.dstSavings} timeZone.observesDaylightTime=${timeZone.observesDaylightTime()} ZONE_OFFSET=${calendar.get(Calendar.ZONE_OFFSET)} DST_OFFSET=${calendar.get(Calendar.DST_OFFSET)} dt=$secondsFromGmt")
 		return correctedTimestamp.toUint32()
 	}
 
@@ -143,7 +143,7 @@ object Util {
 		val timeZone = calendar.timeZone
 //		val msFromGmt = (timeZone.rawOffset + timeZone.dstSavings).toLong()
 		val msFromGmt = (calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET)).toLong()
-		Log.d(TAG, "calendar=$calendar timeZone.rawOffset=${timeZone.rawOffset} timeZone.dstSavings=${timeZone.dstSavings} timeZone.observesDaylightTime=${timeZone.observesDaylightTime()} ZONE_OFFSET=${calendar.get(Calendar.ZONE_OFFSET)} DST_OFFSET=${calendar.get(Calendar.DST_OFFSET)} dt=$msFromGmt")
+		Log.v(TAG, "calendar=$calendar timeZone.rawOffset=${timeZone.rawOffset} timeZone.dstSavings=${timeZone.dstSavings} timeZone.observesDaylightTime=${timeZone.observesDaylightTime()} ZONE_OFFSET=${calendar.get(Calendar.ZONE_OFFSET)} DST_OFFSET=${calendar.get(Calendar.DST_OFFSET)} dt=$msFromGmt")
 		return Date(timestamp.toLong() * 1000L - msFromGmt)
 	}
 
