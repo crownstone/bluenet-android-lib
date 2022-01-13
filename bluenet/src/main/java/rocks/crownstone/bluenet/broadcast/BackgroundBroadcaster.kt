@@ -38,6 +38,13 @@ class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: Bl
 	private var broadcasting = BroadcastingState.STOPPED
 	private var started = false
 
+	private val UPDATE_INTERVAL_MS = 60 * 1000L
+
+	// Makes sure that the broadcast is updated at least once per UPDATE_INTERVAL_MS.
+	private val validationTimeoutRunnable = Runnable {
+		onValidationTimeout()
+	}
+
 	init {
 		eventBus.subscribe(BluenetEvent.BLE_TURNED_OFF,                { data: Any? -> onBleTurnedOff() })
 		eventBus.subscribe(BluenetEvent.BLE_TURNED_ON,                 { data: Any? -> onBleTurnedOn() })
@@ -76,6 +83,7 @@ class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: Bl
 	@Synchronized
 	private fun updateBroadcast() {
 		Log.d(TAG, "updateBroadcast")
+
 		val sphereId = libState.currentSphere
 		if (sphereId == null) {
 			Log.i(TAG, "No current sphere")
@@ -89,6 +97,12 @@ class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: Bl
 		val validationTimestamp = when (useTimeForBroadcastValidation) {
 			true -> Util.getLocalTimestamp() // TODO: use time from crownstones
 			false -> BluenetProtocol.CAFEBABE
+		}
+
+		// Reset the timeout
+		handler.removeCallbacks(validationTimeoutRunnable)
+		if (useTimeForBroadcastValidation) {
+			handler.postDelayed(validationTimeoutRunnable, UPDATE_INTERVAL_MS)
 		}
 
 		val payloadType =
@@ -176,6 +190,14 @@ class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: Bl
 
 	private val retryRunnable = Runnable {
 		updateBroadcast()
+	}
+
+
+
+	@Synchronized
+	private fun onValidationTimeout() {
+		Log.d(TAG, "onValidationTimeout")
+		update()
 	}
 
 	@Synchronized
