@@ -255,6 +255,7 @@ open class CoreConnection(bleCore: BleCore) {
 					return Promise.ofFail(Errors.Busy())
 				}
 				promises.setBusy(Action.DISCONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
+				return deferred.promise.success { closeFinal(clearCache) }
 			}
 			else -> {
 				deferred.reject(Errors.BusyWrongState())
@@ -300,13 +301,10 @@ open class CoreConnection(bleCore: BleCore) {
 			BluetoothProfile.STATE_CONNECTED -> {
 				disconnect()
 						.always {
-							wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
-									. success {
-										val address: String = gatt.device.address
-										closeFinal(clearCache)
-										bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
-										deferred.resolve()
-									}
+							val address: String = gatt.device.address
+							closeFinal(clearCache)
+							bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
+							deferred.resolve()
 						}
 			}
 			else -> {
@@ -429,7 +427,10 @@ open class CoreConnection(bleCore: BleCore) {
 						wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
 								.success { promises.resolve(Action.DISCONNECT) }
 					}
-					else -> promises.reject(Errors.gattError(status))
+					else -> {
+						closeFinal(true)
+						promises.reject(Errors.gattError(status))
+					}
 				}
 			}
 		}
