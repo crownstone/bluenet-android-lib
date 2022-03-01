@@ -851,6 +851,11 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 		val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 		val result = isGpsEnabled || isNetworkEnabled
 		Log.i(TAG, "isLocationServiceEnabled $result")
+		// Log status of all providers
+		val providers = locationManager.allProviders
+		for (provider in providers) {
+			Log.d(TAG, "isProviderEnabled $provider ${locationManager.isProviderEnabled(provider)}")
+		}
 		return result
 	}
 
