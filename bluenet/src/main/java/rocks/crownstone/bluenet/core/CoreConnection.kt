@@ -32,6 +32,7 @@ open class CoreConnection(bleCore: BleCore) {
 
 	private val promises = CorePromises(handler)
 	private var currentGatt: BluetoothGatt? = null
+	private var subscriptionId: SubscriptionId? = null
 
 	// The notification callbacks are stored in a dedicated eventbus.
 	// An eventbus is used so that we can later subscribe to notifications multiple times, and so it can be cleaned up easily.
@@ -39,7 +40,15 @@ open class CoreConnection(bleCore: BleCore) {
 	private val notificationEventBus = EventBus()
 
 	init {
-		bleCore.eventBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
+		subscriptionId = bleCore.eventBus.subscribe(BluenetEvent.BLE_TURNED_OFF, { data: Any? -> onBleTurnedOff() })
+	}
+
+	private fun finalize() {
+		Log.i(TAG, "finalize")
+		val subId = subscriptionId
+		if (subId != null) {
+			bleCore.eventBus.unsubscribe(subId)
+		}
 	}
 
 	/**
