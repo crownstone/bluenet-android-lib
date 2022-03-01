@@ -26,7 +26,7 @@ import java.util.*
  *     - https://stackoverflow.com/questions/43833904/android-bluetooth-le-scanner-stops-after-a-time
  *     - https://android.googlesource.com/platform/packages/apps/Bluetooth/+/1fdc7c138db776b02bc751fd7a80c519ea3324d1
  *     - https://android.googlesource.com/platform/packages/apps/Bluetooth/+/623b906dcd0e4c0b85db20c67df76b3bb2884e74
- * - (to do) Making sure startScan is not called too often within a short time. See:
+ * - Making sure startScan is not called too often within a short time. See:
  *     - https://stackoverflow.com/questions/45681711/app-is-scanning-too-frequently-with-scansettings-scan-mode-opportunistic
  *     - https://android.googlesource.com/platform/packages/apps/Bluetooth/+/1fdc7c138db776b02bc751fd7a80c519ea3324d1
  * - Set scan filters, via the filterManager.
@@ -41,10 +41,10 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 	val filterManager = ScanFilterManager(::onScanFilterUpdate)
 
 	// True when currently interval-scanning.
-	private var running = false
+	private var scanning = false
 
 	// True when currently not interval-scanning, but it was (or, should be).
-	private var wasRunning = false
+	private var wasScanning = false
 	private var scanPause: Long = 100
 	private var scanDuration: Long  = 120 * 1000 // Restart every 2 minutes
 	private val lastStartTimes = LinkedList<Long>()
@@ -68,11 +68,12 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 
 //	@Synchronized
 	fun startScan(delay: Long = 0) {
-		Log.i(TAG, "startScan delay=$delay")
+		Log.i(TAG, "startScan delay=$delay scanning=$scanning")
 		synchronized(this) {
 			handler.removeCallbacks(restartRunnable)
-			if (!running) {
-				running = true
+			Log.d(TAG, "  scanning=$scanning")
+			if (!scanning) {
+				scanning = true
 				handler.removeCallbacksAndMessages(null)
 				handler.postDelayed(startIntervalRunnable, delay)
 			}
@@ -81,12 +82,13 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 
 //	@Synchronized
 	fun stopScan() {
-		Log.i(TAG, "stopScan")
+		Log.i(TAG, "stopScan scanning=$scanning")
 		synchronized(this) {
+			Log.d(TAG, "  scanning=$scanning")
 			handler.removeCallbacksAndMessages(null)
-			wasRunning = false
-			if (running) {
-				running = false
+			wasScanning = false
+			if (scanning) {
+				scanning = false
 				core.stopScan()
 			}
 		}
@@ -107,10 +109,9 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 	private fun restart() {
 		Log.i(TAG, "restart")
 		synchronized(this) {
-			val wasRunning = running
-			Log.d(TAG, "restart wasRunning=$wasRunning")
+			Log.d(TAG, "restart scanning=$scanning")
 			handler.removeCallbacks(restartRunnable)
-			if (wasRunning) {
+			if (scanning) {
 				val delay = delayMsToPreventStartingTooOften()
 				if (delay > 0) {
 					// Don't stop until we can start again.
@@ -143,7 +144,6 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 				Log.w(TAG, "delay start for $delay ms")
 				handler.removeCallbacksAndMessages(null)
 				handler.postDelayed(startIntervalRunnable, delay)
-//				startScan(delay) // Won't work, as it checks for running
 				return
 			}
 
@@ -152,7 +152,13 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 			while (lastStartTimes.size > BluenetConfig.SCAN_CHECK_NUM_PER_PERIOD) {
 				lastStartTimes.removeFirst()
 			}
-			core.startScan()
+			val result = core.startScan()
+			if (!result) {
+				Log.i(TAG, "Failed to start scan, mark scanning=false and wasScanning=true")
+				scanning = false
+				wasScanning = true
+				return
+			}
 			if (scanDuration > 0) {
 				handler.postDelayed(stopIntervalRunnable, scanDuration)
 			}
@@ -172,9 +178,10 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 
 //	@Synchronized
 	private fun onCoreScannerReady() {
-		Log.i(TAG, "onCoreScannerReady")
+		Log.i(TAG, "onCoreScannerReady wasScanning=$wasScanning")
 		synchronized(this) {
-			if (wasRunning) {
+			Log.d(TAG, "  wasScanning=$wasScanning")
+			if (wasScanning) {
 				startScan()
 			}
 		}
@@ -182,11 +189,13 @@ class BleScanner(eventBus: EventBus, bleCore: BleCore, looper: Looper) {
 
 //	@Synchronized
 	private fun onCoreScannerNotReady() {
-		Log.i(TAG, "onCoreScannerNotReady")
+		Log.i(TAG, "onCoreScannerNotReady scanning=$scanning")
 		synchronized(this) {
-			if (running) {
+			Log.d(TAG, "  scanning=$scanning")
+			if (scanning) {
 				stopScan()
-				wasRunning = true
+				Log.d(TAG, "  mark as wasScanning=true")
+				wasScanning = true
 			}
 		}
 	}

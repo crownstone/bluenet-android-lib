@@ -50,14 +50,14 @@ open class CoreScanner(appContext: Context, eventBus: EventBus, looper: Looper) 
 	}
 
 //	@Synchronized
-	fun startScan() {
+	fun startScan(): Boolean {
 		Log.i(TAG, "startScan")
 		synchronized(this) {
 			if (!initScanner()) {
-				return
+				return false
 			}
 			if (!isScannerReady()) {
-				return
+				return false
 			}
 		}
 		synchronized(lockScanConfig) {
@@ -65,12 +65,17 @@ open class CoreScanner(appContext: Context, eventBus: EventBus, looper: Looper) 
 			for (f in scanFilters) {
 				Log.d(TAG, "$f")
 			}
-			Log.d(TAG, "scanSettings=$scanSettings")
+			Log.d(TAG, "scanSettings=(" +
+					"mode=${scanSettings.scanMode}, " +
+					"resultType=${scanSettings.scanResultType}, " +
+					"callbackType=${scanSettings.callbackType}, " +
+					"delay=${scanSettings.reportDelayMillis}ms)")
 			scanner.startScan(scanFilters, scanSettings, scanCallback)
 		}
 //		synchronized(this) {
 //			scanning = true
 //		}
+		return true
 	}
 
 //	@Synchronized
