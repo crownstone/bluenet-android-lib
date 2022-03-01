@@ -141,22 +141,22 @@ class EventBus {
 
 	@Synchronized
 	private fun subscribe(eventType: EventType, callback: EventCallback, id: SubscriptionId) {
-		Log.i(TAG, "subscribe $eventType $id")
+		Log.i(TAG, "subscribe id=$id eventType=$eventType")
 		if (!eventSubscriptions.containsKey(eventType)) {
 			eventSubscriptions[eventType] = ArrayList()
 		}
 		subscribers[id] = eventType
 		eventSubscriptions[eventType]?.add(EventCallbackWithId(id, callback))
+		Log.i(TAG, "subscriber count = ${subscribers.size}")
 	}
 
 	@Synchronized
 	private fun _unsubscribe(id: SubscriptionId) {
-		Log.i(TAG, "unsubscribe $id")
 		val eventType = subscribers[id]
+		Log.i(TAG, "unsubscribe id=$id eventType=$eventType")
 		if (eventType == null) {
 			return
 		}
-		Log.i(TAG, "    eventType=$eventType")
 		subscribers.remove(id)
 
 		val list = eventSubscriptions.getValue(eventType)
@@ -175,5 +175,6 @@ class EventBus {
 		if (eventSubscriptions.getValue(eventType).isEmpty()) {
 			eventSubscriptions.remove(eventType)
 		}
+		Log.i(TAG, "subscriber count = ${subscribers.size}")
 	}
 }
