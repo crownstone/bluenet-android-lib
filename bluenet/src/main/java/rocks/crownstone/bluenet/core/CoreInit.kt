@@ -291,7 +291,13 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 			false -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
 		}
 
-				ActivityCompat.requestPermissions(
+		for (permissionRequest in permissionRequests) {
+			if (ActivityCompat.shouldShowRequestPermissionRationale(activity as Activity, permissionRequest)) {
+				Log.w(TAG, "shouldShowRequestPermissionRationale $permissionRequest")
+			}
+		}
+
+		ActivityCompat.requestPermissions(
 				activity as Activity,
 				permissionRequests,
 				REQ_CODE_PERMISSIONS_LOCATION)
