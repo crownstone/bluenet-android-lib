@@ -200,6 +200,17 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
+	 * Check if location permissions is requestable.
+	 *
+	 * @param activity Activity to be used to ask for permissions.
+	 * @return False when unable to make the request.
+	 */
+	@Synchronized
+	fun isLocationPermissionRequestable(activity: Activity): Boolean {
+		return bleCore.isLocationPermissionRequestable(activity)
+	}
+
+	/**
 	 * @return True when bluetooth is enabled.
 	 */
 	@Synchronized
@@ -559,7 +570,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
-		Log.i(TAG, "handlePermissionResult requestCode=$requestCode  permissions=$permissions  grantResults=$grantResults")
+		Log.i(TAG, "handlePermissionResult requestCode=$requestCode  permissions=[${permissions.joinToString()}]  grantResults=[${grantResults.joinToString()}]")
 		var result = false
 		if (bleCore.handlePermissionResult(requestCode, permissions, grantResults)) {
 			result = true

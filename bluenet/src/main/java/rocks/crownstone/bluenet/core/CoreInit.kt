@@ -265,6 +265,27 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 	}
 
 	/**
+	 * Check if location permissions is requestable.
+	 *
+	 * @param activity Activity to be used to ask for permissions.
+	 * @return False when unable to make the request.
+	 */
+	@Synchronized
+	fun isLocationPermissionRequestable(activity: Activity): Boolean {
+		val permissionRequests = when (Build.VERSION.SDK_INT < 29) {
+			true -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+			false -> arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+		}
+		for (permissionRequest in permissionRequests) {
+			if (ActivityCompat.shouldShowRequestPermissionRationale(activity as Activity, permissionRequest)) {
+				Log.w(TAG, "shouldShowRequestPermissionRationale $permissionRequest")
+				return false
+			}
+		}
+		return true
+	}
+
+	/**
 	 * Checks and requests location permission, required for scanning.
 	 *
 	 * @param activity Activity to be used to ask for permissions.
@@ -294,6 +315,7 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 		for (permissionRequest in permissionRequests) {
 			if (ActivityCompat.shouldShowRequestPermissionRationale(activity as Activity, permissionRequest)) {
 				Log.w(TAG, "shouldShowRequestPermissionRationale $permissionRequest")
+				return false
 			}
 		}
 
