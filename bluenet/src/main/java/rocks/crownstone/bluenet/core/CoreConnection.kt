@@ -34,6 +34,12 @@ open class CoreConnection(bleCore: BleCore) {
 	private var currentGatt: BluetoothGatt? = null
 	private var subscriptionId: SubscriptionId? = null
 
+	// A disconnect event should only be sent when disconnected from a successful connection,
+	// so not when a connection attempt fails.
+	// Also, only 1 disconnect event should be sent, not multiple.
+	// This flag gets set to true on successful connect, and set to false when the disconnect event is sent.
+	private var shouldSendDisconnectEvent = false
+
 	// The notification callbacks are stored in a dedicated eventbus.
 	// An eventbus is used so that we can later subscribe to notifications multiple times, and so it can be cleaned up easily.
 	// Cleaned up on disconnect and connect.
@@ -251,11 +257,9 @@ open class CoreConnection(bleCore: BleCore) {
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
-				val address: String = gatt.device.address
 				closeFinal(clearCache)
 				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
 						.success {
-							bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
 							deferred.resolve()
 						}
 			}
@@ -264,7 +268,9 @@ open class CoreConnection(bleCore: BleCore) {
 					return Promise.ofFail(Errors.Busy())
 				}
 				promises.setBusy(Action.DISCONNECT, deferred, timeoutMs) // Resolve later in onGattConnectionStateChange
-				return deferred.promise.success { closeFinal(clearCache) }
+				return deferred.promise.success {
+					closeFinal(clearCache)
+				}
 			}
 			else -> {
 				deferred.reject(Errors.BusyWrongState())
@@ -281,11 +287,11 @@ open class CoreConnection(bleCore: BleCore) {
 	 */
 	@Synchronized
 	fun close(clearCache: Boolean): Promise<Unit, Exception> {
-		Log.i(TAG, "close")
+		Log.i(TAG, "close address=${currentGatt?.device?.address}")
 //		if (!isBleReady()) {
 //			return Promise.ofSuccess(Unit) // Always closed when BLE is off?? // TODO: check this
 //		}
-		val gatt = this.currentGatt
+		val gatt = currentGatt
 		if (gatt == null) {
 			Log.d(TAG, "already closed")
 			return Promise.ofSuccess(Unit)
@@ -299,20 +305,16 @@ open class CoreConnection(bleCore: BleCore) {
 		Log.i(TAG, "state=${getStateString(state)}")
 		when (state) {
 			BluetoothProfile.STATE_DISCONNECTED -> {
-				val address: String = gatt.device.address
 				closeFinal(clearCache)
 				wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
 						.success {
-							bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
 							deferred.resolve()
 						}
 			}
 			BluetoothProfile.STATE_CONNECTED -> {
 				disconnect()
 						.always {
-							val address: String = gatt.device.address
 							closeFinal(clearCache)
-							bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
 							deferred.resolve()
 						}
 			}
@@ -324,11 +326,20 @@ open class CoreConnection(bleCore: BleCore) {
 	}
 
 	@Synchronized
+	private fun sendDisconnectEvent(address: DeviceAddress?) {
+		if (shouldSendDisconnectEvent && address != null) {
+			Log.i(TAG, "sendDisconnectEvent $address")
+			shouldSendDisconnectEvent = false
+			bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
+		}
+	}
+
+	@Synchronized
 	private fun closeFinal(clearCache: Boolean) {
+		Log.i(TAG, "closeFinal address=${currentGatt?.device?.address}")
 		if (clearCache) {
 			refreshGatt()
 		}
-		Log.i(TAG, "gatt.close")
 		currentGatt?.close()
 		currentGatt = null
 	}
@@ -414,23 +425,24 @@ open class CoreConnection(bleCore: BleCore) {
 		if (gatt == null || gatt != currentGatt || address == null || address != currentGatt?.device?.address) {
 			// [05-10-2018] Got this event after a gatt.close().
 			Log.e(TAG, "gatt=$gatt currentGatt=$currentGatt address=${currentGatt?.device?.address}")
+			sendDisconnectEvent(address)
 			return
 		}
 
 		if (status != BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_DISCONNECTED) {
 			closeFinal(true) // TODO: refresh?
-			if (promises.getAction() != Action.CONNECT) {
-				bleCore.eventBus.emit(BluenetEvent.CORE_DISCONNECTED, address)
-			}
+			sendDisconnectEvent(address)
 		}
 		when (newState) {
 			BluetoothProfile.STATE_CONNECTED -> {
 				notificationEventBus.reset()
+				shouldSendDisconnectEvent = true
 				bleCore.eventBus.emit(BluenetEvent.CORE_CONNECTED, gatt.device.address)
 				promises.resolve(Action.CONNECT)
 			}
 			BluetoothProfile.STATE_DISCONNECTED -> {
 				notificationEventBus.reset()
+				sendDisconnectEvent(address)
 				when (promises.getAction()) {
 					Action.DISCONNECT -> {
 						wait(BluenetConfig.DELAY_AFTER_DISCONNECT)
