@@ -57,6 +57,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 		advertiseCallback = object : AdvertiseCallback() {
 			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
 				super.onStartSuccess(settingsInEffect)
+				Log.i(TAG, "Started advertising")
 				deferred.resolve()
 			}
 
@@ -70,6 +71,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 //					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
 					else -> java.lang.Exception("Advertise failure err=$errorCode")
 				}
+				Log.i(TAG, "Failed advertising err=$errorCode")
 				deferred.reject(err)
 			}
 		}
@@ -113,7 +115,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 
 	@Synchronized
 	fun backgroundAdvertise(data: AdvertiseData): Promise<Unit, Exception> {
-		Log.i(TAG, "advertise")
+		Log.i(TAG, "backgroundAdvertise")
 		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
@@ -122,6 +124,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 		backgroundAdvertiseCallback = object : AdvertiseCallback() {
 			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
 				super.onStartSuccess(settingsInEffect)
+				Log.i(TAG, "Started backgroundAdvertising")
 				deferred.resolve()
 			}
 
@@ -129,12 +132,13 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 				super.onStartFailure(errorCode)
 				val err = when (errorCode) {
 					ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
-					ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
-					ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy()
+					ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy("busy: too many advertisers")
+					ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy("busy: already started")
 //					ADVERTISE_FAILED_INTERNAL_ERROR
 //					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
 					else -> java.lang.Exception("Advertise failure err=$errorCode")
 				}
+				Log.i(TAG, "Failed backgroundAdvertising err=$errorCode")
 				deferred.reject(err)
 			}
 		}
