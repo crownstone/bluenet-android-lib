@@ -60,6 +60,18 @@ class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: Bl
 		eventBus.subscribe(BluenetEvent.SPHERE_SETTINGS_UPDATED,       { data: Any? -> onLibStateChange() })
 	}
 
+	/**
+	 * De-init the library.
+	 *
+	 * Cleans up everything that isn't automatically cleaned.
+	 */
+	@Synchronized
+	fun destroy() {
+		Log.i(TAG, "destroy")
+		handler.removeCallbacksAndMessages(null)
+		bleCore.stopBackgroundAdvertise()
+	}
+
 	@Synchronized
 	fun start() {
 		started = true

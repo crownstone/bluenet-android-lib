@@ -158,6 +158,8 @@ class Bluenet(looper: Looper? = null) {
 		connections.destroy()
 		iBeaconRanger.destroy()
 		service.destroy()
+		broadCast.destroy()
+		backgroundBroadcaster.destroy()
 		// TODO: more?
 	}
 

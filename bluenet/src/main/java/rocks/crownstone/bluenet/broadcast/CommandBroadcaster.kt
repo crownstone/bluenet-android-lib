@@ -50,6 +50,18 @@ class CommandBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: BleCo
 	}
 
 	/**
+	 * De-init the library.
+	 *
+	 * Cleans up everything that isn't automatically cleaned.
+	 */
+	@Synchronized
+	fun destroy() {
+		Log.i(TAG, "destroy")
+		handler.removeCallbacksAndMessages(null)
+		bleCore.stopAdvertise()
+	}
+
+	/**
 	 * Broadcast a switch command.
 	 *
 	 * @param sphereId       Sphere ID of the stone.
