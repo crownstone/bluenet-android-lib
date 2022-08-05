@@ -614,8 +614,8 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 	 * @return Promise with enabled as value.
 	 */
 	@Synchronized
-	fun getSwitchCraftEnabled(enable: Boolean): Promise<Unit, Exception> {
-		Log.i(TAG, "getSwitchCraftEnabled $enable")
+	fun getSwitchCraftEnabled(): Promise<Boolean, Exception> {
+		Log.i(TAG, "getSwitchCraftEnabled")
 		return getConfigValue(ConfigType.SWITCHCRAFT_ENABLED, StateTypeV4.SWITCHCRAFT_ENABLED)
 	}
 
@@ -640,6 +640,29 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 	fun getSwitchCraftThreshold(): Promise<Float, Exception> {
 		Log.i(TAG, "getSwitchCraftThreshold")
 		return getConfigValue(ConfigType.SWITCHCRAFT_THRESHOLD, StateTypeV4.SWITCHCRAFT_THRESHOLD)
+	}
+
+	/**
+	 * Enable or disable switchcraft double tap.
+	 *
+	 * @param enable True to enable switchcraft double tap.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setSwitchCraftDoubleTapEnabled(enable: Boolean): Promise<Unit, Exception> {
+		Log.i(TAG, "setSwitchCraftDoubleTapEnabled $enable")
+		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.SWITCHCRAFT_DOUBLE_TAP_ENABLED, enable)
+	}
+
+	/**
+	 * Get switchcraft double tap enabled.
+	 *
+	 * @return Promise with enabled as value.
+	 */
+	@Synchronized
+	fun getSwitchCraftDoubleTapEnabled(): Promise<Boolean, Exception> {
+		Log.i(TAG, "getSwitchCraftDoubleTapEnabled")
+		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.SWITCHCRAFT_DOUBLE_TAP_ENABLED)
 	}
 
 	/**
@@ -724,30 +747,6 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 	}
 
 	/**
-	 * Set time.
-	 *
-	 * @param currentTime     POSIX timestamp.
-	 * @return Promise
-	 */
-	@Synchronized
-	@Deprecated("Use control command instead.")
-	fun setTime(currentTime: Uint32): Promise<Unit, Exception> {
-		Log.i(TAG, "setTime $currentTime")
-		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.TIME, currentTime)
-	}
-
-	/**
-	 * Get current time.
-	 *
-	 * @return Promise with POSIX timestamp as value.
-	 */
-	@Synchronized
-	fun getTime(): Promise<Uint32, Exception> {
-		Log.i(TAG, "getTime")
-		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.TIME)
-	}
-
-	/**
 	 * Set soft on speed.
 	 *
 	 * @param speed          Speed ranging from 1 until 100.
@@ -768,6 +767,29 @@ class Config(eventBus: EventBus, connection: ExtConnection) {
 	fun getSoftOnSpeed(): Promise<Uint8, Exception> {
 		Log.i(TAG, "getSoftOnSpeed")
 		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.SOFT_ON_SPEED)
+	}
+
+	/**
+	 * Set default dim value.
+	 *
+	 * @param value          Value ranging from 0 until 99.
+	 * @return Promise
+	 */
+	@Synchronized
+	fun setDefaultDimValue(value: Uint8): Promise<Unit, Exception> {
+		Log.i(TAG, "setDefaultDimValue $value")
+		return setConfigValue(ConfigType.UNKNOWN, StateTypeV4.DEFAULT_DIM_VALUE, value)
+	}
+
+	/**
+	 * Get current default dim value.
+	 *
+	 * @return Promise with default dim value as value.
+	 */
+	@Synchronized
+	fun getDefaultDimValue(): Promise<Uint8, Exception> {
+		Log.i(TAG, "getDefaultDimValue")
+		return getConfigValue(ConfigType.UNKNOWN, StateTypeV4.DEFAULT_DIM_VALUE)
 	}
 
 	/**

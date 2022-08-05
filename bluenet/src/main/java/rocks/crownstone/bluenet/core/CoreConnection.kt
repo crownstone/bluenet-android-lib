@@ -191,7 +191,7 @@ open class CoreConnection(bleCore: BleCore) {
 	 */
 	@Synchronized
 	private fun disconnect(): Promise<Unit, Exception> {
-		Log.i(TAG, "disconnect")
+		Log.i(TAG, "disconnect address=${currentGatt?.device?.address}")
 		if (!bleCore.isBleReady()) {
 //			return Promise.ofFail(Errors.BleNotReady())
 			return Promise.ofSuccess(Unit) // Always disconnected when BLE is off
@@ -242,7 +242,7 @@ open class CoreConnection(bleCore: BleCore) {
 	 */
 	@Synchronized
 	fun waitForDisconnect(clearCache: Boolean, timeoutMs: Long): Promise<Unit, Exception> {
-		Log.i(TAG, "waitForDisconnect")
+		Log.i(TAG, "waitForDisconnect address=${currentGatt?.device?.address}")
 		val gatt = this.currentGatt
 		if (gatt == null) {
 			Log.d(TAG, "already closed")

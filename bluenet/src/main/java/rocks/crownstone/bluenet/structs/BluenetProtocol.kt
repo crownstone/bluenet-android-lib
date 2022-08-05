@@ -482,7 +482,8 @@ enum class StateTypeV4(val num: Uint16) {
 	SOFT_ON_SPEED(156U),
 	HUB_MODE(157U),
 	UART_KEY(158U),
-
+	SWITCHCRAFT_DOUBLE_TAP_ENABLED(167U),
+	DEFAULT_DIM_VALUE(168U),
 	UNKNOWN(0xFFFFU);
 	companion object {
 		private val map = StateTypeV4.values().associateBy(StateTypeV4::num)
