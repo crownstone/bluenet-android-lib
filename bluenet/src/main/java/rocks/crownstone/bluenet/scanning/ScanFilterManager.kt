@@ -185,6 +185,13 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		val parcelUuid = ParcelUuid(serviceUuid)
 		val scanFilterBuilder = ScanFilter.Builder()
 		scanFilterBuilder.setServiceData(parcelUuid, null)
+
+		// Set an arbitrary service data, with mask that makes it ignore the service data.
+		// This seems to be required for samsung to make this filter count as not empty.
+		val serviceData = byteArrayOf(0, 0, 0)
+		val serviceDataMask = byteArrayOf(0, 0, 0)
+		scanFilterBuilder.setServiceData(parcelUuid, serviceData, serviceDataMask)
+
 		val scanFilter = scanFilterBuilder.build()
 		filters[id] = Filter(scanFilter)
 		if (update) {
