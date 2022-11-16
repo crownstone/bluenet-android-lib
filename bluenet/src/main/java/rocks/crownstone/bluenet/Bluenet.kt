@@ -154,6 +154,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun destroy() {
+		Log.i(TAG, "destroy")
 		bleScanner?.stopScan()
 		connections.destroy()
 		iBeaconRanger.destroy()
