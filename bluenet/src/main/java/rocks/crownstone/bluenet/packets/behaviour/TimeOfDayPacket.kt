@@ -27,6 +27,7 @@ enum class BaseTimeType(val num: Uint8) {
 	}
 }
 
+// Time difference in seconds.
 typealias TimeDifference = Int32
 
 class TimeOfDayPacket(baseTimeType: BaseTimeType, timeOffset: TimeDifference): PacketInterface {
