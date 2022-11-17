@@ -135,10 +135,10 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		if (addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE, false)) {
 			update = true
 		}
-		if (addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)) {
+		if (addServiceUuidFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)) {
 			update = true
 		}
-		if (addServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU2, false)) {
+		if (addServiceUuidFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU2, false)) {
 			update = true
 		}
 		if (update) {
@@ -159,10 +159,10 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 		if (remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_GUIDESTONE, false)) {
 			update = true
 		}
-		if (remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)) {
+		if (remServiceUuidFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU, false)) {
 			update = true
 		}
-		if (remServiceDataFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU2, false)) {
+		if (remServiceUuidFilter(BluenetProtocol.SERVICE_DATA_UUID_DFU2, false)) {
 			update = true
 		}
 		if (update) {
@@ -209,6 +209,39 @@ class ScanFilterManager(val updateCallback: (List<ScanFilter>) -> Unit) {
 	fun remServiceDataFilter(serviceUuid: UUID, update: Boolean): Boolean {
 		val id = "serviceData $serviceUuid"
 		Log.i(TAG, "remServiceDataFilter id=$id update=$update")
+		if (!filters.containsKey(id)) {
+			return false
+		}
+		filters.remove(id)
+		if (update) {
+			updateCallback(getFilters())
+		}
+		return true
+	}
+
+	@Synchronized
+	fun addServiceUuidFilter(serviceUuid: UUID, update: Boolean): Boolean {
+		val id = "serviceUuid $serviceUuid"
+		Log.i(TAG, "addServiceUuidFilter id=$id update=$update")
+		if (filters.containsKey(id)) {
+			return false
+		}
+		val parcelUuid = ParcelUuid(serviceUuid)
+		val scanFilterBuilder = ScanFilter.Builder()
+		scanFilterBuilder.setServiceUuid(parcelUuid, null)
+
+		val scanFilter = scanFilterBuilder.build()
+		filters[id] = Filter(scanFilter)
+		if (update) {
+			updateCallback(getFilters())
+		}
+		return true
+	}
+
+	@Synchronized
+	fun remServiceUuidFilter(serviceUuid: UUID, update: Boolean): Boolean {
+		val id = "serviceUuid $serviceUuid"
+		Log.i(TAG, "remServiceUuidFilter id=$id update=$update")
 		if (!filters.containsKey(id)) {
 			return false
 		}
