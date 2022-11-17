@@ -71,6 +71,7 @@ class CrownstoneServiceData {
 	var flagBehaviourEnabled = false;    internal set    // True when behaviour is enabled.
 
 	// Errors
+	var errorBitmask: Uint32 = 0U;      internal set
 	var errorOverCurrent = false;       internal set     // Too much current went through the crownstone.
 	var errorOverCurrentDimmer = false; internal set     // Too much current went through the dimmer.
 	var errorChipTemperature = false;   internal set     // The chip temperature was too high.

@@ -135,6 +135,7 @@ internal object Shared {
 	}
 
 	private fun parseErrorBitmask(bitmask: Uint32, servicedata: CrownstoneServiceData) {
+		servicedata.errorBitmask           = bitmask
 		servicedata.errorOverCurrent       = Util.isBitSet(bitmask,0)
 		servicedata.errorOverCurrentDimmer = Util.isBitSet(bitmask,1)
 		servicedata.errorChipTemperature   = Util.isBitSet(bitmask,2)
