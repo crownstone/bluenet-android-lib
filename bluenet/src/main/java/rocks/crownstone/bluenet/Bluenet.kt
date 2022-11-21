@@ -121,7 +121,7 @@ class Bluenet(looper: Looper? = null) {
 
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_READY,          { data: Any? -> onCoreScannerReady() })
 		eventBus.subscribe(BluenetEvent.CORE_SCANNER_NOT_READY,      { data: Any? -> onCoreScannerNotReady() })
-		eventBus.subscribe(BluenetEvent.LOCATION_PERMISSION_GRANTED, { data: Any? -> onPermissionGranted() })
+		eventBus.subscribe(BluenetEvent.PERMISSIONS_GRANTED,         { data: Any? -> onPermissionGranted() })
 
 		bleCore = BleCore(context, eventBus, looper)
 		bleCore.initBle()
@@ -176,7 +176,7 @@ class Bluenet(looper: Looper? = null) {
 	@Synchronized
 	fun initScanner(activity: Activity?): Promise<Unit, Exception> {
 		Log.i(TAG, "initScanner promise")
-		return bleCore.getLocationPermission(activity)
+		return bleCore.getPermissions(activity)
 				.success {
 					initScanner()
 				}
@@ -198,19 +198,19 @@ class Bluenet(looper: Looper? = null) {
 	 * @return True when location permission is granted.
 	 */
 	@Synchronized
-	fun isLocationPermissionGranted(): Boolean {
-		return bleCore.isLocationPermissionGranted()
+	fun isPermissionsGranted(): Boolean {
+		return bleCore.isPermissionsGranted()
 	}
 
 	/**
-	 * Check if location permissions is requestable.
+	 * Check if permissions are requestable.
 	 *
 	 * @param activity Activity to be used to ask for permissions.
-	 * @return False when unable to make the request.
+	 * @return True when the next set of permissions can be requested with the given activity.
 	 */
 	@Synchronized
-	fun isLocationPermissionRequestable(activity: Activity): Boolean {
-		return bleCore.isLocationPermissionRequestable(activity)
+	fun isPermissionRequestable(activity: Activity): Boolean {
+		return bleCore.isPermissionRequestable(activity)
 	}
 
 	/**
@@ -543,7 +543,7 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
-	 * Checks and requests location permission, required for scanning.
+	 * Checks and requests location and bluetooth permissions.
 	 *
 	 * @param activity Activity to be used to ask for permissions.
 	 *                 The activity can implement Activity.onRequestPermissionsResult() to see if the user canceled.
@@ -551,19 +551,7 @@ class Bluenet(looper: Looper? = null) {
 	 */
 	@Synchronized
 	fun requestLocationPermission(activity: Activity) {
-		bleCore.requestLocationPermission(activity)
-	}
-
-	/**
-	 * Checks and requests background location permission, required for scanning in background.
-	 *
-	 * @param activity Activity to be used to ask for permissions.
-	 *                 The activity can implement Activity.onRequestPermissionsResult() to see if the user canceled.
-	 *                 The request code will be BleCore.REQ_CODE_PERMISSIONS_BACKGROUND_LOCATION
-	 */
-	@Synchronized
-	fun requestBackgroundLocationPermission(activity: Activity) {
-		bleCore.requestBackgroundLocationPermission(activity)
+		bleCore.requestPermissions(activity)
 	}
 
 	/**
@@ -572,10 +560,10 @@ class Bluenet(looper: Looper? = null) {
 	 * @return return true if permission result was handled, false otherwise.
 	 */
 	@Synchronized
-	fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
-		Log.i(TAG, "handlePermissionResult requestCode=$requestCode  permissions=[${permissions.joinToString()}]  grantResults=[${grantResults.joinToString()}]")
+	fun handlePermissionResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray, activity: Activity? = null): Boolean {
+		Log.i(TAG, "handlePermissionResult requestCode=$requestCode  permissions=[${permissions.joinToString()}]  grantResults=[${grantResults.joinToString()}] activity=$activity")
 		var result = false
-		if (bleCore.handlePermissionResult(requestCode, permissions, grantResults)) {
+		if (bleCore.handlePermissionResult(requestCode, permissions, grantResults, activity)) {
 			result = true
 		}
 		if (FileLogger.handlePermissionResult(requestCode, permissions, grantResults)) {

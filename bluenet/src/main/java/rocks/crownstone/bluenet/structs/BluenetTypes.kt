@@ -22,8 +22,8 @@ enum class BluenetEvent {
 	SPHERE_SETTINGS_UPDATED,           // Sent when sphere settings have been updated. Used internally.
 	BLE_TURNED_ON,                     // Bluetooth is turned on.
 	BLE_TURNED_OFF,                    // Bluetooth is turned off.
-	NO_LOCATION_SERVICE_PERMISSION,    // Sent when location service permission is required, but not granted.
-	LOCATION_PERMISSION_GRANTED,       // Sent when location service permission is granted.
+	PERMISSIONS_MISSING,               // Sent when a permission is required, but not granted.
+	PERMISSIONS_GRANTED,               // Sent when permissions are all granted.
 	BACKGROUND_LOCATION_PERMISSION_GRANTED, // Sent when background location service permission is granted.
 	LOCATION_SERVICE_TURNED_ON,        // Sent when location service is turned on.
 	LOCATION_SERVICE_TURNED_OFF,       // Sent when location service is turned off.
