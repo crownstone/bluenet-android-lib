@@ -990,6 +990,14 @@ open class CoreConnection(bleCore: BleCore) {
 		// //TODO: When bluetooth is turned off, we should close the gatt?
 		// Reject current action before closing.
 		promises.reject(Errors.BleNotReady())
+
+		// We don't get onGattConnectionStateChange anymore, so send disconnect event.
+		val address = currentGatt?.device?.address
+		if (address != null) {
+			sendDisconnectEvent(address)
+			return
+		}
+
 		close(true)
 		// Or just set gatt to null?
 	}
