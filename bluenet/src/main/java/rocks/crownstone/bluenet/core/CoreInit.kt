@@ -640,12 +640,13 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 		if (isActivityValid(activity)) {
 //			intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 			activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_LOCATION_SERVICE)
+			return true
 		}
-		else {
-			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-			context.startActivity(intent)
-		}
-		return true
+//		else {
+//			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//			context.startActivity(intent)
+//		}
+		return false
 	}
 
 	/**
@@ -757,6 +758,7 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 		Log.v(TAG, "isScannerReady scannerInitialized=$scannerInitialized scannerSet=$scannerSet")
 //		return (scannerInitialized && isBleReady() && isLocationPermissionGranted() && isLocationServiceEnabled())
 		if (scannerInitialized && scannerSet && isBleReady() && isLocationServiceEnabled()) {
+			Log.d(TAG, "isScannerReady scannerInitialized=$scannerInitialized scannerSet=$scannerSet")
 //			scannerReady = true
 			return true
 		}
