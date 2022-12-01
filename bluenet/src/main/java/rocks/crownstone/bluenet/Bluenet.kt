@@ -273,7 +273,7 @@ class Bluenet(looper: Looper? = null) {
 	 * @param explanation Whether to add an explanation to the requests.
 	 */
 	@Synchronized
-	fun tryMakeScannerReady(activity: Activity?, explanation: Boolean = false) {
+	fun tryMakeScannerReady(activity: Activity?, explanation: Boolean = true) {
 		// The scanner will be initialized when core scanner is ready event is sent.
 		bleCore.tryMakeScannerReady(activity, explanation)
 	}

@@ -265,7 +265,7 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 	 * @param explanation Whether to add an explanation to the requests.
 	 */
 	@Synchronized
-	fun tryMakeScannerReady(activity: Activity?, explanation: Boolean = false) {
+	fun tryMakeScannerReady(activity: Activity?, explanation: Boolean = true) {
 		Log.i(TAG, "tryMakeScannerReady activity=$activity")
 		initBle()
 		if (isPermissionsGranted()) {
