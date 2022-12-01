@@ -9,6 +9,7 @@ package rocks.crownstone.bluenet.core
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeAdvertiser
@@ -22,6 +23,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import nl.komponents.kovenant.*
@@ -50,6 +52,8 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 	private var scannerSet = false // Keeps up whether the var "scanner" is set.
 	private var advertiserSet = false // Keeps up whether the var "advertiser" is set.
 	private var scannerReady = false
+
+	private var locationEnableDialogShown = false
 
 	// Keep up promises
 	private var backgroundLocationPermissionPromise: Deferred<Unit, Exception>? = null
@@ -257,17 +261,18 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 
 	/**
 	 * Try to make the scanner ready to scan.
-	 * @param activity Activity to be used to ask for requests.
+	 * @param activity    Activity to be used to ask for requests.
+	 * @param explanation Whether to add an explanation to the requests.
 	 */
 	@Synchronized
-	fun tryMakeScannerReady(activity: Activity?) {
+	fun tryMakeScannerReady(activity: Activity?, explanation: Boolean = false) {
 		Log.i(TAG, "tryMakeScannerReady activity=$activity")
 		initBle()
 		if (isPermissionsGranted()) {
 			Log.i(TAG, "tryMakeScannerReady: initScanner")
 			initScanner()
 			requestEnableBle(activity)
-			requestEnableLocationService(activity)
+			requestEnableLocationService(activity, explanation)
 			setScanner()
 
 			// Also try to set advertiser, as that now also requires a permission.
@@ -555,11 +560,12 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 //			intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
 			activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_BLUETOOOTH)
 		}
-		else {
-			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-			context.startActivity(intent)
-		}
-		return true
+		// This is possible, but let's not bother the user when there is no activity.
+//		else {
+//			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//			context.startActivity(intent)
+//		}
+		return false
 	}
 
 	/**
@@ -623,25 +629,57 @@ open class CoreInit(appContext: Context, eventBus: EventBus, looper: Looper) {
 	/**
 	 * Requests location service to be enabled.
 	 *
-	 * @param activity Optional activity to be used to ask for location service to be enabled.
-	 *                 The activity can implement Activity.onActivityResult() to see if the user canceled the request.
-	 *                 The request code will be BleCore.REQ_CODE_ENABLE_LOCATION_SERVICE
+	 * @param activity    Optional activity to be used to ask for location service to be enabled.
+	 *                    The activity can implement Activity.onActivityResult() to see if the user canceled the request.
+	 *                    The request code will be BleCore.REQ_CODE_ENABLE_LOCATION_SERVICE
+	 * @param explanation Whether to add an explanation to the requests.
 	 * @return False when unable to make the request
 	 */
 	@Synchronized
-	fun requestEnableLocationService(activity: Activity?): Boolean {
+	fun requestEnableLocationService(activity: Activity?, explanation: Boolean = false): Boolean {
 		Log.i(TAG, "requestEnableLocationService activity=$activity")
 		if (isLocationServiceEnabled()) {
 			Log.i(TAG, "no need to request")
 			return true
 		}
 
-		val intent = Intent(context, LocationServiceRequestActivity::class.java)
+		// Can also just use Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
+		// but that makes the app go immediately to settings on start, which is confusing.
+
+		// Another option is to use the LocationServiceRequestActivity, but then we get a grey view.
+
 		if (isActivityValid(activity)) {
-//			intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-			activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_LOCATION_SERVICE)
+			if (!explanation) {
+				val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+				activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_LOCATION_SERVICE)
+				return true
+			}
+
+			if (locationEnableDialogShown) {
+				return true
+			}
+
+			locationEnableDialogShown = true
+			val builder = AlertDialog.Builder(activity)
+			builder.setTitle("Location not enabled")
+			builder.setMessage("Location needs to be enabled to scan for bluetooth devices")
+			builder.setPositiveButton("Settings") { dialog, which ->
+				val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+				activity!!.startActivityForResult(intent, REQ_CODE_ENABLE_LOCATION_SERVICE)
+				locationEnableDialogShown = false
+			}
+			builder.setNegativeButton("Cancel") { dialog, which ->
+				locationEnableDialogShown = false
+			}
+			builder.setCancelable(true)
+			builder.setOnCancelListener {
+				locationEnableDialogShown = false
+			}
+			builder.create().show()
+
 			return true
 		}
+		// This is possible, but let's not bother the user when there is no activity.
 //		else {
 //			intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 //			context.startActivity(intent)

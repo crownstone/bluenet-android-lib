@@ -265,16 +265,17 @@ class Bluenet(looper: Looper? = null) {
 	/**
 	 * Try to make the scanner ready to scan.
 	 * You can wait for the event SCANNER_READY.
-	 * @param activity Activity to be used to ask for requests.
-	 *                 The activity should have Activity.onRequestPermissionsResult() implemented,
-	 *                 and from there calls Bluenet.handlePermissionResult().
-	 *                 The activity should implement Activity.onActivityResult(),
-	 *                 and from there call Bluenet.handleActivityResult().
+	 * @param activity    Activity to be used to ask for requests.
+	 *                    The activity should have Activity.onRequestPermissionsResult() implemented,
+	 *                    and from there calls Bluenet.handlePermissionResult().
+	 *                    The activity should implement Activity.onActivityResult(),
+	 *                    and from there call Bluenet.handleActivityResult().
+	 * @param explanation Whether to add an explanation to the requests.
 	 */
 	@Synchronized
-	fun tryMakeScannerReady(activity: Activity?) {
+	fun tryMakeScannerReady(activity: Activity?, explanation: Boolean = false) {
 		// The scanner will be initialized when core scanner is ready event is sent.
-		bleCore.tryMakeScannerReady(activity)
+		bleCore.tryMakeScannerReady(activity, explanation)
 	}
 
 	/**
