@@ -312,12 +312,21 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 		connectionEncryptionManager.clearSessionData()
 		when (mode) {
 			CrownstoneMode.SETUP -> {
-				val v5 = hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID)
-				val sessionDataChar = when (v5) {
-					true -> BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID
-					false -> BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID
-				}
-				Log.i(TAG, "get session data and key v5=$v5 sessionDataChar=$sessionDataChar")
+
+				val (v5, sessionDataChar, encrypted) =
+						when {
+							hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UNENCRYPTED_UUID) -> {
+								Triple(true, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UNENCRYPTED_UUID, false)
+							}
+							hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID) -> {
+								Triple(true, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UUID, true)
+							}
+							else -> {
+								Triple(false, BluenetProtocol.CHAR_SETUP_SESSION_NONCE_UUID, false)
+							}
+						}
+
+				Log.i(TAG, "get session data and key v5=$v5 encrypted=$encrypted sessionDataChar=$sessionDataChar")
 				return bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_KEY_UUID)
 						.then {
 							connectionEncryptionManager.parseSessionKey(address, it)
@@ -326,7 +335,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 							bleCore.read(BluenetProtocol.SETUP_SERVICE_UUID, sessionDataChar)
 						}.unwrap()
 						.then {
-							connectionEncryptionManager.parseSessionData(address, it, isEncrypted = v5, setupMode = true, v5 = v5)
+							connectionEncryptionManager.parseSessionData(address, it, isEncrypted = encrypted, setupMode = true, v5 = v5)
 						}.unwrap()
 						.then {
 							protocolVersion = it.protocolVersion
@@ -338,18 +347,27 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 					Log.w(TAG, "No keys, don't read session data")
 					return Promise.ofSuccess(Unit)
 				}
-				val v5 = hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_DATA_UUID)
-				val sessionDataChar = when (v5) {
-					true -> BluenetProtocol.CHAR_SESSION_DATA_UUID
-					false -> BluenetProtocol.CHAR_SESSION_NONCE_UUID
-				}
-				Log.i(TAG, "get session data v5=$v5 sessionDataChar=$sessionDataChar")
+
+				val (v5, sessionDataChar, encrypted) =
+						when {
+							hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_DATA_UNENCRYPTED_UUID) -> {
+								Triple(true, BluenetProtocol.CHAR_SESSION_DATA_UNENCRYPTED_UUID, false)
+							}
+							hasCharacteristic(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_SESSION_DATA_UUID) -> {
+								Triple(true, BluenetProtocol.CHAR_SESSION_DATA_UUID, true)
+							}
+							else -> {
+								Triple(false, BluenetProtocol.CHAR_SESSION_NONCE_UUID, true)
+							}
+						}
+
+				Log.i(TAG, "get session data v5=$v5 encrypted=$encrypted sessionDataChar=$sessionDataChar")
 				return bleCore.read(BluenetProtocol.CROWNSTONE_SERVICE_UUID, sessionDataChar)
 						.then {
 //							// TODO: is it ok to ignore any error in the session data parsing?
 //							// Ignore errors in parsing of session data: in case we have no keys for this crownstone, but want to write/read unencrypted data.
 //							Util.recoverableUnitPromise(encryptionManager.parseSessionData(address, it, true), { true })
-							connectionEncryptionManager.parseSessionData(address, it, isEncrypted = true, setupMode = false, v5 = v5)
+							connectionEncryptionManager.parseSessionData(address, it, isEncrypted = encrypted, setupMode = false, v5 = v5)
 						}.unwrap()
 						.then {
 							protocolVersion = it.protocolVersion
