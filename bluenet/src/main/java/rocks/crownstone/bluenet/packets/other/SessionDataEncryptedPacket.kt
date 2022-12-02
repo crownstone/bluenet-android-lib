@@ -15,17 +15,15 @@ import rocks.crownstone.bluenet.util.Log
 import rocks.crownstone.bluenet.util.getUint8
 import java.nio.ByteBuffer
 
-class SessionDataPacket: PacketInterface {
+class SessionDataEncryptedPacket: PacketInterface {
 	private val TAG = this.javaClass.simpleName
-	var protocol: Uint8 = 0U; private set
-	var sessionNonce = ByteArray(BluenetProtocol.SESSION_NONCE_LENGTH); private set
-	var validationKey = ByteArray(BluenetProtocol.VALIDATION_KEY_LENGTH); private set
+	var validation = ByteArray(BluenetProtocol.VALIDATION_KEY_LENGTH); private set
+	var sessionData = SessionDataPacket(); private set
+	var padding = ByteArray(PADDING_SIZE); private set
 
 	companion object {
-		const val SIZE =
-						Uint8.SIZE_BYTES +
-						BluenetProtocol.SESSION_NONCE_LENGTH +
-						BluenetProtocol.VALIDATION_KEY_LENGTH
+		const val SIZE = BluenetProtocol.AES_BLOCK_SIZE
+		const val PADDING_SIZE = SIZE -	(BluenetProtocol.VALIDATION_KEY_LENGTH + SessionDataPacket.SIZE)
 	}
 
 	override fun getPacketSize(): Int {
@@ -41,13 +39,15 @@ class SessionDataPacket: PacketInterface {
 			Log.i(TAG, "size=${bb.remaining()} expected=${getPacketSize()}")
 			return false
 		}
-		protocol = bb.getUint8()
-		bb.get(sessionNonce)
-		bb.get(validationKey)
+		bb.get(validation)
+		if (!sessionData.fromBuffer(bb)) {
+			return false
+		}
+		bb.get(padding)
 		return true
 	}
 
 	override fun toString(): String {
-		return "SessionDataPacket(protocol=$protocol, sessionNonce=${sessionNonce.contentToString()}, validationKey=${validationKey.contentToString()})"
+		return "SessionDataEncryptedPacket(validation=${validation.contentToString()}, sessionData=$sessionData, padding=${padding.contentToString()})"
 	}
 }

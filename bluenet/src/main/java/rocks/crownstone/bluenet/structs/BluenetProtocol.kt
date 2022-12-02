@@ -44,7 +44,7 @@ object BluenetProtocol {
 	val CHAR_CONTROL5_UUID =                 UUID.fromString("24f0000c-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_RESULT5_UUID =                  UUID.fromString("24f0000d-7d10-4805-bfc1-7663a01c3bff")
 	val CHAR_SESSION_DATA_UUID =             UUID.fromString("24f0000e-7d10-4805-bfc1-7663a01c3bff")
-	val CHAR_SESSION_DATA_UNENCRYPTED_UUID = UUID.fromString("24f0000e-7d10-4805-bfc1-7663a01c3bff")
+	val CHAR_SESSION_DATA_UNENCRYPTED_UUID = UUID.fromString("24f0000f-7d10-4805-bfc1-7663a01c3bff")
 
 	// Setup service
 	val SETUP_SERVICE_UUID =                         UUID.fromString("24f10000-7d10-4805-bfc1-7663a01c3bff")

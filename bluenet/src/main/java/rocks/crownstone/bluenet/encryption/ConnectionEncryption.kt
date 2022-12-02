@@ -27,26 +27,27 @@ class ConnectionEncryption(encryptionManager: EncryptionManager) {
 
 	@Synchronized
 	fun parseSessionData(address: DeviceAddress, data: ByteArray, isEncrypted: Boolean, setupMode: Boolean, v5: Boolean): Promise<SessionData, Exception> {
-		val sessionData = if (isEncrypted) {
-			val key = if (setupMode) {
-				sessionKey
-			}
-			else {
-				encryptionManager.getKeySetFromAddress(address)?.guestKeyBytes
-			}
-			if (key == null) {
-				Log.w(TAG, "No key for $address")
-				return Promise.ofFail(Errors.EncryptionKeyMissing())
-			}
-			val decryptedData = Encryption.decryptEcb(data, key)
-			if (decryptedData == null) {
-				return Promise.ofFail(Errors.Encryption())
-			}
-			SessionDataParser.getSessionData(decryptedData, isEncrypted, v5)
-		}
-		else {
-			SessionDataParser.getSessionData(data, isEncrypted, v5)
-		}
+		val sessionData =
+				if (isEncrypted) {
+					val key = if (setupMode) {
+						sessionKey
+					}
+					else {
+						encryptionManager.getKeySetFromAddress(address)?.guestKeyBytes
+					}
+					if (key == null) {
+						Log.w(TAG, "No key for $address")
+						return Promise.ofFail(Errors.EncryptionKeyMissing())
+					}
+					val decryptedData = Encryption.decryptEcb(data, key)
+					if (decryptedData == null) {
+						return Promise.ofFail(Errors.Encryption())
+					}
+					SessionDataParser.getSessionData(decryptedData, isEncrypted, v5)
+				}
+				else {
+					SessionDataParser.getSessionData(data, isEncrypted, v5)
+				}
 
 		if (sessionData == null) {
 			return Promise.ofFail(Errors.Parse("failed to parse session data"))
