@@ -22,6 +22,10 @@ class IbeaconRssiAverager {
 		return average
 	}
 
+	fun getCount(): Int {
+		return list.size
+	}
+
 	fun clear() {
 		list.clear()
 	}
