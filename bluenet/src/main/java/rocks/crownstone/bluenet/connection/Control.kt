@@ -645,13 +645,13 @@ class Control(eventBus: EventBus, connection: ExtConnection) {
 		// If previous recover attempt succeeded step 1, then only one more write is needed. So also check if in setup mode after second connect.
 		// TODO: resolve nicely when already in setup mode, don't use the error hack for that.
 		val deferred = deferred<Unit, Exception>()
-		connection.connect(false)
+		connection.connect(false, getSessionData = false)
 				.then { checkIfAlreadyInSetupMode() }.unwrap()
 				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
 				.then { checkRecoveryResult() }.unwrap()
 				.then { connection.disconnect(true) }.unwrap()
 				.then { connection.wait(2000) }.unwrap() // Wait for the crownstone trying to disconnect us before connecting again. TODO: do this with a waitForDisconnect() function.
-				.then { connection.connect(false) }.unwrap()
+				.then { connection.connect(false, getSessionData = false) }.unwrap()
 				.then { checkIfAlreadyInSetupMode() }.unwrap()
 				.then { connection.write(BluenetProtocol.CROWNSTONE_SERVICE_UUID, BluenetProtocol.CHAR_RECOVERY_UUID, packet, AccessLevel.ENCRYPTION_DISABLED) }.unwrap()
 				.then { checkRecoveryResult() }.unwrap()

@@ -67,7 +67,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	 * @return Promise that resolves when connected.
 	 */
 	@Synchronized
-	fun connect(auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES): Promise<Unit, Exception> {
+	fun connect(auto: Boolean, timeoutMs: Long = BluenetConfig.TIMEOUT_CONNECT, retries: Int = BluenetConfig.CONNECT_RETRIES, getSessionData: Boolean = true): Promise<Unit, Exception> {
 		Log.i(TAG, "connect $address auto=$auto timeoutMs=$timeoutMs retries=$retries")
 		val deferred = deferred<Unit, Exception>()
 
@@ -86,7 +86,7 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 					bleCore.discoverServices(false)
 				}.unwrap()
 				.then {
-					postConnect()
+					postConnect(getSessionData)
 				}.unwrap()
 				.success {
 					isConnected = true
@@ -305,14 +305,17 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 	}
 
 	@Synchronized
-	private fun postConnect(): Promise<Unit, Exception> {
+	private fun postConnect(getSessionData: Boolean): Promise<Unit, Exception> {
 		Log.i(TAG, "postConnect $address")
 		bleCore.logCharacteristics()
 		checkMode()
 		connectionEncryptionManager.clearSessionData()
 		when (mode) {
 			CrownstoneMode.SETUP -> {
-
+				if (!getSessionData) {
+					Log.i(TAG, "Skip reading session data")
+					return Promise.ofSuccess(Unit)
+				}
 				val (v5, sessionDataChar, encrypted) =
 						when {
 							hasCharacteristic(BluenetProtocol.SETUP_SERVICE_UUID, BluenetProtocol.CHAR_SETUP_SESSION_DATA_UNENCRYPTED_UUID) -> {
@@ -343,6 +346,10 @@ class ExtConnection(address: DeviceAddress, eventBus: EventBus, bleCore: BleCore
 						}
 			}
 			CrownstoneMode.NORMAL -> {
+				if (!getSessionData) {
+					Log.i(TAG, "Skip reading session data")
+					return Promise.ofSuccess(Unit)
+				}
 				if (encryptionManager.getKeySetFromAddress(address) == null) {
 					Log.w(TAG, "No keys, don't read session data")
 					return Promise.ofSuccess(Unit)
