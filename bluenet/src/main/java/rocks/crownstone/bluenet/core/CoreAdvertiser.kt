@@ -11,7 +11,6 @@ import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
-import android.os.Handler
 import android.os.Looper
 import nl.komponents.kovenant.Deferred
 import nl.komponents.kovenant.Promise
@@ -23,15 +22,16 @@ import rocks.crownstone.bluenet.util.Log
 import java.lang.IllegalStateException
 
 open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Looper) : CoreInit(appContext, eventBus, looper) {
+	private val ADVERTISE_START_TIMEOUT_MS = 500L
 	private var advertiserSettingsBuilder = AdvertiseSettings.Builder()
 //	private var advertiseStarted = false
-	private var advertiseStartPromise: Deferred<Unit, Exception>? = null
+	private var advertisePromise: Deferred<Unit, Exception>? = null
 	private var advertiseCallback = object : AdvertiseCallback() {
 		override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
 			super.onStartSuccess(settingsInEffect)
 			Log.i(TAG, "Started advertising")
 //			advertiseStarted = true
-			advertiseStartPromise?.resolve()
+			resolve(advertisePromise)
 		}
 
 		override fun onStartFailure(errorCode: Int) {
@@ -46,19 +46,19 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 			}
 			Log.i(TAG, "Failed advertising err=$errorCode")
 //			advertiseStarted = false
-			advertiseStartPromise?.reject(err)
+			reject(advertisePromise, err)
 		}
 	}
 
 	private var backgroundAdvertiserSettingsBuilder = AdvertiseSettings.Builder()
 //	private var backgroundAdvertiseStarted = false
-	private var backgroundAdvertiseStartPromise: Deferred<Unit, Exception>? = null
+	private var backgroundAdvertisePromise: Deferred<Unit, Exception>? = null
 	private var backgroundAdvertiseCallback = object : AdvertiseCallback() {
 		override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
 			super.onStartSuccess(settingsInEffect)
 			Log.i(TAG, "Started background advertising")
 //			backgroundAdvertiseStarted = true
-			backgroundAdvertiseStartPromise?.resolve()
+			resolve(backgroundAdvertisePromise)
 		}
 
 		override fun onStartFailure(errorCode: Int) {
@@ -73,7 +73,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 			}
 			Log.i(TAG, "Failed background advertising err=$errorCode")
 //			backgroundAdvertiseStarted = false
-			backgroundAdvertiseStartPromise?.reject(err)
+			reject(backgroundAdvertisePromise, err)
 		}
 	}
 
@@ -100,16 +100,17 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
-		if (advertiseStartPromise?.promise?.isDone() == false) {
-			Log.i(TAG, "busy: promise=${advertiseStartPromise?.promise} done=${advertiseStartPromise?.promise?.isDone()}")
+		if (advertisePromise?.promise?.isDone() == false) {
+			Log.i(TAG, "busy: promise=${advertisePromise?.promise} done=${advertisePromise?.promise?.isDone()}")
 			return Promise.ofFail(Errors.Busy())
 		}
 		val deferred = deferred<Unit, Exception>()
-		advertiseStartPromise = deferred
+		advertisePromise = deferred
 
 		advertiserSettingsBuilder.setTimeout(timeoutMs)
 		try {
 			advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
+			handler.postDelayed(advertiseTimeoutRunnable, ADVERTISE_START_TIMEOUT_MS)
 //			advertiseStarted = true
 		}
 		catch (e: IllegalStateException) {
@@ -119,9 +120,19 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 		return deferred.promise
 	}
 
+	private val advertiseTimeoutRunnable = Runnable {
+		advertiseTimeout()
+	}
+
+	@Synchronized
+	private fun advertiseTimeout() {
+		reject(advertisePromise, Errors.Timeout())
+	}
+
 	@Synchronized
 	fun stopAdvertise() {
 		Log.i(TAG, "stopAdvertise")
+		reject(advertisePromise, Errors.Aborted())
 		if (isAdvertiserReady(true)) {
 			try {
 				advertiser.stopAdvertising(advertiseCallback)
@@ -142,15 +153,16 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
-		if (backgroundAdvertiseStartPromise?.promise?.isDone() == false) {
-			Log.i(TAG, "busy: promise=${backgroundAdvertiseStartPromise?.promise} done=${backgroundAdvertiseStartPromise?.promise?.isDone()}")
+		if (backgroundAdvertisePromise?.promise?.isDone() == false) {
+			Log.i(TAG, "busy: promise=${backgroundAdvertisePromise?.promise} done=${backgroundAdvertisePromise?.promise?.isDone()}")
 			return Promise.ofFail(Errors.Busy())
 		}
 		val deferred = deferred<Unit, Exception>()
-		backgroundAdvertiseStartPromise = deferred
+		backgroundAdvertisePromise = deferred
 
 		try {
 			advertiser.startAdvertising(backgroundAdvertiserSettingsBuilder.build(), data, backgroundAdvertiseCallback)
+			handler.postDelayed(backgroundAdvertiseTimeoutRunnable, ADVERTISE_START_TIMEOUT_MS)
 //			backgroundAdvertiseStarted = true
 		}
 		catch (e: IllegalStateException) {
@@ -163,6 +175,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 	@Synchronized
 	fun stopBackgroundAdvertise() {
 		Log.i(TAG, "stopBackgroundAdvertise")
+		reject(backgroundAdvertisePromise, Errors.Aborted())
 		if (isAdvertiserReady(true)) {
 			try {
 				advertiser.stopAdvertising(backgroundAdvertiseCallback)
@@ -174,4 +187,42 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 			}
 		}
 	}
+
+	private val backgroundAdvertiseTimeoutRunnable = Runnable {
+		backgroundAdvertiseTimeout()
+	}
+
+	@Synchronized
+	private fun backgroundAdvertiseTimeout() {
+		reject(backgroundAdvertisePromise, Errors.Timeout())
+	}
+
+
+
+	@Synchronized
+	private fun resolve(promise: Deferred<Unit, Exception>?) {
+		if (promise?.promise?.isDone() == false) {
+			cancelTimeout(promise)
+			promise.resolve()
+		}
+	}
+
+	@Synchronized
+	private fun reject(promise: Deferred<Unit, Exception>?, exception: Exception) {
+		if (promise?.promise?.isDone() == false) {
+			cancelTimeout(promise)
+			promise.reject(exception)
+		}
+	}
+
+	@Synchronized
+	private fun cancelTimeout(promise: Deferred<Unit, Exception>) {
+		if (promise == advertisePromise) {
+			handler.removeCallbacks(advertiseTimeoutRunnable)
+		}
+		else {
+			handler.removeCallbacks(backgroundAdvertiseTimeoutRunnable)
+		}
+	}
+
 }
