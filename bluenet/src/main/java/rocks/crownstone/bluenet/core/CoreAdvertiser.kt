@@ -13,6 +13,7 @@ import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import nl.komponents.kovenant.Deferred
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.deferred
 import nl.komponents.kovenant.resolve
@@ -23,9 +24,59 @@ import java.lang.IllegalStateException
 
 open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Looper) : CoreInit(appContext, eventBus, looper) {
 	private var advertiserSettingsBuilder = AdvertiseSettings.Builder()
-	private var advertiseCallback: AdvertiseCallback? = null
+//	private var advertiseStarted = false
+	private var advertiseStartPromise: Deferred<Unit, Exception>? = null
+	private var advertiseCallback = object : AdvertiseCallback() {
+		override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+			super.onStartSuccess(settingsInEffect)
+			Log.i(TAG, "Started advertising")
+//			advertiseStarted = true
+			advertiseStartPromise?.resolve()
+		}
+
+		override fun onStartFailure(errorCode: Int) {
+			super.onStartFailure(errorCode)
+			val err = when (errorCode) {
+				ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
+				ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
+				ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy()
+//					ADVERTISE_FAILED_INTERNAL_ERROR
+//					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
+				else -> java.lang.Exception("Advertise failure err=$errorCode")
+			}
+			Log.i(TAG, "Failed advertising err=$errorCode")
+//			advertiseStarted = false
+			advertiseStartPromise?.reject(err)
+		}
+	}
+
 	private var backgroundAdvertiserSettingsBuilder = AdvertiseSettings.Builder()
-	private var backgroundAdvertiseCallback: AdvertiseCallback? = null
+//	private var backgroundAdvertiseStarted = false
+	private var backgroundAdvertiseStartPromise: Deferred<Unit, Exception>? = null
+	private var backgroundAdvertiseCallback = object : AdvertiseCallback() {
+		override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
+			super.onStartSuccess(settingsInEffect)
+			Log.i(TAG, "Started background advertising")
+//			backgroundAdvertiseStarted = true
+			backgroundAdvertiseStartPromise?.resolve()
+		}
+
+		override fun onStartFailure(errorCode: Int) {
+			super.onStartFailure(errorCode)
+			val err = when (errorCode) {
+				ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
+				ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
+				ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy()
+//					ADVERTISE_FAILED_INTERNAL_ERROR
+//					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
+				else -> java.lang.Exception("Advertise failure err=$errorCode")
+			}
+			Log.i(TAG, "Failed background advertising err=$errorCode")
+//			backgroundAdvertiseStarted = false
+			backgroundAdvertiseStartPromise?.reject(err)
+		}
+	}
+
 	init {
 		// Set maximum advertising frequency, and TX power, so that we can have a low timeout.
 		advertiserSettingsBuilder.setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
@@ -49,35 +100,17 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
-		if (advertiseCallback != null) {
+		if (advertiseStartPromise?.promise?.isDone() == false) {
+			Log.i(TAG, "busy: promise=${advertiseStartPromise?.promise} done=${advertiseStartPromise?.promise?.isDone()}")
 			return Promise.ofFail(Errors.Busy())
 		}
 		val deferred = deferred<Unit, Exception>()
+		advertiseStartPromise = deferred
 
-		advertiseCallback = object : AdvertiseCallback() {
-			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-				super.onStartSuccess(settingsInEffect)
-				Log.i(TAG, "Started advertising")
-				deferred.resolve()
-			}
-
-			override fun onStartFailure(errorCode: Int) {
-				super.onStartFailure(errorCode)
-				val err = when (errorCode) {
-					ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
-					ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
-					ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy()
-//					ADVERTISE_FAILED_INTERNAL_ERROR
-//					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
-					else -> java.lang.Exception("Advertise failure err=$errorCode")
-				}
-				Log.i(TAG, "Failed advertising err=$errorCode")
-				deferred.reject(err)
-			}
-		}
 		advertiserSettingsBuilder.setTimeout(timeoutMs)
 		try {
 			advertiser.startAdvertising(advertiserSettingsBuilder.build(), data, advertiseCallback)
+//			advertiseStarted = true
 		}
 		catch (e: IllegalStateException) {
 			Log.w(TAG, "Advertise couldn't start: $e")
@@ -88,30 +121,20 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 
 	@Synchronized
 	fun stopAdvertise() {
-		if (advertiseCallback != null) {
-			Log.d(TAG, "stopAdvertise")
-			if (isAdvertiserReady(true)) {
-				try {
-					advertiser.stopAdvertising(advertiseCallback)
-				}
-				catch (e: IllegalStateException) {
-					Log.e(TAG, "Ble not ready, cache was wrong.")
-					checkBleEnabled()
-				}
+		Log.i(TAG, "stopAdvertise")
+		if (isAdvertiserReady(true)) {
+			try {
+				advertiser.stopAdvertising(advertiseCallback)
+//				advertiseStarted = false
 			}
-			advertiseCallback = null
+			catch (e: IllegalStateException) {
+				Log.e(TAG, "Ble not ready, cache was wrong.")
+				checkBleEnabled()
+			}
 		}
 	}
 
-//	private val onAdvertiseDoneRunnable = Runnable {
-//		onAdvertiseDone()
-//	}
-//
-//	@Synchronized
-//	private fun onAdvertiseDone() {
-//		Log.i(TAG, "onAdvertiseDone")
-//		stop()
-//	}
+
 
 	@Synchronized
 	fun backgroundAdvertise(data: AdvertiseData): Promise<Unit, Exception> {
@@ -119,34 +142,19 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 		if (!isAdvertiserReady(true)) {
 			return Promise.ofFail(Errors.BleNotReady())
 		}
-		val deferred = deferred<Unit, Exception>()
-
-		backgroundAdvertiseCallback = object : AdvertiseCallback() {
-			override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-				super.onStartSuccess(settingsInEffect)
-				Log.i(TAG, "Started backgroundAdvertising")
-				deferred.resolve()
-			}
-
-			override fun onStartFailure(errorCode: Int) {
-				super.onStartFailure(errorCode)
-				val err = when (errorCode) {
-					ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
-					ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy("busy: too many advertisers")
-					ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy("busy: already started")
-//					ADVERTISE_FAILED_INTERNAL_ERROR
-//					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
-					else -> java.lang.Exception("Advertise failure err=$errorCode")
-				}
-				Log.i(TAG, "Failed backgroundAdvertising err=$errorCode")
-				deferred.reject(err)
-			}
+		if (backgroundAdvertiseStartPromise?.promise?.isDone() == false) {
+			Log.i(TAG, "busy: promise=${backgroundAdvertiseStartPromise?.promise} done=${backgroundAdvertiseStartPromise?.promise?.isDone()}")
+			return Promise.ofFail(Errors.Busy())
 		}
+		val deferred = deferred<Unit, Exception>()
+		backgroundAdvertiseStartPromise = deferred
+
 		try {
 			advertiser.startAdvertising(backgroundAdvertiserSettingsBuilder.build(), data, backgroundAdvertiseCallback)
+//			backgroundAdvertiseStarted = true
 		}
 		catch (e: IllegalStateException) {
-			Log.w(TAG, "Advertise couldn't start: $e")
+			Log.w(TAG, "Background advertise couldn't start: $e")
 			deferred.reject(e)
 		}
 		return deferred.promise
@@ -154,18 +162,16 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 
 	@Synchronized
 	fun stopBackgroundAdvertise() {
-		if (backgroundAdvertiseCallback != null) {
-			Log.d(TAG, "stopBackgroundAdvertise")
-			if (isAdvertiserReady(true)) {
-				try {
-					advertiser.stopAdvertising(backgroundAdvertiseCallback)
-				}
-				catch (e: IllegalStateException) {
-					Log.e(TAG, "Ble not ready, cache was wrong.")
-					checkBleEnabled()
-				}
+		Log.i(TAG, "stopBackgroundAdvertise")
+		if (isAdvertiserReady(true)) {
+			try {
+				advertiser.stopAdvertising(backgroundAdvertiseCallback)
+//				backgroundAdvertiseStarted = false
 			}
-			backgroundAdvertiseCallback = null
+			catch (e: IllegalStateException) {
+				Log.e(TAG, "Ble not ready, cache was wrong.")
+				checkBleEnabled()
+			}
 		}
 	}
 }
