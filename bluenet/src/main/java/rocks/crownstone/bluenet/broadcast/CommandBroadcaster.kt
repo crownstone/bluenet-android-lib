@@ -324,6 +324,10 @@ class CommandBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: BleCo
 				}
 				.fail {
 					broadcasting = false
+					if (it is Errors.BusyAlready) {
+						// Fix the broadcasting state.
+						broadcasting = true
+					}
 					queue.advertisementDone(0, it)
 				}
 	}

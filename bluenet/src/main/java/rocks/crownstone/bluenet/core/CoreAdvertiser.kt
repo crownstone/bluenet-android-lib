@@ -39,7 +39,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 			val err = when (errorCode) {
 				ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
 				ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
-				ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy()
+				ADVERTISE_FAILED_ALREADY_STARTED -> Errors.BusyAlready("started")
 //					ADVERTISE_FAILED_INTERNAL_ERROR
 //					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
 				else -> java.lang.Exception("Advertise failure err=$errorCode")
@@ -47,6 +47,11 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 			Log.i(TAG, "Failed advertising err=$errorCode")
 //			advertiseStarted = false
 			reject(advertisePromise, err)
+
+			// On failure, it's expected that advertising stopped.
+			if (errorCode == ADVERTISE_FAILED_ALREADY_STARTED) {
+				stopAdvertise()
+			}
 		}
 	}
 
@@ -66,7 +71,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 			val err = when (errorCode) {
 				ADVERTISE_FAILED_DATA_TOO_LARGE -> Errors.SizeWrong()
 				ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Errors.Busy()
-				ADVERTISE_FAILED_ALREADY_STARTED -> Errors.Busy()
+				ADVERTISE_FAILED_ALREADY_STARTED -> Errors.BusyAlready("started")
 //					ADVERTISE_FAILED_INTERNAL_ERROR
 //					ADVERTISE_FAILED_FEATURE_UNSUPPORTED
 				else -> java.lang.Exception("Advertise failure err=$errorCode")
@@ -74,6 +79,11 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 			Log.i(TAG, "Failed background advertising err=$errorCode")
 //			backgroundAdvertiseStarted = false
 			reject(backgroundAdvertisePromise, err)
+
+			// On failure, it's expected that advertising stopped.
+			if (errorCode == ADVERTISE_FAILED_ALREADY_STARTED) {
+				stopBackgroundAdvertise()
+			}
 		}
 	}
 
@@ -126,6 +136,9 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 
 	@Synchronized
 	private fun advertiseTimeout() {
+		// On failure, it's expected that advertising stopped.
+		stopAdvertise()
+
 		reject(advertisePromise, Errors.Timeout())
 	}
 
@@ -194,6 +207,9 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 
 	@Synchronized
 	private fun backgroundAdvertiseTimeout() {
+		// On failure, it's expected that advertising stopped.
+		stopBackgroundAdvertise()
+
 		reject(backgroundAdvertisePromise, Errors.Timeout())
 	}
 

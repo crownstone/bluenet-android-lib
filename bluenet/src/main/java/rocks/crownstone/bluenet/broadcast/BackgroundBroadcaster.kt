@@ -168,6 +168,10 @@ class BackgroundBroadcaster(eventBus: EventBus, state: BluenetState, bleCore: Bl
 				.fail {
 					Log.w(TAG, "Failed to start broadcasting: $it")
 					broadcasting = BroadcastingState.STOPPED
+					if (it is Errors.BusyAlready) {
+						// Fix the broadcasting state
+						broadcasting = BroadcastingState.STARTED
+					}
 					retryUpdateLater()
 				}
 	}
