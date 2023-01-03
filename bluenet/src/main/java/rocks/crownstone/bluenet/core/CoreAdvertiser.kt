@@ -136,6 +136,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 
 	@Synchronized
 	private fun advertiseTimeout() {
+		Log.i(TAG, "advertiseTimeout")
 		// On failure, it's expected that advertising stopped.
 		stopAdvertise()
 
@@ -207,6 +208,7 @@ open class CoreAdvertiser(appContext: Context, eventBus: EventBus, looper: Loope
 
 	@Synchronized
 	private fun backgroundAdvertiseTimeout() {
+		Log.i(TAG, "backgroundAdvertiseTimeout")
 		// On failure, it's expected that advertising stopped.
 		stopBackgroundAdvertise()
 
