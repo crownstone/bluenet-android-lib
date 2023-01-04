@@ -631,6 +631,8 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Filter for Crownstones with service data.
+	 * This will decrypt and parse the service data and add it to the SCAN_RESULT event,
+	 * giving you the state of the Crownstone (switch state, power usage, etc).
 	 *
 	 * Can be combined with other filters.
 	 *
@@ -646,6 +648,7 @@ class Bluenet(looper: Looper? = null) {
 
 	/**
 	 * Filter for iBeacons.
+	 * This will parse the iBeacon data and add it to the SCAN_RESULT event.
 	 *
 	 * Can be combined with other filters.
 	 *

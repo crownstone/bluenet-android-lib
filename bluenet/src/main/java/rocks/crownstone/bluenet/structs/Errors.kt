@@ -17,6 +17,7 @@ object Errors {
 	open class Busy(msg: String = "busy"): Exception(msg)
 	class BusyWrongState: Busy("wrong state: busy")
 	class BusyOtherDevice: Busy("busy with another device")
+	class BusyAlready(msg: String): Busy("busy: already $msg")
 
 	// BluetoothGatt errors, see https://android.googlesource.com/platform/external/bluetooth/bluedroid/+/master/stack/include/gatt_api.h
 	open class Gatt(status: Int, type: String = ""): Exception("gatt error $status: $type") // Make a class per error?

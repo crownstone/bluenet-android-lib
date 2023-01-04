@@ -10,6 +10,70 @@ This android library is part of the [crownstone-sdk](https://github.com/crownsto
 
 The functionality in this library is implemented using Kotlin.
 
+
+# Installation
+
+- Copy the *bluenet* directory to the top directory of your app (where *settings.gradle* is located).
+- In *settings.gradle* of your app, add the line: `include ':bluenet'`
+- In the top *build.gradle*, in `buildscript {` add (with the versions you use):
+    - `ext.supportLibVersion = "28.0.0"`
+    - `ext.kotlin_version = "1.6.10"`
+- In the *app/build.gradle*, in `dependencies {` add: ` implementation project(':bluenet')`.
+
+
+# Usage
+
+This is only a brief description of how to use this library. Make sure to read the in code documentation.
+
+The [development app](https://github.com/crownstone/bluenet-android-dev-app/) can serve as a rough example.
+
+## Initialization
+
+- Create an instance of `Bluenet`.
+- Initialize it with the `init()` function.
+- Subscribe for events with `subscribe()`, see which events there are in the `BluenetEvent` class.
+- Check if you have the required permissions, and request them if needed. The bluenet instance has functions for this.
+- Now initialize the scanner, this can be done with `initScanner()`, `tryMakeScannerReady()`, or `makeScannerReady()`.
+- Load the settings for all spheres with `setSphereSettings()`.
+
+## Scanning
+
+You will have to scan in order to get data from Crownstones and for localization. The data will be sent via events that you have to subscribe to. This includes: the state of Crownstones (like the switch state, or power usage)
+- Configure the scanner with `filterForCrownstones()`, `filterForIbeacons()`, `setScanInterval()`, etc.
+- Optionally, configure and start the iBeacon ranger with `iBeaconRanger.track()`.
+- Start scanning for Crownstones with `startScanning()`.
+
+## Broadcasting
+
+This is used to let the Crownstones know where you are, and to send simple commands to the Crownstones.
+
+Configure and keep up to date:
+- `setSphereShortId()`
+- `setCurrentSphere()`
+- `setLocation()`
+- `setProfile()`
+- `setDeviceToken()`
+- `setSunTime()`
+
+Then start background broadcasting with `backgroundBroadcaster.start()`
+
+Commands can be sent with one of the `Bluenet.broadCast` functions.
+
+## Connection
+- Connect to the Crownstone with `connect()`.
+- Perform actions via:
+    - `Bluenet.control`
+    - `Bluenet.control`
+    - `Bluenet.config`
+    - `Bluenet.state`
+    - `Bluenet.mesh`
+    - `Bluenet.deviceInfo`
+    - `Bluenet.debugData`
+    - `Bluenet.setup`
+    - `Bluenet.dfu`
+- Disconnect with `disconnect()`.
+
+
 # Copyrights
 
 The copyrights for the code belongs to Crownstone and are provided under an noncontagious open-source license:
