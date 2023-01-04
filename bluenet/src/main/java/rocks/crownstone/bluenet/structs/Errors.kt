@@ -88,6 +88,8 @@ object Errors {
 
 	class NotImplemented: Exception("Not implemented")
 
+	class Unsupported(msg: String): Exception("Unsupported: $msg")
+
 	class Result(val result: ResultType): Exception("result: ${result.name}")
 
 	open class Timeout(msg: String =""): Exception("timed out: ($msg)")

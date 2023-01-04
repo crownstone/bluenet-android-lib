@@ -822,6 +822,16 @@ class Bluenet(looper: Looper? = null) {
 	}
 
 	/**
+	 * Get the microapp module, it provides methods to modify microapps on a Crownstone.
+	 *
+	 * @param address        MAC address of the Crownstone.
+	 * @return               The microapp module.
+	 */
+	fun microapp(address: DeviceAddress): Microapp {
+		return Microapp(eventBus, connections.getConnection(address))
+	}
+
+	/**
 	 * Get the device information module, it provides methods to get information about a Crownstone.
 	 *
 	 * @param address        MAC address of the Crownstone.
