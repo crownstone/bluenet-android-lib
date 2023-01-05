@@ -31,7 +31,7 @@ class Microapp(eventBus: EventBus, connection: ExtConnection) {
 	private val connection = connection
 
 	companion object {
-		const val MAX_CHUNK_SIZE = 256
+		const val MAX_CHUNK_SIZE = 128 // 256 was too much
 		const val PROTOCOL: Uint8 = 1U
 	}
 
@@ -168,7 +168,8 @@ class Microapp(eventBus: EventBus, connection: ExtConnection) {
 			return Promise.ofSuccess(Unit)
 		}
 
-		val actualChunkSize = min(chunkSize, MAX_CHUNK_SIZE)
+		val maxChunkSize = min(chunkSize, MAX_CHUNK_SIZE)
+		val actualChunkSize = min(maxChunkSize, data.size - offset)
 		val chunk = data.slice(offset until (offset + actualChunkSize)).toMutableList()
 
 		// Pad the chunk with 0xFF, so the size is a multiple of 4.
