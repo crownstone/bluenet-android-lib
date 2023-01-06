@@ -70,7 +70,7 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 
 		// When an address was not scanned this tick, but was scanned at most N ms ago, use the RSSI of that scan.
 		// Where N is this value.
-		const val MAX_NOT_SCANNED_FILL_TIME_MS: Long = 4000
+		const val MAX_NOT_SCANNED_FILL_TIME_MS: Long = 4500
 	}
 
 	internal data class DeviceData(val ibeaconData: IbeaconData, val averager: IbeaconRssiAverager)
