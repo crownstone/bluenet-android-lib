@@ -30,6 +30,7 @@ import kotlin.collections.HashSet
  */
 class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 	private val TAG = this.javaClass.simpleName
+
 	private val handler = Handler(looper)
 	// TODO: this class has state variables that are used by both commands and scans. This makes concurrency issues likely.
 
@@ -41,6 +42,12 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 
 	// Map with address -> iBeacon and RSSI data.
 	private val deviceMap = HashMap<DeviceAddress, DeviceData>()
+
+	// The previous list of iBeacons.
+	private val previousIbeaconList = ScannedIbeaconList()
+
+	// Map with address -> Timestamp in ms when this device was last scanned.
+	private val lastSeenDevice = HashMap<DeviceAddress, Long>()
 
 	// Map with iBeacon UUID -> reference ID.
 	private val trackedUuids = HashMap<UUID, String>()
@@ -60,6 +67,10 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 		const val IBEACON_SCAN_INTERVAL_MS: Long = 1000 // Every interval, the list of iBeacons is sent.
 		const val TICK_INTERVAL_MS: Long = 1000         // Every tick, the region timeout is checked.
 		const val REGION_TIMEOUT_MS: Long = 30000       // After not getting a scan for <timeout> time, the region has been left.
+
+		// When an address was not scanned this tick, but was scanned at most N ms ago, use the RSSI of that scan.
+		// Where N is this value.
+		const val MAX_NOT_SCANNED_FILL_TIME_MS: Long = 4000
 	}
 
 	internal data class DeviceData(val ibeaconData: IbeaconData, val averager: IbeaconRssiAverager)
@@ -179,13 +190,31 @@ class IbeaconRanger(val eventBus: EventBus, looper: Looper) {
 		Log.d(TAG, "onTimeout numBeacons=${deviceMap.size}")
 //		val result = ArrayList<ScannedIbeacon>()
 		val result = ScannedIbeaconList()
+		val currentTimeMs = SystemClock.elapsedRealtime()
 		for (entry in deviceMap) {
 			val referenceId = trackedUuids[entry.value.ibeaconData.uuid] ?: ""
 			Log.d(TAG, "    ${entry.key} uuid=${entry.value.ibeaconData.uuid} major=${entry.value.ibeaconData.major} minor=${entry.value.ibeaconData.minor} rssi=${entry.value.averager.getAverage()} count=${entry.value.averager.getCount()}")
 			result.add(ScannedIbeacon(entry.key, entry.value.ibeaconData, entry.value.averager.getAverage(), referenceId))
+			lastSeenDevice[entry.key] = currentTimeMs
 		}
+
+		// Fill in gaps with previous result
+		for (entry in previousIbeaconList) {
+			val lastSeen = lastSeenDevice.getOrDefault(entry.address, 0L)
+			if (!deviceMap.containsKey(entry.address) && (currentTimeMs - lastSeen) < MAX_NOT_SCANNED_FILL_TIME_MS) {
+				result.add(entry)
+				Log.d(TAG, "    ${entry.address} uuid=${entry.ibeaconData.uuid} major=${entry.ibeaconData.major} minor=${entry.ibeaconData.minor} rssi=${entry.rssi} from ${currentTimeMs - lastSeen} ms ago")
+			}
+		}
+
 		deviceMap.clear()
 		isTimeoutRunning = false
+
+		// Copy the result
+		previousIbeaconList.clear()
+		for (entry in result) {
+			previousIbeaconList.add(entry)
+		}
 		eventBus.emit(BluenetEvent.IBEACON_SCAN, result)
 	}
 
